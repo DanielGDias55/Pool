@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pool Manager SaaS Pro</title>
+    <title>Pool Manager Pro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -66,20 +66,21 @@
             
             <div class="flex flex-wrap justify-center items-center gap-2">
                 <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1">
-                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-4 py-1.5 text-[10px] font-black uppercase rounded-xl transition">Todos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-4 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 transition">Falta Pagar</button>
-                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-4 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-rose-500 transition">Não Cobrados</button>
+                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 text-[10px] font-black uppercase rounded-xl transition">Todos</button>
+                    <button onclick="setFiltroStatus('pagos')" id="btn-pagos" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-emerald-500 transition">Pagos</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 transition">Faltam Pagar</button>
+                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-rose-500 transition">Não Cobrados</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl"><i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-500"></i></button>
-                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl"><i data-lucide="plus" class="w-5 h-5"></i></button>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl transition" title="Importar"><i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-500"></i></button>
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 transition"><i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800"><p class="text-[10px] font-black opacity-40 uppercase italic">Previsão</p><div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div></div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl"><p class="opacity-70 text-[10px] font-black uppercase italic">Pago</p><div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div></div>
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800"><p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente</p><div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div></div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-[10px] font-black opacity-40 uppercase italic">Previsão</p><div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div></div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20"><p class="opacity-70 text-[10px] font-black uppercase italic text-white">Recebido</p><div class="text-3xl font-black italic text-white">R$ <span id="tPago">0,00</span></div></div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente</p><div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div></div>
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
@@ -133,6 +134,7 @@
         function renderizarTabela() {
             const c = document.getElementById('corpoTabela');
             let f = [...dadosLocais];
+            if (filtroStatus === 'pagos') f = f.filter(p => p.pago);
             if (filtroStatus === 'pendente') f = f.filter(p => !p.pago);
             if (filtroStatus === 'nao_enviado') f = f.filter(p => !p.msgEnviada);
             f.sort((a, b) => a.nome.localeCompare(b.nome));
@@ -145,9 +147,9 @@
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition ${sel ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
                         <td class="px-6 py-5"><input type="checkbox" ${sel ? 'checked' : ''} onclick="toggleSelect('${p.id}')"></td>
                         <td class="px-2 py-5">
-                            <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block">
+                            <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block text-sm">
                             <div class="flex items-center gap-1 mt-1">
-                                <span class="text-[9px] opacity-30 font-bold uppercase">Zap:</span>
+                                <span class="text-[9px] opacity-30 font-bold uppercase tracking-widest">Zap:</span>
                                 <input type="text" value="${p.tel || '55'}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-blue-500 font-bold w-full">
                             </div>
                         </td>
@@ -155,13 +157,13 @@
                             R$ <input type="number" step="0.01" value="${v.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-24 text-center dark:text-white">
                         </td>
                         <td class="px-6 py-5 text-center">
-                            <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                            <button onclick="togglePago('${p.id}',${p.pago})" class="px-4 py-1.5 rounded-full text-[9px] font-black uppercase ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
                                 ${p.pago ? 'Pago' : 'Pendente'}
                             </button>
                         </td>
                         <td class="px-6 py-5 text-right space-x-1">
-                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${v})" class="p-2 ${p.msgEnviada ? 'text-blue-500' : 'opacity-20'}"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-4 h-4"></i></button>
-                            <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${v})" class="p-2 ${p.msgEnviada ? 'text-blue-500' : 'opacity-20'} transition hover:scale-110"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-5 h-5"></i></button>
+                            <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                         </td>
                     </tr>`;
             });
@@ -171,7 +173,6 @@
             lucide.createIcons();
         }
 
-        // AÇÕES EM MASSA
         function toggleSelect(id) { if (selecionados.has(id)) selecionados.delete(id); else selecionados.add(id); renderBarra(); renderizarTabela(); }
         function toggleSelectAll(el) { if (el.checked) dadosLocais.forEach(p => selecionados.add(p.id)); else selecionados.clear(); renderBarra(); renderizarTabela(); }
         function clearSelection() { selecionados.clear(); document.getElementById('selectAll').checked = false; renderBarra(); renderizarTabela(); }
@@ -182,10 +183,9 @@
         }
         function bulkDelete() { if (confirm("Excluir selecionados?")) { selecionados.forEach(id => db.ref(`cobrancas/${mesAtual}/${id}`).remove()); clearSelection(); } }
 
-        // OUTROS
         function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
         function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
-        function excluir(id) { if (confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
+        function excluir(id) { if (confirm("Apagar participante?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
         function mudarMes(v) { clearSelection(); mesAtual = v; carregarDadosAdmin(); }
         function setFiltroStatus(s) { filtroStatus = s; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); document.getElementById(`btn-${s}`).classList.add('active'); renderizarTabela(); }
         function toggleDarkMode() { const h = document.documentElement; if (h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.theme = 'light'; } else { h.classList.add('dark'); localStorage.theme = 'dark'; } }
