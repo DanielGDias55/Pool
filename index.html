@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pool Manager Pro - Mass Import</title>
+    <title>Pool Manager Pro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -40,7 +40,6 @@
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
         .dark .editable-input:focus { background: #0f172a; color: white; }
 
-        /* Modal Styles */
         #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
         #modalImport.flex { display: flex; }
     </style>
@@ -51,17 +50,17 @@
     <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
         <div class="flex items-center gap-3 mb-4">
             <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600">
-                <i data-lucide="users"></i>
+                <i data-lucide="copy-plus"></i>
             </div>
             <div>
-                <h3 class="text-xl font-black">Cadastro em Massa</h3>
-                <p class="text-xs text-slate-500">Cole um nome por linha (Máx. 200)</p>
+                <h3 class="text-xl font-black tracking-tight">Importação Rápida</h3>
+                <p class="text-xs text-slate-500">Dica: Use "Nome, Telefone" ou apenas "Nome"</p>
             </div>
         </div>
-        <textarea id="listaNomes" rows="10" class="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white" placeholder="João Silva&#10;Maria Oliveira&#10;Pedro Santos..."></textarea>
+        <textarea id="listaNomes" rows="10" class="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white" placeholder="Exemplo:&#10;João Silva, 5511999999999&#10;Maria Oliveira&#10;Pedro, 552188888888"></textarea>
         <div class="flex gap-3 mt-6">
             <button onclick="fecharModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
-            <button onclick="processarImportacao()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition">Cadastrar Todos</button>
+            <button onclick="processarImportacao()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition">Cadastrar Lista</button>
         </div>
     </div>
 </div>
@@ -72,7 +71,7 @@
             <div class="flex items-center justify-between w-full lg:w-auto">
                 <div>
                     <h1 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
-                        <i data-lucide="zap" class="text-blue-600"></i> Pool Manager
+                        <i data-lucide="layout-grid" class="text-blue-600"></i> Pool SaaS
                     </h1>
                     <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
                 </div>
@@ -84,10 +83,10 @@
             
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Importar Lista
+                    <i data-lucide="list-plus" class="w-4 h-4 text-blue-500"></i> Importar
                 </button>
                 <button onclick="adicionarPessoa()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg shadow-blue-500/20">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i> Novo
+                    <i data-lucide="plus" class="w-4 h-4"></i> Novo
                 </button>
                 <button onclick="toggleDarkMode()" class="hidden lg:flex p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:scale-105 transition">
                     <i data-lucide="moon" class="dark:hidden w-5 h-5"></i>
@@ -98,33 +97,18 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 border border-slate-800">
-                <i data-lucide="qr-code" class="text-blue-400"></i>
+                <i data-lucide="hash" class="text-blue-400"></i>
                 <div class="flex-1">
-                    <p class="text-[10px] uppercase font-black opacity-50 tracking-widest">Chave PIX</p>
-                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono" placeholder="Sua chave...">
+                    <p class="text-[10px] uppercase font-black opacity-50 tracking-widest">Sua Chave PIX</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono" placeholder="Chave para recebimento...">
                 </div>
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4">
-                <i data-lucide="coins" class="text-blue-600"></i>
+                <i data-lucide="banknote" class="text-blue-600"></i>
                 <div class="flex-1">
-                    <p class="text-[10px] uppercase font-black text-slate-400 tracking-widest">Valor Padrão (R$)</p>
-                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold" placeholder="50.00">
+                    <p class="text-[10px] uppercase font-black text-slate-400 tracking-widest">Valor Padrão Individual</p>
+                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold" placeholder="0.00">
                 </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Previsão</p>
-                <div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div>
-            </div>
-            <div class="bg-emerald-500 p-6 rounded-2xl shadow-xl shadow-emerald-500/20 text-white">
-                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1">Confirmado</p>
-                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">A receber</p>
-                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
             </div>
         </div>
 
@@ -133,9 +117,9 @@
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <tr>
-                            <th class="px-6 py-4">Participante</th>
-                            <th class="px-6 py-4 text-center">Valor</th>
-                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4">Participante / Tel</th>
+                            <th class="px-6 py-4 text-center">Valor Mensal</th>
+                            <th class="px-6 py-4 text-center">Situação</th>
                             <th class="px-6 py-4 text-right">Ações</th>
                         </tr>
                     </thead>
@@ -145,21 +129,23 @@
         </div>
     </div>
 
-    <div class="client-only max-w-md mx-auto py-10">
-        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
-            <div class="bg-slate-900 dark:bg-blue-600 p-12 text-center">
-                <p class="text-blue-400 dark:text-blue-200 text-xs font-black uppercase tracking-widest mb-3" id="cNome">Olá!</p>
-                <h2 class="text-white text-6xl font-black tracking-tighter">R$ <span id="cValor">0,00</span></h2>
+    <div class="client-only max-w-md mx-auto py-10 text-center">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+            <div class="bg-blue-600 p-12 transition-colors">
+                <p class="text-blue-100 text-xs font-black uppercase tracking-[0.2em] mb-3" id="cNome">Olá!</p>
+                <h2 class="text-white text-6xl font-black tracking-tighter italic">R$ <span id="cValor">0,00</span></h2>
             </div>
-            <div class="p-10 space-y-8 text-center text-slate-700 dark:text-slate-300">
-                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Pague via Chave PIX</p>
-                <p id="cChavePixExibicao" class="font-mono font-bold text-lg break-all">---</p>
+            <div class="p-10 space-y-8">
+                <div>
+                    <p class="text-[10px] text-slate-400 font-black uppercase mb-2">Copie a chave PIX</p>
+                    <p id="cChavePixExibicao" class="font-mono font-bold text-lg text-slate-700 dark:text-slate-200 break-all select-all">---</p>
+                </div>
                 <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
-                <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2rem] cursor-pointer hover:border-blue-500 transition-all">
-                    <i data-lucide="image-plus" class="w-8 h-8 text-slate-300"></i>
-                    <span class="text-xs font-bold uppercase tracking-wider">Anexar Comprovante</span>
+                <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all">
+                    <i data-lucide="camera" class="w-8 h-8 text-blue-500"></i>
+                    <span class="text-xs font-bold text-slate-500 uppercase">Enviar Comprovante</span>
                 </label>
-                <img id="imgPreview" class="w-full rounded-[1.5rem] hidden shadow-2xl border-4 border-white dark:border-slate-800">
+                <img id="imgPreview" class="w-full rounded-[2rem] hidden shadow-2xl border-4 border-white dark:border-slate-800">
             </div>
         </div>
     </div>
@@ -188,42 +174,50 @@
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-        gerarOpcoesMes();
         db.ref('configuracoes').on('value', s => {
             configGeral = s.val() || { chavePix: "", valorPadrao: 0 };
             document.getElementById('chavePix').value = configGeral.chavePix;
             document.getElementById('valorPadrao').value = configGeral.valorPadrao;
             if(idCliente) document.getElementById('cChavePixExibicao').innerText = configGeral.chavePix;
         });
+        gerarOpcoesMes();
         if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
         else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
         lucide.createIcons();
     }
 
-    // FUNÇÕES DE IMPORTAÇÃO EM MASSA
+    // NOVA LÓGICA DE IMPORTAÇÃO (NOME E TEL OPCIONAL)
     function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
-    function fecharModal(e) { document.getElementById('modalImport').classList.remove('flex'); document.getElementById('listaNomes').value = ""; }
+    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
 
     function processarImportacao() {
         const texto = document.getElementById('listaNomes').value;
-        const nomes = texto.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        const linhas = texto.split('\n').filter(l => l.trim().length > 0);
         
-        if (nomes.length === 0) return alert("Por favor, cole ao menos um nome.");
-        if (nomes.length > 200) return alert("O limite é de 200 nomes por vês.");
+        if (linhas.length === 0) return alert("Lista vazia!");
 
         const updates = {};
-        nomes.forEach(nome => {
-            const id = Date.now() + Math.floor(Math.random() * 1000); // Evitar IDs duplicados no mesmo ms
-            updates[id] = { nome, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, comprovante: null };
+        linhas.forEach(linha => {
+            // Tenta separar por vírgula
+            let [nome, tel] = linha.split(',').map(item => item.trim());
+            
+            // Se não houver telefone na linha, 'tel' será undefined, então usamos "55" como padrão opcional
+            const id = Date.now() + Math.floor(Math.random() * 9999);
+            updates[id] = { 
+                nome: nome, 
+                tel: tel || "55", 
+                valor: configGeral.valorPadrao || 0, 
+                pago: false, 
+                comprovante: null 
+            };
         });
 
         db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => {
-            alert(`✅ ${nomes.length} participantes cadastrados com sucesso!`);
+            alert(`✅ ${Object.keys(updates).length} participantes adicionados!`);
             fecharModal();
         });
     }
 
-    // RESTANTE DAS FUNÇÕES (Mantidas do código anterior)
     function carregarDadosAdmin() {
         db.ref(`cobrancas/${mesAtual}`).on('value', s => {
             const dados = s.val() || {};
@@ -234,59 +228,96 @@
 
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
-        let t = 0, pg = 0, pd = 0;
         corpo.innerHTML = "";
         dadosLocais.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(p => {
             const val = parseFloat(p.valor) || 0;
-            t += val; if(p.pago) pg += val; else pd += val;
-            corpo.innerHTML += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
-                <td class="px-6 py-4"><input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-slate-200 w-full block"><input type="text" value="${p.tel}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full"></td>
-                <td class="px-6 py-4 text-center font-mono font-bold">R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-20 text-center"></td>
-                <td class="px-6 py-4 text-center"><button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${p.pago ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600'}">${p.pago ? 'Pago' : 'Pendente'}</button></td>
-                <td class="px-6 py-4 text-right space-x-1"><button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 text-slate-400 hover:text-emerald-500 transition inline-flex"><i data-lucide="send" class="w-4 h-4"></i></button>${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 transition inline-flex"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}<button onclick="excluir('${p.id}')" class="p-2 text-slate-300 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
-            </tr>`;
+            corpo.innerHTML += `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
+                    <td class="px-6 py-4">
+                        <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-slate-200 w-full block">
+                        <input type="text" value="${p.tel}" placeholder="Telefone (opcional)" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full">
+                    </td>
+                    <td class="px-6 py-4 text-center font-mono font-bold">
+                        R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-20 text-center">
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${p.pago ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600'}">
+                            ${p.pago ? 'Pago' : 'Pendente'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-1">
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 text-slate-400 hover:text-emerald-500 transition inline-flex"><i data-lucide="send" class="w-4 h-4"></i></button>
+                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 transition inline-flex"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-300 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`;
         });
-        document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
-        document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
-        document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
     function toggleDarkMode() {
-        const html = document.documentElement;
-        if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.theme = 'light'; }
-        else { html.classList.add('dark'); localStorage.theme = 'dark'; }
+        const h = document.documentElement;
+        if (h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.theme = 'light'; }
+        else { h.classList.add('dark'); localStorage.theme = 'dark'; }
     }
 
     function enviarZap(id, nome, tel, valor) {
         const link = window.location.href.split('?')[0] + "?p=" + id;
-        const partes = mesAtual.split('-');
-        const nomeMes = new Date(partes[1], partes[0] - 1).toLocaleDateString('pt-br', { month: 'long', year: 'numeric' });
-        const msg = encodeURIComponent(`Olá, ${nome}! ✨\n\nReferente a *${nomeMes}*.\n💰 *Valor:* R$ ${valor.toFixed(2).replace('.', ',')}\n🔑 *PIX:* ${configGeral.chavePix}\n\nEnvie o comprovante aqui:\n${link}`);
+        const p = mesAtual.split('-');
+        const mesExtenso = new Date(p[1], p[0]-1).toLocaleDateString('pt-br', {month:'long', year:'numeric'});
+        const msg = encodeURIComponent(`Olá, ${nome}! ✨\n\nReferente a *${mesExtenso}*.\n💰 *Valor:* R$ ${valor.toFixed(2).replace('.', ',')}\n🔑 *PIX:* ${configGeral.chavePix}\n\nEnvie o comprovante aqui:\n${link}`);
         window.open(`https://wa.me/${tel}?text=${msg}`);
     }
 
-    function adicionarPessoa() { const nome = prompt("Nome:"); if(nome) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, comprovante: null }); }
-    function editar(id, campo, valor) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [campo]: valor }); }
+    function adicionarPessoa() { 
+        const n = prompt("Nome do participante:"); 
+        if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, comprovante: null }); 
+    }
+    function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
     function excluir(id) { if(confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function salvarConfig(c, v) { db.ref('configuracoes').update({ [c]: v }); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
+    
     function gerarOpcoesMes() {
         const s = document.getElementById('filtroMes');
-        const agora = new Date();
+        const a = new Date();
         for(let i = -2; i <= 4; i++) {
-            const d = new Date(agora.getFullYear(), agora.getMonth() + i, 1);
-            const key = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
-            const opt = document.createElement('option');
-            opt.value = key; opt.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'});
-            if(key === mesAtual) opt.selected = true;
-            s.appendChild(opt);
+            const d = new Date(a.getFullYear(), a.getMonth() + i, 1);
+            const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+            const o = document.createElement('option');
+            o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'});
+            if(k === mesAtual) o.selected = true;
+            s.appendChild(o);
         }
     }
-    function carregarPortalCliente() { db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => { const p = s.val(); if(p){ document.getElementById('cNome').innerText = "Olá, " + p.nome; document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2}); }}); }
-    function lerFoto(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('imgPreview').src = e.target.result; document.getElementById('imgPreview').classList.remove('hidden'); db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result }); alert("✅ Sucesso!"); }; r.readAsDataURL(input.files[0]); }}
-    function verFoto(img) { const v = window.open(""); v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`); }
+
+    function carregarPortalCliente() {
+        db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
+            const p = s.val();
+            if(p) {
+                document.getElementById('cNome').innerText = "Olá, " + p.nome;
+                document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2});
+            }
+        });
+    }
+
+    function lerFoto(i) {
+        if (i.files && i.files[0]) {
+            const r = new FileReader();
+            r.onload = e => {
+                document.getElementById('imgPreview').src = e.target.result;
+                document.getElementById('imgPreview').classList.remove('hidden');
+                db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
+            };
+            r.readAsDataURL(i.files[0]);
+        }
+    }
+
+    function verFoto(img) {
+        const v = window.open("");
+        v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`);
+    }
 
     iniciar();
 </script>
