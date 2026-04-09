@@ -4,104 +4,393 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pool Manager SaaS Pro</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { slate: { 850: '#1e293b', 950: '#020617' } } } } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { slate: { 850: '#1e293b', 950: '#020617' } }
+                }
+            }
+        }
     </script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         html.dark { background-color: #020617 !important; }
         html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
-        body { font-family: 'Inter', sans-serif; min-height: 100vh; transition: background 0.3s; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; min-height: 100vh; }
         .admin-only, .client-only { display: none; }
-        body.modo-admin .admin-only, body.modo-cliente .client-only { display: block; }
-        .editable-input { background: transparent; border: 1px solid transparent; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
+        body.modo-admin .admin-only { display: block; }
+        body.modo-cliente .client-only { display: block; }
+        .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
+        .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
+        .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
-        .dark .editable-input:focus { background: #0f172a !important; color: white !important; }
+        .dark .editable-input:focus { background: #0f172a; color: white !important; }
         #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
+        #modalImport.flex { display: flex; }
+        .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
+        .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-32">
-
-<div id="bulkActions" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-blue-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-8 z-50 transition-all scale-0 opacity-0 translate-y-20">
-    <span class="text-sm font-black uppercase tracking-tighter"><span id="selectedCount">0</span> SELECIONADOS</span>
-    <button onclick="bulkDelete()" class="hover:text-rose-300 font-bold flex items-center gap-2 text-xs uppercase"><i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i> EXCLUIR VÁRIOS</button>
-    <button onclick="clearSelection()"><i data-lucide="x" class="w-6 h-6 opacity-50"></i></button>
-</div>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8">
 
 <div id="modalImport" onclick="fecharModal()">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl mx-4 shadow-2xl" onclick="event.stopPropagation()">
-        <h3 class="text-xl font-black mb-4 dark:text-white uppercase italic">Importar CSV</h3>
-        <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="document.getElementById('nArq').innerText=this.files[0].name">
-        <label for="arquivoCSV" class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-10 block text-center cursor-pointer hover:border-blue-500 transition-colors">
-            <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 opacity-20"></i>
-            <p id="nArq" class="text-sm font-bold opacity-60 dark:text-slate-400">Selecionar arquivo .csv</p>
-        </label>
-        <div class="flex gap-3 mt-8">
-            <button onclick="fecharModal()" class="flex-1 py-3 text-slate-400 font-black uppercase text-xs">Sair</button>
-            <button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase text-xs">Importar</button>
+    <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl text-emerald-600">
+                <i data-lucide="file-spreadsheet"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-black dark:text-white">Importar Planilha CSV</h3>
+                <p class="text-xs text-slate-500">Colunas esperadas: Nome, Telefone</p>
+            </div>
+        </div>
+
+        <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
+            <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
+            <label for="arquivoCSV" class="cursor-pointer group">
+                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Clique para selecionar o CSV</p>
+            </label>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
+            <button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition">Processar Planilha</button>
         </div>
     </div>
 </div>
 
 <div class="max-w-6xl mx-auto space-y-6">
     <div class="admin-only space-y-6">
-        <header class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-6 shadow-sm">
-            <div>
-                <h1 class="text-2xl font-black uppercase italic dark:text-white">Pool Manager</h1>
-                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-1 bg-slate-100 dark:bg-slate-800 dark:text-white rounded-lg px-2 py-1 text-xs font-black italic border-none"></select>
+        <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
+            <div class="w-full lg:w-auto text-center lg:text-left">
+                <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic">Pool Manager SaaS</h1>
+                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
             </div>
+            
             <div class="flex flex-wrap justify-center items-center gap-2">
-                <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1">
-                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 text-[10px] font-black uppercase rounded-xl transition">Todos</button>
-                    <button onclick="setFiltroStatus('pagos')" id="btn-pagos" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-emerald-500 transition">Pagos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 transition">Falta Pagar</button>
-                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-rose-500 transition">Não Cobrados</button>
+                <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
+                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[11px] font-black uppercase transition">Todos</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pendentes</button>
+                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pagos</button>
+                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition text-rose-500">Não Cobrados</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl transition shadow-sm hover:scale-105"><i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-500"></i></button>
-                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition shadow-lg hover:scale-105 shadow-blue-500/20"><i data-lucide="plus" class="w-5 h-5"></i></button>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 transition"><i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-slate-200 transition" title="Importar CSV"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i></button>
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Participante"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
+                    <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
+                </button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-[10px] font-black opacity-40 uppercase italic">Previsão</p><div class="text-3xl font-black italic dark:text-white italic">R$ <span id="tGeral">0,00</span></div></div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20"><p class="opacity-70 text-[10px] font-black uppercase italic text-white">Pago</p><div class="text-3xl font-black italic text-white">R$ <span id="tPago">0,00</span></div></div>
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente</p><div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div></div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1 italic">Previsão Total</p>
+                <div class="text-3xl font-black dark:text-white italic text-slate-800">R$ <span id="tGeral">0,00</span></div>
+            </div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 italic text-white">Confirmado</p>
+                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">A receber</p>
+                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 shadow-md border border-slate-800">
-                <i data-lucide="key" class="text-blue-400"></i><div class="flex-1"><p class="text-[10px] font-black uppercase opacity-50 italic">Sua Chave PIX</p><input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white italic focus:ring-0" placeholder="Chave..."></div>
+            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 shadow-md">
+                <i data-lucide="key" class="text-blue-400"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black uppercase opacity-50 tracking-widest">Chave PIX Ativa</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white placeholder:text-slate-600" placeholder="Digite sua chave...">
+                </div>
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-sm">
-                <i data-lucide="dollar-sign" class="text-blue-600"></i><div class="flex-1"><p class="text-[10px] font-black text-slate-400 uppercase italic">Valor Padrão</p><input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white focus:ring-0" placeholder="0.00"></div>
+                <i data-lucide="dollar-sign" class="text-blue-600"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Valor Padrão (R$)</p>
+                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold dark:text-white" placeholder="0.00">
+                </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto"><table class="w-full text-left">
-                <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <tr><th class="px-6 py-5 w-10"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th class="px-2 py-5 cursor-pointer hover:text-blue-600" onclick="toggleOrdemAlfabetica()">Participante <i data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th><th class="px-6 py-5 text-center">Valor</th><th class="px-6 py-5 text-center">Status</th><th class="px-6 py-5 text-right">Ações</th></tr>
-                </thead>
-                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
-            </table></div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <tr>
+                            <th class="px-6 py-4 cursor-pointer hover:text-blue-600 transition" onclick="toggleOrdemAlfabetica()">Participante <i data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                            <th class="px-6 py-4 text-center">Valor</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="client-only max-w-md mx-auto py-10 px-4 text-center">
-        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 space-y-8">
-            <h2 class="text-4xl font-black italic dark:text-white tracking-tighter" id="cNome">Olá!</h2>
-            <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20"><p class="text-[10px] font-black uppercase opacity-70 italic mb-1">Valor a Pagar</p><h3 class="text-5xl font-black italic">R$ <span id="cValor">0,00</span></h3></div>
-            <div><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Chave PIX</p><p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border dark:border-slate-700 select-all italic">---</p></div>
+    <div class="client-only max-w-md mx-auto py-10">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 text-center space-y-6">
+            <h2 class="text-4xl font-black italic dark:text-white tracking-tight" id="cNome">Olá!</h2>
+            <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20">
+                <p class="text-[10px] font-black uppercase opacity-70 italic text-white">Valor a Pagar</p>
+                <h3 class="text-5xl font-black italic">R$ <span id="cValor">0,00</span></h3>
+            </div>
+            <p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white select-all break-all italic bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">---</p>
             <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
-            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-10 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all active:scale-95 group">
-                <i data-lucide="camera" class="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform"></i><span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Anexar Comprovante</span>
+            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all active:scale-95 group">
+                <i data-lucide="camera" class="w-8 h-8 text-blue-500 group-hover:scale-110 transition"></i>
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Anexar Comprovante</span>
             </label>
         </div>
     </div>
 </div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",
+        authDomain: "pool-e439a.firebaseapp.com",
+        databaseURL: "https://pool-e439a-default-rtdb.firebaseio.com",
+        projectId: "pool-e439a",
+        storageBucket: "pool-e439a.firebasestorage.app",
+        messagingSenderId: "94463318724",
+        appId: "1:94463318724:web:05208de1c8a9cbfd014791"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let mesAtual = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
+    let dadosLocais = [];
+    let filtroStatus = 'todos';
+    let ordemCrescente = true;
+    let idCliente = new URLSearchParams(window.location.search).get('p');
+    let configGeral = { chavePix: "", valorPadrao: 0 };
+
+    function iniciar() {
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        db.ref('configuracoes').on('value', s => {
+            configGeral = s.val() || { chavePix: "", valorPadrao: 0 };
+            document.getElementById('chavePix').value = configGeral.chavePix;
+            document.getElementById('valorPadrao').value = configGeral.valorPadrao;
+            if(idCliente) document.getElementById('cChavePixExibicao').innerText = configGeral.chavePix;
+        });
+
+        gerarOpcoesMes();
+        verificarResetMensal();
+        
+        if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
+        else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
+        lucide.createIcons();
+    }
+
+    // --- LOGICA DE RESET MENSAL (DIA 20) ---
+    async function verificarResetMensal() {
+        const hoje = new Date();
+        if (hoje.getDate() >= 20) {
+            const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
+            const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
+            const s = await db.ref(`cobrancas/${keyProx}`).once('value');
+            if (!s.exists()) {
+                const atual = await db.ref(`cobrancas/${mesAtual}`).once('value');
+                if (atual.exists()) {
+                    const lista = atual.val();
+                    const novaLista = {};
+                    Object.keys(lista).forEach(id => { 
+                        novaLista[id] = { ...lista[id], pago: false, msgEnviada: false, comprovante: null }; 
+                    });
+                    await db.ref(`cobrancas/${keyProx}`).set(novaLista);
+                }
+            }
+        }
+    }
+
+    // --- LOGICA ADMIN E TABELA ---
+    function carregarDadosAdmin() {
+        db.ref(`cobrancas/${mesAtual}`).on('value', s => {
+            const dados = s.val() || {};
+            dadosLocais = Object.keys(dados).map(id => ({ id, ...dados[id] }));
+            renderizarTabela();
+        });
+    }
+
+    function renderizarTabela() {
+        const corpo = document.getElementById('corpoTabela');
+        let filtrados = [...dadosLocais];
+        
+        if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
+        if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
+        if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
+
+        filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
+
+        corpo.innerHTML = "";
+        let t = 0, pg = 0, pd = 0;
+
+        filtrados.forEach(p => {
+            const val = parseFloat(p.valor) || 0;
+            t += val; if(p.pago) pg += val; else pd += val;
+            
+            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400 dark:text-slate-600';
+            const msgIcone = p.msgEnviada ? 'check-check' : 'send';
+            
+            corpo.innerHTML += `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
+                    <td class="px-6 py-4">
+                        <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block">
+                        <input type="text" value="${p.tel}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full">
+                    </td>
+                    <td class="px-6 py-4 text-center dark:text-white font-mono font-bold italic">
+                        R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-24 text-center dark:text-white">
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                            ${p.pago ? 'Pago' : 'Pendente'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-1">
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 inline-flex transition hover:scale-110"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition inline-flex">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+        
+        document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
+        lucide.createIcons();
+    }
+
+    // --- LOGICA DE IMPORTACAO CSV ---
+    function validarArquivo(input) {
+        const nome = input.files[0] ? input.files[0].name : "Clique para selecionar o CSV";
+        document.getElementById('nomeArquivo').innerText = nome;
+    }
+
+    function processarCSV() {
+        const fileInput = document.getElementById('arquivoCSV');
+        const file = fileInput.files[0];
+        if (!file) return alert("Selecione um arquivo CSV.");
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const conteudo = e.target.result;
+            const linhas = conteudo.split('\n');
+            const updates = {};
+            for (let i = 1; i < linhas.length; i++) {
+                if (linhas[i].trim() === "") continue;
+                let colunas = linhas[i].split(/[;,]/);
+                let nome = colunas[0] ? colunas[0].trim() : null;
+                let tel = colunas[1] ? colunas[1].trim() : "55";
+                if (nome) {
+                    const id = Date.now() + Math.floor(Math.random() * 9999) + i;
+                    updates[id] = { nome, tel, valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false, comprovante: null };
+                }
+            }
+            if (Object.keys(updates).length > 0) {
+                db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => {
+                    alert(`✅ ${Object.keys(updates).length} participantes importados!`);
+                    fecharModal();
+                    fileInput.value = "";
+                });
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    // --- FUNCOES UI E FIREBASE ---
+    function toggleDarkMode() {
+        const h = document.documentElement;
+        if (h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.theme = 'light'; }
+        else { h.classList.add('dark'); localStorage.theme = 'dark'; }
+    }
+
+    function setFiltroStatus(status) {
+        filtroStatus = status;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.add('opacity-40'));
+        document.getElementById(`btn-${status}`).classList.remove('opacity-40');
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${status}`).classList.add('active');
+        renderizarTabela();
+    }
+
+    function enviarZap(id, nome, tel, valor) {
+        db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true });
+        const link = window.location.href.split('?')[0] + "?p=" + id;
+        const p = mesAtual.split('-');
+        const nomeMes = new Date(p[1], p[0]-1).toLocaleDateString('pt-br', { month: 'long', year: 'numeric' });
+        const msg = encodeURIComponent(`Olá, ${nome}! Tudo bem?\n\nPassando para enviar sua cobranca referente a *${nomeMes}*.\n\n*Valor:* R$ ${valor.toFixed(2).replace('.', ',')}\n*PIX:* ${configGeral.chavePix}\n\nEnvie o comprovante aqui:\n${link}\n\nQualquer duvida, estou a disposicao!`);
+        window.open(`https://wa.me/${tel}?text=${msg}`);
+    }
+
+    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); document.getElementById('nomeArquivo').innerText = "Clique para selecionar o CSV"; }
+    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
+    function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
+    function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
+    function excluir(id) { if(confirm("Apagar participante?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
+    function salvarConfig(c, v) { db.ref('configuracoes').update({ [c]: v }); }
+    function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
+    function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
+    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false, comprovante: null }); }
+    
+    function gerarOpcoesMes() {
+        const s = document.getElementById('filtroMes');
+        const a = new Date();
+        for(let i = -2; i <= 4; i++) {
+            const d = new Date(a.getFullYear(), a.getMonth() + i, 1);
+            const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+            const o = document.createElement('option');
+            o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'});
+            if(k === mesAtual) o.selected = true;
+            s.appendChild(o);
+        }
+    }
+
+    function carregarPortalCliente() {
+        db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
+            const p = s.val();
+            if(p) {
+                document.getElementById('cNome').innerText = "Olá, " + p.nome;
+                document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2});
+            }
+        });
+    }
+
+    function lerFoto(i) {
+        if (i.files && i.files[0]) {
+            const r = new FileReader();
+            r.onload = e => {
+                db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
+                alert("✅ Comprovante enviado com sucesso!");
+            };
+            r.readAsDataURL(i.files[0]);
+        }
+    }
+
+    function verFoto(img) {
+        const v = window.open("");
+        v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`);
+    }
+
+    iniciar();
+</script>
+</body>
+</html>
