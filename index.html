@@ -58,18 +58,18 @@
         
         <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
             <div class="w-full lg:w-auto text-center lg:text-left">
-                <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase">Participantes</h1>
-                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
+                <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic">Participantes</h1>
+                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer italic"></select>
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-2">
                 <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
                     <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[11px] font-black uppercase transition">Todos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300">Pendentes</button>
-                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300">Pagos</button>
-                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 text-rose-500">Não Cobrados</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pendentes</button>
+                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pagos</button>
+                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition text-rose-500">Não Cobrados</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex transition"><i data-lucide="users" class="w-4 h-4"></i></button>
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex transition"><i data-lucide="users" class="w-4 h-4 text-blue-500"></i></button>
                 <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
                 <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400">
                     <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
@@ -78,15 +78,15 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center md:text-left">
                 <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1 italic">Previsão Total</p>
                 <div class="text-3xl font-black dark:text-white italic">R$ <span id="tGeral">0,00</span></div>
             </div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
-                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 italic text-white text-left">Confirmado</p>
-                <div class="text-3xl font-black italic text-left text-white">R$ <span id="tPago">0,00</span></div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20 text-center md:text-left">
+                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 italic text-white">Confirmado</p>
+                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm text-center md:text-left">
                 <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">A receber</p>
                 <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
             </div>
@@ -96,14 +96,14 @@
             <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4">
                 <i data-lucide="key" class="text-blue-400"></i>
                 <div class="flex-1">
-                    <p class="text-[10px] font-black uppercase opacity-50">Sua Chave PIX</p>
-                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white" placeholder="Sua chave...">
+                    <p class="text-[10px] font-black uppercase opacity-50">Chave PIX</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white italic" placeholder="Sua chave...">
                 </div>
             </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-sm">
                 <i data-lucide="dollar-sign" class="text-blue-600"></i>
                 <div class="flex-1">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">Valor Padrão</p>
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Valor Padrão</p>
                     <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold dark:text-white" placeholder="0.00">
                 </div>
             </div>
@@ -128,14 +128,14 @@
 
     <div class="client-only max-w-md mx-auto py-10">
         <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 text-center space-y-6">
-            <h2 class="text-4xl font-black italic dark:text-white" id="cNome">Olá!</h2>
-            <div class="bg-blue-600 p-8 rounded-[2rem] text-white">
+            <h2 class="text-4xl font-black italic dark:text-white tracking-tight" id="cNome">Olá!</h2>
+            <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20">
                 <p class="text-[10px] font-black uppercase opacity-70 italic text-white">Valor a Pagar</p>
                 <h3 class="text-5xl font-black italic">R$ <span id="cValor">0,00</span></h3>
             </div>
-            <p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white select-all break-all italic bg-slate-50 dark:bg-slate-800 p-4 rounded-xl">---</p>
+            <p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white select-all break-all italic bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">---</p>
             <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
-            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all">
+            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all active:scale-95">
                 <i data-lucide="camera" class="w-8 h-8 text-blue-500"></i>
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Anexar Comprovante</span>
             </label>
@@ -207,7 +207,7 @@
             const val = parseFloat(p.valor) || 0;
             t += val; if(p.pago) pg += val; else pd += val;
             
-            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-300 dark:text-slate-700';
+            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400 dark:text-slate-600';
             const msgIcone = p.msgEnviada ? 'check-check' : 'send';
             
             corpo.innerHTML += `
@@ -225,9 +225,12 @@
                         </button>
                     </td>
                     <td class="px-6 py-4 text-right space-x-1">
-                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
-                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 inline-flex"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
-                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-300 dark:text-slate-800 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 inline-flex transition"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
+                        
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition inline-flex" title="Excluir">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
                     </td>
                 </tr>`;
         });
@@ -247,28 +250,28 @@
         renderizarTabela();
     }
 
-    function enviarZap(id, nome, tel, valor) {
-        db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true });
-        const link = window.location.href.split('?')[0] + "?p=" + id;
-        const msg = encodeURIComponent(`Olá, ${nome}! ✨\n\nO valor deste mês é R$ ${valor.toFixed(2).replace('.', ',')}.\n\n🔑 PIX: ${configGeral.chavePix}\n\nEnvie o comprovante aqui: ${link}`);
-        window.open(`https://wa.me/${tel}?text=${msg}`);
-    }
-
     function toggleDarkMode() {
         const h = document.documentElement;
         if (h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.theme = 'light'; }
         else { h.classList.add('dark'); localStorage.theme = 'dark'; }
     }
 
-    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
-    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
+    function enviarZap(id, nome, tel, valor) {
+        db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true });
+        const link = window.location.href.split('?')[0] + "?p=" + id;
+        const msg = encodeURIComponent(`Olá, ${nome}! ✨\n\nO valor deste mês é R$ ${valor.toFixed(2).replace('.', ',')}.\n\nPIX: ${configGeral.chavePix}\n\nEnvie o comprovante aqui:\n${link}`);
+        window.open(`https://wa.me/${tel}?text=${msg}`);
+    }
+
     function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
-    function excluir(id) { if(confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
+    function excluir(id) { if(confirm("Apagar participante?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function salvarConfig(c, v) { db.ref('configuracoes').update({ [c]: v }); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
     function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false }); }
+    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
+    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
     
     function gerarOpcoesMes() {
         const s = document.getElementById('filtroMes');
@@ -298,7 +301,7 @@
             const r = new FileReader();
             r.onload = e => {
                 db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
-                alert("Enviado!");
+                alert("Enviado com sucesso!");
             };
             r.readAsDataURL(i.files[0]);
         }
@@ -314,6 +317,11 @@
             updates[id] = { nome, tel: tel || "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false };
         });
         db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => fecharModal());
+    }
+
+    function verFoto(img) {
+        const v = window.open("");
+        v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`);
     }
 
     iniciar();
