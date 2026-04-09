@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pool Manager Pro</title>
+    <title>Pool Manager SaaS Pro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -22,11 +22,11 @@
         html.dark { background-color: #020617 !important; }
         html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
         body { font-family: 'Inter', sans-serif; min-height: 100vh; transition: background 0.3s; }
-        
+        .admin-only, .client-only { display: none; }
+        body.modo-admin .admin-only, body.modo-cliente .client-only { display: block; }
         .editable-input { background: transparent; border: 1px solid transparent; padding: 4px 8px; border-radius: 6px; transition: 0.2s; }
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
         .dark .editable-input:focus { background: #0f172a !important; color: white !important; }
-
         #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
         .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
     </style>
@@ -34,72 +34,85 @@
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8 pb-32">
 
     <div id="bulkActions" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-blue-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-8 z-50 transition-all scale-0 opacity-0 translate-y-20">
-        <span class="text-sm font-black uppercase tracking-tighter"><span id="selectedCount">0</span> Selecionados</span>
-        <button onclick="bulkDelete()" class="hover:text-rose-300 font-bold flex items-center gap-2 text-xs uppercase tracking-widest">
-            <i data-lucide="trash-2" class="w-5 h-5 text-rose-400"></i> Excluir Selecionados
-        </button>
-        <button onclick="clearSelection()" class="opacity-50 hover:opacity-100"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <span class="text-sm font-black uppercase"><span id="selectedCount">0</span> Selecionados</span>
+        <button onclick="bulkDelete()" class="hover:text-rose-300 font-bold flex items-center gap-2 text-xs uppercase"><i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i> Excluir Selecionados</button>
+        <button onclick="clearSelection()"><i data-lucide="x" class="w-5 h-5 opacity-50"></i></button>
     </div>
 
     <div id="modalImport" onclick="fecharModal()">
         <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl mx-4 shadow-2xl" onclick="event.stopPropagation()">
-            <h3 class="text-xl font-black mb-4 dark:text-white uppercase italic">Importar Planilha CSV</h3>
+            <h3 class="text-xl font-black mb-4 dark:text-white uppercase italic">Importar CSV</h3>
             <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="document.getElementById('nArq').innerText=this.files[0].name">
-            <label for="arquivoCSV" class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-10 block text-center cursor-pointer hover:border-blue-500">
-                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 opacity-20 text-blue-500"></i>
-                <p id="nArq" class="text-sm font-bold opacity-60">Selecione o arquivo CSV</p>
-            </label>
-            <div class="flex gap-3 mt-8">
-                <button onclick="fecharModal()" class="flex-1 py-3 text-slate-400 font-black uppercase text-xs">Sair</button>
-                <button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase text-xs">Importar</button>
-            </div>
+            <label for="arquivoCSV" class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-10 block text-center cursor-pointer hover:border-blue-500"><p id="nArq" class="text-sm font-bold opacity-60">Selecionar arquivo CSV</p></label>
+            <div class="flex gap-3 mt-8"><button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold">Sair</button><button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs">Importar</button></div>
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-6">
-        
+    <div class="max-w-6xl mx-auto admin-only space-y-6">
         <header class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-6 shadow-sm">
-            <div>
-                <h1 class="text-2xl font-black uppercase italic dark:text-white">Pool Manager</h1>
-                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-1 bg-slate-100 dark:bg-slate-800 dark:text-white rounded-lg px-2 py-1 text-xs font-black italic border-none"></select>
-            </div>
-            
-            <div class="flex flex-wrap justify-center items-center gap-2">
+            <div><h1 class="text-2xl font-black uppercase italic dark:text-white">Pool Manager</h1><select id="filtroMes" onchange="mudarMes(this.value)" class="mt-1 bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1 text-xs font-black italic border-none"></select></div>
+            <div class="flex flex-wrap items-center gap-2">
                 <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl flex gap-1">
-                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 text-[10px] font-black uppercase rounded-xl transition">Todos</button>
-                    <button onclick="setFiltroStatus('pagos')" id="btn-pagos" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-emerald-500 transition">Pagos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 transition">Faltam Pagar</button>
-                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-xl opacity-40 text-rose-500 transition">Não Cobrados</button>
+                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 text-[10px] font-black uppercase rounded-lg transition">Todos</button>
+                    <button onclick="setFiltroStatus('pagos')" id="btn-pagos" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-lg opacity-40 text-emerald-500 transition">Pagos</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-lg opacity-40 transition">Faltam Pagar</button>
+                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 text-[10px] font-black uppercase rounded-lg opacity-40 text-rose-500 transition">Não Cobrados</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl transition" title="Importar"><i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-500"></i></button>
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl transition"><i data-lucide="file-spreadsheet" class="w-5 h-5 text-emerald-500"></i></button>
                 <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition"><i data-lucide="plus" class="w-5 h-5"></i></button>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 transition"><i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 transition"><i data-lucide="moon" class="dark:hidden text-slate-400"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-[10px] font-black opacity-40 uppercase italic">Previsão</p><div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div></div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20"><p class="opacity-70 text-[10px] font-black uppercase italic">Recebido</p><div class="text-3xl font-black italic text-white">R$ <span id="tPago">0,00</span></div></div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20"><p class="opacity-70 text-[10px] font-black uppercase italic text-white">Recebido</p><div class="text-3xl font-black italic text-white">R$ <span id="tPago">0,00</span></div></div>
             <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200 dark:border-slate-800 shadow-sm"><p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente</p><div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div></div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <tr>
-                            <th class="px-6 py-5 w-10"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
-                            <th class="px-2 py-5 cursor-pointer hover:text-blue-500 transition flex items-center gap-1" onclick="toggleOrdemAlfabetica()">
-                                Participante <i data-lucide="chevrons-up-down" class="w-3 h-3"></i>
-                            </th>
-                            <th class="px-6 py-5 text-center">Valor</th>
-                            <th class="px-6 py-5 text-center">Status</th>
-                            <th class="px-6 py-5 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
-                </table>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 shadow-md border border-slate-800">
+                <i data-lucide="key" class="text-blue-400"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black uppercase opacity-50 italic">Sua Chave PIX</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white italic focus:ring-0" placeholder="Definir chave...">
+                </div>
             </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-sm">
+                <i data-lucide="dollar-sign" class="text-blue-600"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black text-slate-400 uppercase italic">Valor Padrão</p>
+                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white focus:ring-0" placeholder="0.00">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto"><table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <tr><th class="px-6 py-5 w-10"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th class="px-2 py-5 cursor-pointer flex items-center gap-2" onclick="toggleOrdemAlfabetica()">Participante <i data-lucide="chevrons-up-down" class="w-3 h-3"></i></th><th class="px-6 py-5 text-center">Valor</th><th class="px-6 py-5 text-center">Status</th><th class="px-6 py-5 text-right">Ações</th></tr>
+                </thead>
+                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm"></tbody>
+            </table></div>
+        </div>
+    </div>
+
+    <div class="client-only max-w-md mx-auto py-10 px-4">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 text-center space-y-8">
+            <h2 class="text-4xl font-black italic dark:text-white tracking-tighter" id="cNome">Olá!</h2>
+            <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20">
+                <p class="text-[10px] font-black uppercase opacity-70 italic mb-1">Valor a Pagar</p>
+                <h3 class="text-5xl font-black italic tracking-tighter">R$ <span id="cValor">0,00</span></h3>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 italic">Chave PIX</p>
+                <p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white select-all italic bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">---</p>
+            </div>
+            <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
+            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-10 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all active:scale-95 group">
+                <i data-lucide="camera" class="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform"></i>
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Anexar Comprovante</span>
+            </label>
         </div>
     </div>
 
@@ -122,8 +135,14 @@
 
         function iniciar() {
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-            db.ref('configuracoes').on('value', s => { configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; });
-            gerarOpcoesMes(); carregarDadosAdmin(); lucide.createIcons();
+            db.ref('configuracoes').on('value', s => { 
+                configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; 
+                if(idCliente) document.getElementById('cChavePixExibicao').innerText = configGeral.chavePix;
+            });
+            gerarOpcoesMes(); 
+            if(idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
+            else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
+            lucide.createIcons();
         }
 
         function carregarDadosAdmin() {
@@ -140,23 +159,20 @@
             if (filtroStatus === 'pagos') f = f.filter(p => p.pago);
             if (filtroStatus === 'pendente') f = f.filter(p => !p.pago);
             if (filtroStatus === 'nao_enviado') f = f.filter(p => !p.msgEnviada);
-            
-            // Lógica de Ordenação Alfabética
-            f.sort((a, b) => {
-                return ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome);
-            });
+            f.sort((a, b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
             c.innerHTML = ""; let t = 0, pg = 0, pd = 0;
             f.forEach(p => {
                 const v = parseFloat(p.valor) || 0; t += v; if (p.pago) pg += v; else pd += v;
                 const sel = selecionados.has(p.id);
+                const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-300 dark:text-slate-700';
                 c.innerHTML += `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition ${sel ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
                         <td class="px-6 py-5"><input type="checkbox" ${sel ? 'checked' : ''} onclick="toggleSelect('${p.id}')"></td>
                         <td class="px-2 py-5">
                             <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block text-sm">
                             <div class="flex items-center gap-1 mt-1">
-                                <span class="text-[9px] opacity-30 font-bold uppercase tracking-widest">Zap:</span>
+                                <span class="text-[9px] opacity-30 font-bold uppercase">Zap:</span>
                                 <input type="text" value="${p.tel || '55'}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-blue-500 font-bold w-full">
                             </div>
                         </td>
@@ -169,8 +185,8 @@
                             </button>
                         </td>
                         <td class="px-6 py-5 text-right space-x-1">
-                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${v})" class="p-2 ${p.msgEnviada ? 'text-blue-500' : 'opacity-20'} transition hover:scale-110"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-5 h-5"></i></button>
-                            <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${v})" class="p-2 ${msgEstilo} transition hover:scale-110"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-5 h-5"></i></button>
+                            <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-600 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                         </td>
                     </tr>`;
             });
@@ -180,7 +196,6 @@
             lucide.createIcons();
         }
 
-        // AÇÕES EM MASSA
         function toggleSelect(id) { if (selecionados.has(id)) selecionados.delete(id); else selecionados.add(id); renderBarra(); renderizarTabela(); }
         function toggleSelectAll(el) { if (el.checked) dadosLocais.forEach(p => selecionados.add(p.id)); else selecionados.clear(); renderBarra(); renderizarTabela(); }
         function clearSelection() { selecionados.clear(); document.getElementById('selectAll').checked = false; renderBarra(); renderizarTabela(); }
@@ -208,15 +223,41 @@
                 const l = e.target.result.split('\n'); const u = {};
                 for (let i = 1; i < l.length; i++) {
                     let c = l[i].split(/[;,]/);
-                    if (c[0]) { const id = Date.now() + i; u[id] = { nome: c[0].trim(), tel: c[1] ? c[1].trim() : "55", valor: 0, pago: false, msgEnviada: false }; }
+                    if (c[0]) { const id = Date.now() + i; u[id] = { nome: c[0].trim(), tel: c[1] ? c[1].trim() : "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false }; }
                 }
                 db.ref(`cobrancas/${mesAtual}`).update(u).then(() => fecharModal());
             };
             r.readAsText(f, 'UTF-8');
         }
 
-        function adicionarPessoa() { const n = prompt("Nome:"); if (n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: 0, pago: false, msgEnviada: false }); }
-        function enviarZap(id, n, t, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); window.open(`https://wa.me/${t}?text=Ola%20${n},%20o%20valor%20e%20R$%20${v}`); }
+        function adicionarPessoa() { const n = prompt("Nome:"); if (n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false }); }
+        
+        function enviarZap(id, n, t, v) {
+            db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true });
+            const link = window.location.href.split('?')[0] + "?p=" + id;
+            const msg = encodeURIComponent(`Olá, *${n}*! ✨\n\nPassando para enviar a cobrança do mês.\n\n*Valor:* R$ ${v.toFixed(2).replace('.', ',')}\n*PIX:* ${configGeral.chavePix}\n\nPor favor, anexe o comprovante no link abaixo:\n${link}`);
+            window.open(`https://wa.me/${t}?text=${msg}`);
+        }
+
+        function carregarPortalCliente() {
+            db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
+                const p = s.val(); if(p) { 
+                    document.getElementById('cNome').innerText = "Olá, " + p.nome; 
+                    document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2}); 
+                }
+            });
+        }
+
+        function lerFoto(i) {
+            if (i.files && i.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
+                    alert("✅ Comprovante enviado com sucesso!");
+                };
+                r.readAsDataURL(i.files[0]);
+            }
+        }
 
         function gerarOpcoesMes() {
             const s = document.getElementById('filtroMes'); const a = new Date();
