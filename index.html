@@ -2,95 +2,103 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cobrança Pro - WhatsApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cobrança Pro Mobile</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root { --primary: #2563eb; --success: #22c55e; --danger: #ef4444; --whatsapp: #25d366; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
         
-        .pix-container { display: flex; gap: 20px; background: #eff6ff; padding: 20px; border-radius: 10px; align-items: center; margin-bottom: 25px; border: 1px solid #dbeafe; }
-        #qrcode { background: white; padding: 10px; border-radius: 5px; }
-
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .stat-card { padding: 15px; border-radius: 8px; color: white; text-align: center; font-weight: bold; }
-
-        .controls { background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid #e2e8f0; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { text-align: left; padding: 12px; background: #f1f5f9; color: #64748b; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+        .header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        
+        .pix-container { display: flex; flex-wrap: wrap; gap: 15px; background: #eff6ff; padding: 15px; border-radius: 10px; align-items: center; border: 1px solid #dbeafe; }
+        #qrcode { background: white; padding: 5px; border-radius: 5px; }
 
-        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 13px; }
-        .btn-add { background: var(--primary); color: white; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .stat-card { padding: 10px; border-radius: 8px; color: white; text-align: center; font-weight: bold; font-size: 14px; }
+
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { text-align: left; padding: 10px; background: #f1f5f9; font-size: 12px; }
+        td { padding: 10px; border-bottom: 1px solid #f1f5f9; }
+
+        .btn { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-add { background: var(--primary); color: white; width: 100%; }
         .btn-pago { background: var(--success); color: white; }
         .btn-pendente { background: #94a3b8; color: white; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; text-decoration: none; }
         
-        input { padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; width: 100%; box-sizing: border-box; }
+        input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; width: 100%; }
         
-        /* Modal Style (Portal do Pagador) */
-        #modalPortal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:30px; border-radius:12px; width:90%; max-width:400px; text-align:center; }
-        .preview-img { width:100%; max-height:200px; object-fit:contain; margin-top:10px; border:1px solid #ddd; }
+        /* Modal Portal */
+        #modalPortal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; justify-content:center; align-items:center; padding: 20px; }
+        .modal-content { background:white; padding:20px; border-radius:12px; width:100%; max-width:400px; text-align:center; }
+        .preview-img { width:100%; max-height:250px; object-fit:contain; margin-top:10px; border: 2px dashed #cbd5e1; border-radius: 8px; }
+
+        @media (max-width: 600px) {
+            h2 { font-size: 18px; }
+            .pix-container { justify-content: center; text-align: center; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container" id="adminView">
+<div class="container" id="mainApp">
     <div class="header">
-        <h2>📊 Gestão & Cobrança Automática</h2>
+        <h2>📊 Gestão de Cobrança</h2>
         <button class="btn btn-add" onclick="adicionarPessoa()">+ Adicionar Pessoa</button>
     </div>
 
     <div class="pix-container">
         <div id="qrcode"></div>
-        <div>
-            <strong>Minha Chave PIX:</strong><br>
-            <input type="text" id="chavePix" value="seu-email@pix.com" onchange="atualizarTudo()" style="max-width: 300px;">
-            <p style="font-size: 0.8em; color: #64748b; margin-top: 5px;">O QR Code acima é gerado com esta chave.</p>
+        <div style="flex: 1; min-width: 200px;">
+            <strong>Chave PIX:</strong>
+            <input type="text" id="chavePix" value="seu-email@pix.com" onchange="atualizarTudo()">
         </div>
     </div>
 
-    <div class="controls">
+    <div style="margin: 15px 0;">
         <strong>Mês:</strong>
         <select id="filtroMes" onchange="trocarMes()"></select>
     </div>
 
     <div class="stats">
-        <div class="stat-card" style="background: var(--primary);">Total: R$ <span id="totalMes">0</span></div>
-        <div class="stat-card" style="background: var(--success);">Pago: R$ <span id="totalPago">0</span></div>
-        <div class="stat-card" style="background: var(--danger);">Pendente: R$ <span id="totalPendente">0</span></div>
+        <div class="stat-card" style="background: var(--primary);">Total<br>R$ <span id="totalMes">0</span></div>
+        <div class="stat-card" style="background: var(--success);">Pago<br>R$ <span id="totalPago">0</span></div>
+        <div class="stat-card" style="background: var(--danger);">Pendente<br>R$ <span id="totalPendente">0</span></div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>WhatsApp</th>
-                <th>Valor</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="tabelaCorpo"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>WhatsApp</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCorpo"></tbody>
+        </table>
+    </div>
 </div>
 
 <div id="modalPortal">
     <div class="modal-content">
-        <h3 id="portalNome">Olá!</h3>
-        <p>Confirme seu pagamento de <strong>R$ <span id="portalValor"></span></strong></p>
+        <h3 id="portalNome">Portal do Pagador</h3>
+        <p>Valor a pagar: <strong>R$ <span id="portalValor"></span></strong></p>
         <hr>
-        <p style="font-size: 13px;">Tire uma foto do comprovante:</p>
+        <p>Selecione ou tire foto do comprovante:</p>
         <input type="file" id="inputComprovante" accept="image/*" onchange="previewImagem(this)">
         <img id="preview" class="preview-img" style="display:none">
         <br><br>
-        <button class="btn btn-pago" style="width:100%" onclick="salvarComprovante()">Enviar Comprovante</button>
-        <button class="btn" style="margin-top:10px" onclick="fecharPortal()">Cancelar</button>
+        <button class="btn btn-pago" style="width:100%; padding:15px;" onclick="salvarComprovante()">✅ ENVIAR AGORA</button>
+        <button class="btn" style="margin-top:10px; color: grey;" onclick="fecharPortal()">Cancelar</button>
     </div>
 </div>
 
@@ -98,7 +106,7 @@
     let db = JSON.parse(localStorage.getItem('cobranca_v4')) || {};
     let baseUsuarios = JSON.parse(localStorage.getItem('base_v4')) || [];
     let mesVisivel = getMesAnoAtual();
-    let idUsuarioAtualPortal = null;
+    let idUsuarioPortal = null;
 
     function getMesAnoAtual() {
         const d = new Date();
@@ -106,23 +114,18 @@
     }
 
     function inicializar() {
-        // Checa se o usuário caiu aqui via link de cobrança
         const urlParams = new URLSearchParams(window.location.search);
-        const userPortal = urlParams.get('p');
-        if(userPortal) {
-            abrirPortal(userPortal);
-        }
+        const pId = urlParams.get('p');
+        if(pId) abrirPortal(pId);
 
         verificarViradaDeMes();
         renderizarFiltro();
         atualizarTudo();
     }
 
-    // --- FUNÇÕES DO PORTAL ---
     function abrirPortal(id) {
-        idUsuarioAtualPortal = id;
-        const lista = db[mesVisivel] || [];
-        const p = lista.find(x => x.id == id);
+        idUsuarioPortal = id;
+        const p = (db[mesVisivel] || []).find(x => x.id == id);
         if(p) {
             document.getElementById('portalNome').innerText = "Olá, " + p.nome;
             document.getElementById('portalValor').innerText = p.valor.toFixed(2);
@@ -132,92 +135,46 @@
 
     function fecharPortal() {
         document.getElementById('modalPortal').style.display = 'none';
-        window.history.replaceState({}, document.title, window.location.pathname); // Limpa URL
+        window.history.replaceState({}, '', window.location.pathname);
     }
 
     function previewImagem(input) {
-        const preview = document.getElementById('preview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            }
-            reader.readAsDataURL(input.files[0]);
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById('preview');
+            img.src = e.target.result;
+            img.style.display = 'block';
         }
+        if(input.files[0]) reader.readAsDataURL(input.files[0]);
     }
 
     function salvarComprovante() {
-        const imgData = document.getElementById('preview').src;
-        if(!imgData || imgData.includes('display:none')) return alert("Selecione a foto do comprovante!");
+        const img = document.getElementById('preview').src;
+        if(!img || img.includes('display:none')) return alert("Anexe a foto do comprovante primeiro!");
 
-        const p = db[mesVisivel].find(x => x.id == idUsuarioAtualPortal);
+        const p = db[mesVisivel].find(x => x.id == idUsuarioPortal);
         if(p) {
             p.pago = true;
-            p.comprovante = imgData; // Salva a imagem em base64
+            p.comprovante = img;
             salvar();
-            alert("Sucesso! O administrador foi notificado.");
+            alert("Comprovante enviado com sucesso!");
             fecharPortal();
             atualizarTudo();
         }
     }
 
-    function verComprovante(img) {
-        const win = window.open("");
-        win.document.write(`<img src="${img}" style="max-width:100%">`);
-    }
-
-    // --- FUNÇÕES ORIGINAIS ADAPTADAS ---
-
     function enviarCobranca(id, nome, tel, valor) {
         const chave = document.getElementById('chavePix').value;
-        // Gera link que aponta para esta mesma página com o parâmetro P (Portal)
-        const linkPortal = `${window.location.href.split('?')[0]}?p=${id}`;
-        
-        const msg = window.encodeURIComponent(`Olá ${nome}! Passando para lembrar da mensalidade de ${mesVisivel}.\n\nValor: R$ ${valor.toFixed(2)}\nChave PIX: ${chave}\n\n👉 Envie o comprovante por aqui: ${linkPortal}`);
-        window.open(`https://wa.me/${tel}?text=${msg}`, '_blank');
-    }
-
-    function renderizarTabela() {
-        const corpo = document.getElementById('tabelaCorpo');
-        corpo.innerHTML = "";
-        const lista = db[mesVisivel] || [];
-        
-        lista.forEach(p => {
-            corpo.innerHTML += `
-                <tr>
-                    <td><input type="text" value="${p.nome}" onchange="editar(${p.id}, 'nome', this.value)"></td>
-                    <td><input type="text" value="${p.tel}" onchange="editar(${p.id}, 'tel', this.value)"></td>
-                    <td><input type="number" value="${p.valor}" onchange="editar(${p.id}, 'valor', this.value)"></td>
-                    <td>
-                        <button class="btn ${p.pago ? 'btn-pago' : 'btn-pendente'}" onclick="alternarStatus(${p.id})">
-                            ${p.pago ? '✅ Pago' : '⏳ Pendente'}
-                        </button>
-                    </td>
-                    <td style="display: flex; gap: 5px;">
-                        <button class="btn btn-whatsapp" onclick="enviarCobranca(${p.id}, '${p.nome}', '${p.tel}', ${p.valor})">📲 Cobrar</button>
-                        ${p.comprovante ? `<button class="btn" title="Ver Comprovante" onclick="verComprovante('${p.comprovante}')">👁️</button>` : ''}
-                        <button class="btn" onclick="excluir(${p.id})">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    // (As demais funções de cálculo e virada de mês permanecem iguais à sua lógica)
-    function verificarViradaDeMes() {
-        const hoje = new Date();
-        const mesAnoHoje = getMesAnoAtual();
-        if (hoje.getDate() >= 20 && !db[mesAnoHoje]) {
-            db[mesAnoHoje] = baseUsuarios.map(u => ({ ...u, pago: false, comprovante: null }));
-            salvar();
-        }
-        if (!db[mesAnoHoje]) db[mesAnoHoje] = [];
+        // ATENÇÃO: Se rodar localmente, o link no WhatsApp não será azul (clicável)
+        // O WhatsApp exige que comece com http/https para virar link.
+        const link = `${window.location.href.split('?')[0]}?p=${id}`;
+        const texto = `Olá ${nome}! Segue cobrança de ${mesVisivel}:\n\nValor: R$ ${valor.toFixed(2)}\nPIX: ${chave}\n\nConfirme o pagamento aqui:\n${link}`;
+        window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, '_blank');
     }
 
     function adicionarPessoa() {
         const id = Date.now();
-        const nova = { id, nome: "Novo", tel: "5511999999999", valor: 50.00, pago: false, comprovante: null };
+        const nova = { id, nome: "Novo", tel: "55", valor: 0, pago: false, comprovante: null };
         baseUsuarios.push(nova);
         if (!db[mesVisivel]) db[mesVisivel] = [];
         db[mesVisivel].push({...nova});
@@ -238,12 +195,11 @@
         const p = db[mesVisivel].find(x => x.id === id);
         if(p) { p.pago = !p.pago; if(!p.pago) p.comprovante = null; }
         salvar();
-        renderizarTabela();
-        calcularTotais();
+        atualizarTudo();
     }
 
     function excluir(id) {
-        if(confirm("Remover permanentemente?")) {
+        if(confirm("Excluir?")) {
             db[mesVisivel] = db[mesVisivel].filter(x => x.id !== id);
             baseUsuarios = baseUsuarios.filter(x => x.id !== id);
             salvar();
@@ -251,24 +207,36 @@
         }
     }
 
-    function salvar() {
-        localStorage.setItem('cobranca_v4', JSON.stringify(db));
-        localStorage.setItem('base_v4', JSON.stringify(baseUsuarios));
-    }
-
-    function atualizarTudo() {
-        renderizarTabela();
-        calcularTotais();
-        gerarQR();
+    function renderizarTabela() {
+        const corpo = document.getElementById('tabelaCorpo');
+        corpo.innerHTML = "";
+        (db[mesVisivel] || []).forEach(p => {
+            corpo.innerHTML += `
+                <tr>
+                    <td><input type="text" value="${p.nome}" onchange="editar(${p.id}, 'nome', this.value)"></td>
+                    <td><input type="text" value="${p.tel}" onchange="editar(${p.id}, 'tel', this.value)"></td>
+                    <td><input type="number" value="${p.valor}" onchange="editar(${p.id}, 'valor', this.value)"></td>
+                    <td>
+                        <button class="btn ${p.pago ? 'btn-pago' : 'btn-pendente'}" onclick="alternarStatus(${p.id})">
+                            ${p.pago ? 'Pago' : 'Pendente'}
+                        </button>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn btn-whatsapp" onclick="enviarCobranca(${p.id}, '${p.nome}', '${p.tel}', ${p.valor})">📲</button>
+                            ${p.comprovante ? `<button class="btn" onclick="window.open().document.write('<img src=\\'${p.comprovante}\\'>')">👁️</button>` : ''}
+                            <button class="btn" style="background:#fee2e2" onclick="excluir(${p.id})">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
     }
 
     function calcularTotais() {
         const lista = db[mesVisivel] || [];
         let t = 0, pg = 0, pd = 0;
-        lista.forEach(p => {
-            t += p.valor;
-            if(p.pago) pg += p.valor; else pd += p.valor;
-        });
+        lista.forEach(p => { t += p.valor; if(p.pago) pg += p.valor; else pd += p.valor; });
         document.getElementById('totalMes').innerText = t.toFixed(2);
         document.getElementById('totalPago').innerText = pg.toFixed(2);
         document.getElementById('totalPendente').innerText = pd.toFixed(2);
@@ -276,22 +244,26 @@
 
     function renderizarFiltro() {
         const sel = document.getElementById('filtroMes');
-        sel.innerHTML = "";
         const meses = Object.keys(db).length ? Object.keys(db) : [getMesAnoAtual()];
-        meses.sort().reverse().forEach(m => {
-            sel.innerHTML += `<option value="${m}" ${m === mesVisivel ? 'selected' : ''}>${m}</option>`;
-        });
+        sel.innerHTML = meses.sort().reverse().map(m => `<option value="${m}" ${m === mesVisivel ? 'selected' : ''}>${m}</option>`).join('');
     }
 
-    function trocarMes() {
-        mesVisivel = document.getElementById('filtroMes').value;
-        atualizarTudo();
-    }
-
-    function gerarQR() {
+    function trocarMes() { mesVisivel = document.getElementById('filtroMes').value; atualizarTudo(); }
+    function salvar() { localStorage.setItem('cobranca_v4', JSON.stringify(db)); localStorage.setItem('base_v4', JSON.stringify(baseUsuarios)); }
+    function atualizarTudo() { renderizarTabela(); calcularTotais(); gerarQR(); }
+    function gerarQR() { 
         const qrDiv = document.getElementById("qrcode");
         qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: document.getElementById('chavePix').value, width: 80, height: 80 });
+        new QRCode(qrDiv, { text: document.getElementById('chavePix').value, width: 70, height: 70 });
+    }
+    function verificarViradaDeMes() {
+        const hoje = new Date();
+        const mesAnoHoje = getMesAnoAtual();
+        if (hoje.getDate() >= 20 && !db[mesAnoHoje]) {
+            db[mesAnoHoje] = baseUsuarios.map(u => ({ ...u, pago: false, comprovante: null }));
+            salvar();
+        }
+        if (!db[mesAnoHoje]) db[mesAnoHoje] = [];
     }
 
     inicializar();
