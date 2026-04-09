@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="transition-colors duration-300">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pool Manager Pro - Dashboard</title>
+    <title>Pool Manager SaaS</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -22,138 +22,136 @@
     </script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        html.dark, html.dark body { background-color: #020617 !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+        
         .admin-only, .client-only { display: none; }
         body.modo-admin .admin-only { display: block; }
         body.modo-cliente .client-only { display: block; }
-        
-        .editable-input { 
-            background: transparent; border: 1px solid transparent; transition: all 0.2s; 
-            padding: 2px 5px; border-radius: 4px;
+
+        /* Estilo de Inputs Editáveis */
+        .editable-input {
+            background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s;
         }
-        .dark .editable-input:hover { background: #1e293b; border-color: #334155; }
-        .editable-input:hover { background: #f1f5f9; border-color: #cbd5e1; }
-        .editable-input:focus { background: white; border-color: #3b82f6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
+        .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
+        .editable-input:focus { background: white; border-color: #3b82f6; outline: none; }
         .dark .editable-input:focus { background: #0f172a; color: white; }
 
-        #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+        /* Modal Importação */
+        #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
         #modalImport.flex { display: flex; }
-        
-        /* Ajuste de Contraste dos Botões de Filtro */
-        .filter-btn.active { background-color: white; color: #1e293b; opacity: 1; font-weight: 800; }
-        .dark .filter-btn.active { background-color: #3b82f6; color: white; }
-        .dark .filter-btn:not(.active) { color: #94a3b8; }
 
-        /* Estilo para o Select de Meses no Dark Mode */
-        .dark select option { background-color: #0f172a; color: white; }
+        /* Filtros Ativos */
+        .filter-btn.active { background-color: white; color: #1e293b; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .dark .filter-btn.active { background-color: #3b82f6; color: white; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
 
 <div id="modalImport" onclick="fecharModal()">
     <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
-        <div class="flex items-center gap-3 mb-4 text-slate-800 dark:text-white">
-            <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600"><i data-lucide="copy-plus"></i></div>
-            <div>
-                <h3 class="text-xl font-black">Importação em Massa</h3>
-                <p class="text-xs text-slate-500">Cole "Nome, Telefone" ou apenas "Nome" (um por linha)</p>
-            </div>
-        </div>
-        <textarea id="listaNomes" rows="8" class="w-full bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none dark:text-white" placeholder="João Silva, 5511999999999&#10;Maria Oliveira"></textarea>
+        <h3 class="text-xl font-black mb-2 dark:text-white">Cadastro em Massa</h3>
+        <p class="text-xs text-slate-500 mb-4">Cole "Nome, Telefone" (um por linha)</p>
+        <textarea id="listaNomes" rows="8" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 text-sm dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
         <div class="flex gap-3 mt-6">
-            <button onclick="fecharModal()" class="flex-1 px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Cancelar</button>
-            <button onclick="processarImportacao()" class="flex-1 px-4 py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition">Cadastrar Tudo</button>
+            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500">Cancelar</button>
+            <button onclick="processarImportacao()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Importar</button>
         </div>
     </div>
 </div>
 
-<div class="max-w-6xl mx-auto px-4 py-6">
+<div class="max-w-6xl mx-auto px-4 py-8">
     <div class="admin-only space-y-6">
-        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
-            <div class="flex items-center justify-between w-full lg:w-auto">
-                <div>
-                    <h1 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                        <i data-lucide="layout-dashboard" class="text-blue-600"></i> Participantes do Pool
-                    </h1>
-                    <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-blue-500 cursor-pointer dark:text-white"></select>
-                </div>
-                <button onclick="toggleDarkMode()" class="lg:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
-                </button>
+        
+        <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div class="w-full lg:w-auto">
+                <h1 class="text-2xl font-black tracking-tight dark:text-white">Participantes do Pool</h1>
+                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer"></select>
             </div>
             
             <div class="flex flex-wrap items-center gap-2">
-                <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1 mr-2">
-                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-4 py-1.5 rounded-lg text-sm font-medium transition">Todos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium transition">Pendentes</button>
-                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-4 py-1.5 rounded-lg text-sm font-medium transition">Pagos</button>
+                <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
+                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-4 py-1.5 rounded-lg text-sm font-bold transition">Todos</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-4 py-1.5 rounded-lg text-sm font-bold opacity-50 dark:text-slate-400 transition">Pendentes</button>
+                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-4 py-1.5 rounded-lg text-sm font-bold opacity-50 dark:text-slate-400 transition">Pagos</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-200 transition">
-                    <i data-lucide="users" class="w-4 h-4"></i> Importar
-                </button>
-                <button onclick="adicionarPessoa()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 transition shadow-lg shadow-blue-500/20">
-                    <i data-lucide="plus" class="w-4 h-4"></i> Novo
-                </button>
-                <button onclick="toggleDarkMode()" class="hidden lg:flex p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-200"><i data-lucide="users" class="w-4 h-4"></i> Importar</button>
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-500/30"><i data-lucide="plus" class="w-4 h-4"></i> Novo</button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400">
                     <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
                 </button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">Previsão Total</p>
-                <div class="text-2xl font-black italic dark:text-white">R$ <span id="tGeral">0,00</span></div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Previsão Total</p>
+                <div class="text-3xl font-black dark:text-white italic">R$ <span id="tGeral">0,00</span></div>
             </div>
-            <div class="bg-emerald-500 p-5 rounded-2xl shadow-lg shadow-emerald-500/20 text-white">
-                <p class="opacity-70 text-[10px] font-black uppercase mb-1 tracking-widest">Confirmado</p>
-                <div class="text-2xl font-black italic">R$ <span id="tPago">0,00</span></div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 text-white">Confirmado</p>
+                <div class="text-3xl font-black italic text-white">R$ <span id="tPago">0,00</span></div>
             </div>
-            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500">
-                <p class="text-slate-400 text-[10px] font-black uppercase mb-1 tracking-widest">A receber</p>
-                <div class="text-2xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">A receber</p>
+                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 border border-slate-800">
+            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white border border-slate-800 flex items-center gap-4">
                 <i data-lucide="key" class="text-blue-400"></i>
                 <div class="flex-1">
-                    <p class="text-[10px] font-black opacity-50 uppercase">Chave PIX</p>
-                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white" placeholder="...">
+                    <p class="text-[10px] font-black uppercase opacity-50">Chave PIX</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white" placeholder="Sua chave...">
                 </div>
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4">
                 <i data-lucide="dollar-sign" class="text-blue-600"></i>
-                <div class="flex-1 text-slate-800 dark:text-white">
+                <div class="flex-1">
                     <p class="text-[10px] font-black text-slate-400 uppercase">Valor Padrão</p>
                     <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold dark:text-white" placeholder="0.00">
                 </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <tr>
-                            <th class="px-6 py-4 cursor-pointer hover:text-blue-600 transition" onclick="toggleOrdemAlfabetica()">
-                                <span class="flex items-center gap-1">Participante <i data-lucide="arrow-up-down" class="w-3 h-3"></i></span>
-                            </th>
-                            <th class="px-6 py-4 text-center">Valor</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-                </table>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 cursor-pointer" onclick="toggleOrdemAlfabetica()">Participante <i data-lucide="chevrons-up-down" class="inline w-3 h-3"></i></th>
+                        <th class="px-6 py-4 text-center">Valor</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="client-only max-w-md mx-auto py-10">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div class="bg-blue-600 p-12 text-center text-white">
+                <p class="text-xs font-black uppercase tracking-widest opacity-80 mb-2" id="cNome">Olá!</p>
+                <h2 class="text-6xl font-black italic">R$ <span id="cValor">0,00</span></h2>
+            </div>
+            <div class="p-10 space-y-6 text-center">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Chave PIX</p>
+                    <p id="cChavePixExibicao" class="font-mono font-bold text-lg dark:text-white select-all break-all">---</p>
+                </div>
+                <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
+                <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all">
+                    <i data-lucide="camera" class="w-8 h-8 text-blue-500"></i>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Enviar Comprovante</span>
+                </label>
+                <img id="imgPreview" class="w-full rounded-[2rem] hidden shadow-2xl border-4 border-white dark:border-slate-800">
             </div>
         </div>
     </div>
-    
-    </div>
+</div>
 
 <script>
     const firebaseConfig = {
@@ -180,13 +178,17 @@
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
+
         db.ref('configuracoes').on('value', s => {
             configGeral = s.val() || { chavePix: "", valorPadrao: 0 };
             document.getElementById('chavePix').value = configGeral.chavePix;
             document.getElementById('valorPadrao').value = configGeral.valorPadrao;
+            if(idCliente) document.getElementById('cChavePixExibicao').innerText = configGeral.chavePix;
         });
+
         gerarOpcoesMes();
-        if (!idCliente) carregarDadosAdmin();
+        if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
+        else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
         lucide.createIcons();
     }
 
@@ -201,11 +203,7 @@
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
         let filtrados = [...dadosLocais];
-
-        if (filtroStatus !== 'todos') {
-            filtrados = filtrados.filter(p => filtroStatus === 'pago' ? p.pago : !p.pago);
-        }
-
+        if (filtroStatus !== 'todos') filtrados = filtrados.filter(p => filtroStatus === 'pago' ? p.pago : !p.pago);
         filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
         corpo.innerHTML = "";
@@ -216,12 +214,12 @@
             t += val; if(p.pago) pg += val; else pd += val;
             
             corpo.innerHTML += `
-                <tr class="group hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
                     <td class="px-6 py-4">
                         <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold text-slate-800 dark:text-white w-full block">
-                        <input type="text" value="${p.tel}" placeholder="Telefone..." onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full">
+                        <input type="text" value="${p.tel}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full">
                     </td>
-                    <td class="px-6 py-4 text-center font-mono font-bold text-slate-800 dark:text-white">
+                    <td class="px-6 py-4 text-center font-mono font-bold dark:text-white">
                         R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-24 text-center text-slate-800 dark:text-white">
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -231,15 +229,22 @@
                     </td>
                     <td class="px-6 py-4 text-right space-x-1">
                         <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 text-slate-400 hover:text-emerald-500 transition inline-flex"><i data-lucide="send" class="w-4 h-4"></i></button>
-                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-300 dark:text-slate-700 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 transition inline-flex"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-300 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>`;
         });
-
         document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
+    }
+
+    function setFiltroStatus(status) {
+        filtroStatus = status;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${status}`).classList.add('active');
+        renderizarTabela();
     }
 
     function toggleDarkMode() {
@@ -248,24 +253,34 @@
         else { h.classList.add('dark'); localStorage.theme = 'dark'; }
     }
 
-    function setFiltroStatus(status) {
-        filtroStatus = status;
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.getElementById(`btn-${status}`).classList.add('active');
-        renderizarTabela();
+    function enviarZap(id, nome, tel, valor) {
+        const link = window.location.href.split('?')[0] + "?p=" + id;
+        const msg = encodeURIComponent(`Olá, ${nome}! ✨\n💰 *Valor:* R$ ${valor.toFixed(2).replace('.', ',')}\n🔑 *PIX:* ${configGeral.chavePix}\n\nEnvie o comprovante aqui: ${link}`);
+        window.open(`https://wa.me/${tel}?text=${msg}`);
     }
 
-    function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
+    function processarImportacao() {
+        const texto = document.getElementById('listaNomes').value;
+        const linhas = texto.split('\n').filter(l => l.trim().length > 0);
+        const updates = {};
+        linhas.forEach(linha => {
+            let [nome, tel] = linha.split(',').map(item => item.trim());
+            const id = Date.now() + Math.floor(Math.random() * 9999);
+            updates[id] = { nome, tel: tel || "55", valor: configGeral.valorPadrao || 0, pago: false, comprovante: null };
+        });
+        db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => { fecharModal(); });
+    }
+
+    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
+    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
     function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
     function excluir(id) { if(confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function salvarConfig(c, v) { db.ref('configuracoes').update({ [c]: v }); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
-    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
-    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
-
+    function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
+    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, comprovante: null }); }
+    
     function gerarOpcoesMes() {
         const s = document.getElementById('filtroMes');
         const a = new Date();
@@ -277,6 +292,33 @@
             if(k === mesAtual) o.selected = true;
             s.appendChild(o);
         }
+    }
+
+    function carregarPortalCliente() {
+        db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
+            const p = s.val();
+            if(p) {
+                document.getElementById('cNome').innerText = "Olá, " + p.nome;
+                document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2});
+            }
+        });
+    }
+
+    function lerFoto(i) {
+        if (i.files && i.files[0]) {
+            const r = new FileReader();
+            r.onload = e => {
+                document.getElementById('imgPreview').src = e.target.result;
+                document.getElementById('imgPreview').classList.remove('hidden');
+                db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
+            };
+            r.readAsDataURL(i.files[0]);
+        }
+    }
+
+    function verFoto(img) {
+        const v = window.open("");
+        v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`);
     }
 
     iniciar();
