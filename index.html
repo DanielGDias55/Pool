@@ -141,7 +141,7 @@
         </div>
     </div>
 
-    <div class="client-only max-w-md mx-auto py-10">
+    <div class="client-only max-w-md mx-auto py-10" id="portalCliente">
         <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 text-center space-y-6">
             <h2 class="text-4xl font-black italic dark:text-white tracking-tight" id="cNome">Olá!</h2>
             <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20">
@@ -199,7 +199,6 @@
         lucide.createIcons();
     }
 
-    // --- LOGICA DE RESET MENSAL (DIA 20) ---
     async function verificarResetMensal() {
         const hoje = new Date();
         if (hoje.getDate() >= 20) {
@@ -220,7 +219,6 @@
         }
     }
 
-    // --- LOGICA ADMIN E TABELA ---
     function carregarDadosAdmin() {
         db.ref(`cobrancas/${mesAtual}`).on('value', s => {
             const dados = s.val() || {};
@@ -279,7 +277,6 @@
         lucide.createIcons();
     }
 
-    // --- LOGICA DE IMPORTACAO CSV ---
     function validarArquivo(input) {
         const nome = input.files[0] ? input.files[0].name : "Clique para selecionar o CSV";
         document.getElementById('nomeArquivo').innerText = nome;
@@ -316,7 +313,6 @@
         reader.readAsText(file, 'UTF-8');
     }
 
-    // --- FUNCOES UI E FIREBASE ---
     function toggleDarkMode() {
         const h = document.documentElement;
         if (h.classList.contains('dark')) { h.classList.remove('dark'); localStorage.theme = 'light'; }
@@ -368,8 +364,21 @@
         db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
             const p = s.val();
             if(p) {
-                document.getElementById('cNome').innerText = "Olá, " + p.nome;
-                document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2});
+                if(p.comprovante) {
+                    document.getElementById('portalCliente').innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 p-12 text-center space-y-6">
+                            <div class="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
+                            </div>
+                            <h2 class="text-3xl font-black dark:text-white">Comprovante Enviado!</h2>
+                            <p class="text-slate-500 dark:text-slate-400 font-medium">Obrigado, ${p.nome.split(' ')[0]}! Seu pagamento está em análise.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                    document.getElementById('cNome').innerText = "Olá, " + p.nome;
+                    document.getElementById('cValor').innerText = p.valor.toLocaleString('pt-br',{minimumFractionDigits:2});
+                }
             }
         });
     }
@@ -379,7 +388,6 @@
             const r = new FileReader();
             r.onload = e => {
                 db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
-                alert("✅ Comprovante enviado com sucesso!");
             };
             r.readAsDataURL(i.files[0]);
         }
