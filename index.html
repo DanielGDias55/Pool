@@ -2,7 +2,7 @@
 <html lang="pt-br" class="transition-colors duration-300">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pool Pro</title>
+<title>Pool Manager</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -23,27 +23,26 @@ body.modo-admin .admin-only,body.modo-cliente .client-only{display:block}
 </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8">
+
 <div id="bulkActions" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-blue-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-50 transition-all scale-0 opacity-0 translate-y-20">
-<span class="text-sm font-bold border-r border-white/20 pr-6 uppercase"><span id="selectedCount">0</span> SELEC.</span>
-<button onclick="bulkDelete()" class="hover:text-rose-300 font-bold flex items-center gap-2 text-xs uppercase"><i data-lucide="trash-2" class="w-4 h-4"></i> EXCLUIR</button>
-<button onclick="bulkSetGroup()" class="hover:text-blue-200 font-bold flex items-center gap-2 text-xs uppercase"><i data-lucide="folder-plus" class="w-4 h-4"></i> GRUPO</button>
+<span class="text-sm font-bold uppercase"><span id="selectedCount">0</span> Selecionados</span>
+<button onclick="bulkDelete()" class="hover:text-rose-300 font-bold flex items-center gap-2 text-xs uppercase"><i data-lucide="trash-2" class="w-4 h-4"></i> Excluir Vários</button>
 <button onclick="clearSelection()"><i data-lucide="x" class="w-5 h-5 opacity-50"></i></button>
 </div>
+
 <div id="modalImport" onclick="fecharModal()">
-<div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl mx-4 shadow-2xl" onclick="event.stopPropagation()">
-<h3 class="text-xl font-black mb-4 dark:text-white uppercase italic">Importar CSV</h3>
+<div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl mx-4" onclick="event.stopPropagation()">
+<h3 class="text-xl font-black mb-4 uppercase italic">Importar CSV</h3>
 <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="document.getElementById('nArq').innerText=this.files[0].name">
 <label for="arquivoCSV" class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-10 block text-center cursor-pointer hover:border-blue-500"><i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 opacity-20"></i><p id="nArq" class="text-sm font-bold opacity-60">Selecionar arquivo CSV</p></label>
-<div class="flex gap-3 mt-8"><button onclick="fecharModal()" class="flex-1 py-3 text-slate-400 font-black uppercase text-xs">Sair</button><button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black uppercase text-xs">Importar</button></div>
+<div class="flex gap-3 mt-8"><button onclick="fecharModal()" class="flex-1 py-3 text-xs uppercase font-bold">Sair</button><button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase text-xs">Importar</button></div>
 </div>
 </div>
+
 <div class="max-w-6xl mx-auto space-y-6">
 <div class="admin-only space-y-6">
 <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-6">
-<div class="flex flex-col md:flex-row gap-6 items-center w-full lg:w-auto">
 <div><h1 class="text-2xl font-black uppercase italic dark:text-white">Pool Manager</h1><select id="filtroMes" onchange="mudarMes(this.value)" class="mt-1 bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1 text-xs font-black italic border-none"></select></div>
-<div class="flex flex-col border-l dark:border-slate-800 pl-4"><span class="text-[10px] font-black opacity-40 uppercase mb-1">Grupo</span><select id="filtroGrupo" onchange="renderizarTabela()" class="bg-slate-100 dark:bg-slate-800 text-xs font-bold rounded-lg px-2 py-1 border-none"></select></div>
-</div>
 <div class="flex flex-wrap items-center gap-2">
 <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
 <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 text-[10px] font-black uppercase rounded-lg">Todos</button>
@@ -55,62 +54,60 @@ body.modo-admin .admin-only,body.modo-cliente .client-only{display:block}
 <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800"><i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block text-yellow-400"></i></button>
 </div>
 </header>
+
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
-<p class="text-[10px] font-black uppercase text-slate-400 italic italic">Previsão</p><div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div></div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200"><p class="text-[10px] font-black opacity-40 uppercase italic">Previsão</p><div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div></div>
 <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl"><p class="opacity-70 text-[10px] font-black uppercase italic">Pago</p><div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div></div>
 <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border-l-4 border-l-rose-500 border border-slate-200"><p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente</p><div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div></div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 border border-slate-800 shadow-md"><i data-lucide="key" class="text-blue-400"></i><div class="flex-1"><p class="text-[10px] font-black uppercase opacity-50">PIX</p><input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white italic"></div></div>
-<div class="bg-white dark:bg-slate-900 border border-slate-200 p-4 rounded-xl flex items-center gap-4 shadow-sm"><i data-lucide="dollar-sign" class="text-blue-600"></i><div class="flex-1"><p class="text-[10px] font-black text-slate-400 uppercase">Valor Padrão</p><input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white"></div></div>
-</div>
+
 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
 <div class="overflow-x-auto"><table class="w-full text-left">
-<thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-<tr><th class="px-6 py-4 w-10"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th class="px-2 py-4" onclick="toggleOrdemAlfabetica()">Participante</th><th class="px-6 py-4 text-center">Valor</th><th class="px-6 py-4 text-center">Status</th><th class="px-6 py-4 text-right">Ações</th></tr>
+<thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+<tr><th class="px-6 py-4 w-10"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th><th class="px-2 py-4">Participante</th><th class="px-6 py-4 text-center">Valor</th><th class="px-6 py-4 text-center">Status</th><th class="px-6 py-4 text-right">Ações</th></tr>
 </thead>
 <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800 text-xs"></tbody>
 </table></div></div></div></div>
+
 <script>
 const firebaseConfig={apiKey:"AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",authDomain:"pool-e439a.firebaseapp.com",databaseURL:"https://pool-e439a-default-rtdb.firebaseio.com",projectId:"pool-e439a",storageBucket:"pool-e439a.firebasestorage.app",messagingSenderId:"94463318724",appId:"1:94463318724:web:05208de1c8a9cbfd014791"};
 firebase.initializeApp(firebaseConfig);const db=firebase.database();
 let mesAtual=`${String(new Date().getMonth()+1).padStart(2,'0')}-${new Date().getFullYear()}`,dadosLocais=[],filtroStatus='todos',ordemCrescente=true,configGeral={chavePix:"",valorPadrao:0},selecionados=new Set();
+
 function iniciar(){
 if(localStorage.theme==='dark'||(!('theme' in localStorage)&&window.matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark');
-db.ref('configuracoes').on('value',s=>{configGeral=s.val()||{chavePix:"",valorPadrao:0};document.getElementById('chavePix').value=configGeral.chavePix;document.getElementById('valorPadrao').value=configGeral.valorPadrao;});
+db.ref('configuracoes').on('value',s=>{configGeral=s.val()||{chavePix:"",valorPadrao:0};});
 gerarOpcoesMes();carregarDadosAdmin();lucide.createIcons();}
-function carregarDadosAdmin(){db.ref(`cobrancas/${mesAtual}`).on('value',s=>{const d=s.val()||{};dadosLocais=Object.keys(d).map(id=>({id,...d[id]}));atualizarFiltroGrupos();renderizarTabela();});}
-function atualizarFiltroGrupos(){const g=[...new Set(dadosLocais.map(p=>p.grupo).filter(x=>x))];const s=document.getElementById('filtroGrupo');const v=s.value||"todos";s.innerHTML='<option value="todos">Todos</option>';g.forEach(x=>{s.innerHTML+=`<option value="${x}">${x}</option>`;});s.value=v;}
+
+function carregarDadosAdmin(){db.ref(`cobrancas/${mesAtual}`).on('value',s=>{const d=s.val()||{};dadosLocais=Object.keys(d).map(id=>({id,...d[id]}));renderizarTabela();});}
+
 function renderizarTabela(){
-const c=document.getElementById('corpoTabela'),gF=document.getElementById('filtroGrupo').value;let f=[...dadosLocais];
-if(filtroStatus==='pago')f=f.filter(p=>p.pago);if(filtroStatus==='pendente')f=f.filter(p=>!p.pago);if(filtroStatus==='nao_enviado')f=f.filter(p=>!p.msgEnviada);if(gF!=='todos')f=f.filter(p=>p.grupo===gF);
-f.sort((a,b)=>ordemCrescente?a.nome.localeCompare(b.nome):b.nome.localeCompare(a.nome));
+const c=document.getElementById('corpoTabela');let f=[...dadosLocais];
+if(filtroStatus==='pago')f=f.filter(p=>p.pago);if(filtroStatus==='pendente')f=f.filter(p=>!p.pago);if(filtroStatus==='nao_enviado')f=f.filter(p=>!p.msgEnviada);
+f.sort((a,b)=>a.nome.localeCompare(b.nome));
 c.innerHTML="";let t=0,pg=0,pd=0;
 f.forEach(p=>{const v=parseFloat(p.valor)||0;t+=v;if(p.pago)pg+=v;else pd+=v;const sel=selecionados.has(p.id);
 c.innerHTML+=`<tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 ${sel?'bg-blue-50 dark:bg-blue-900/20':''}">
 <td class="px-6 py-4"><input type="checkbox" ${sel?'checked':''} onclick="toggleSelect('${p.id}')"></td>
-<td class="px-2 py-4"><input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block"><div class="flex items-center gap-1"><span class="text-[9px] opacity-30 font-bold">ZAP:</span><input type="text" value="${p.tel||'55'}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-blue-500 font-bold w-full"></div><input type="text" value="${p.grupo||''}" placeholder="Grupo..." onblur="editar('${p.id}','grupo',this.value)" class="editable-input text-[9px] text-slate-400 uppercase w-full"></td>
+<td class="px-2 py-4"><input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full block"><div class="flex items-center gap-1"><span class="text-[9px] opacity-30 font-bold">ZAP:</span><input type="text" value="${p.tel||'55'}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-blue-500 font-bold w-full"></div></td>
 <td class="px-6 py-4 text-center font-mono font-bold">R$ <input type="number" step="0.01" value="${v.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-20 text-center dark:text-white"></td>
 <td class="px-6 py-4 text-center"><button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.pago?'bg-emerald-100 text-emerald-600':'bg-amber-100 text-amber-600'}">${p.pago?'Pago':'Pendente'}</button></td>
 <td class="px-6 py-4 text-right space-x-1"><button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${v})" class="p-2 ${p.msgEnviada?'text-blue-500':'opacity-20'}"><i data-lucide="${p.msgEnviada?'check-check':'send'}" class="w-4 h-4"></i></button><button onclick="excluir('${p.id}')" class="p-2 text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;});
 document.getElementById('tGeral').innerText=t.toLocaleString('pt-br',{minimumFractionDigits:2});document.getElementById('tPago').innerText=pg.toLocaleString('pt-br',{minimumFractionDigits:2});document.getElementById('tPend').innerText=pd.toLocaleString('pt-br',{minimumFractionDigits:2});lucide.createIcons();}
+
 function toggleSelect(id){if(selecionados.has(id))selecionados.delete(id);else selecionados.add(id);renderBarra();renderizarTabela();}
 function toggleSelectAll(el){if(el.checked)dadosLocais.forEach(p=>selecionados.add(p.id));else selecionados.clear();renderBarra();renderizarTabela();}
 function clearSelection(){selecionados.clear();document.getElementById('selectAll').checked=false;renderBarra();renderizarTabela();}
 function renderBarra(){const b=document.getElementById('bulkActions');document.getElementById('selectedCount').innerText=selecionados.size;if(selecionados.size>0)b.classList.remove('scale-0','opacity-0','translate-y-20');else b.classList.add('scale-0','opacity-0','translate-y-20');}
 function bulkDelete(){if(confirm("Excluir selecionados?")){selecionados.forEach(id=>db.ref(`cobrancas/${mesAtual}/${id}`).remove());clearSelection();}}
-function bulkSetGroup(){const n=prompt("Nome do grupo:");if(n){selecionados.forEach(id=>db.ref(`cobrancas/${mesAtual}/${id}`).update({grupo:n}));clearSelection();}}
 function editar(id,c,v){db.ref(`cobrancas/${mesAtual}/${id}`).update({[c]:v});}
 function togglePago(id,s){db.ref(`cobrancas/${mesAtual}/${id}`).update({pago:!s});}
 function excluir(id){if(confirm("Apagar?"))db.ref(`cobrancas/${mesAtual}/${id}`).remove();}
-function salvarConfig(c,v){db.ref('configuracoes').update({[c]:v});}
 function mudarMes(v){clearSelection();mesAtual=v;carregarDadosAdmin();}
-function toggleOrdemAlfabetica(){ordemCrescente=!ordemCrescente;renderizarTabela();}
 function setFiltroStatus(s){filtroStatus=s;document.querySelectorAll('.filter-btn').forEach(btn=>btn.classList.remove('active'));document.getElementById(`btn-${s}`).classList.add('active');renderizarTabela();}
 function enviarZap(id,n,t,v){db.ref(`cobrancas/${mesAtual}/${id}`).update({msgEnviada:true});const link=window.location.href.split('?')[0]+"?p="+id;const msg=encodeURIComponent(`Ola, ${n}! Valor: R$ ${v.toFixed(2).replace('.',',')}.\nPIX: ${configGeral.chavePix}\nLink: ${link}`);window.open(`https://wa.me/${t}?text=${msg}`);}
-function processarCSV(){const f=document.getElementById('arquivoCSV').files[0];if(!f)return;const r=new FileReader();r.onload=function(e){const l=e.target.result.split('\n');const u={};for(let i=1;i<l.length;i++){let c=l[i].split(/[;,]/);if(c[0]){const id=Date.now()+i;u[id]={nome:c[0].trim(),tel:c[1]?c[1].trim():"55",valor:configGeral.valorPadrao||0,pago:false,msgEnviada:false,grupo:""};}}db.ref(`cobrancas/${mesAtual}`).update(u).then(()=>fecharModal());};r.readAsText(f,'UTF-8');}
-function adicionarPessoa(){const n=prompt("Nome:");if(n)db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({nome:n,tel:"55",valor:configGeral.valorPadrao||0,pago:false,msgEnviada:false,grupo:""});}
+function processarCSV(){const f=document.getElementById('arquivoCSV').files[0];if(!f)return;const r=new FileReader();r.onload=function(e){const l=e.target.result.split('\n');const u={};for(let i=1;i<l.length;i++){let c=l[i].split(/[;,]/);if(c[0]){const id=Date.now()+i;u[id]={nome:c[0].trim(),tel:c[1]?c[1].trim():"55",valor:configGeral.valorPadrao||0,pago:false,msgEnviada:false};}}db.ref(`cobrancas/${mesAtual}`).update(u).then(()=>fecharModal());};r.readAsText(f,'UTF-8');}
+function adicionarPessoa(){const n=prompt("Nome:");if(n)db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({nome:n,tel:"55",valor:configGeral.valorPadrao||0,pago:false,msgEnviada:false});}
 function abrirModal(){document.getElementById('modalImport').style.display='flex';}
 function fecharModal(){document.getElementById('modalImport').style.display='none';}
 function toggleDarkMode(){const h=document.documentElement;if(h.classList.contains('dark')){h.classList.remove('dark');localStorage.theme='light';}else{h.classList.add('dark');localStorage.theme='dark';}}
