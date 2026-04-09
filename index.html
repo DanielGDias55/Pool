@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cobrança Pro - v6</title>
+    <title>Sistema de Cobrança Pool</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
         :root { --primary: #2563eb; --success: #22c55e; --danger: #ef4444; --whatsapp: #25d366; --bg: #f8fafc; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 10px; color: #1e293b; }
         
         .admin-only, .client-only { display: none; }
         body.modo-admin .admin-only { display: block; }
@@ -23,12 +28,11 @@
         .table-res { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th { background: #f1f5f9; padding: 10px; text-align: left; font-size: 12px; }
-        td { padding: 8px; border-bottom: 1px solid #eee; }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
 
-        input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; width: 100%; font-size: 14px; }
+        input { padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; width: 100%; }
         .btn { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; justify-content: center; }
         .btn-add { background: var(--primary); color: white; width: 100%; margin: 15px 0; }
-        .btn-zap { background: var(--whatsapp); color: white; text-decoration: none; }
         
         .client-box { width: 100%; max-width: 400px; text-align: center; }
         .preview-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 15px; border: 2px dashed #ccc; display: none; }
@@ -40,33 +44,26 @@
 <div class="container">
     
     <div class="admin-only">
-        <h2>📊 Gestão de Cobrança</h2>
+        <h2>📊 Gestão Pool - Cloud</h2>
         
         <div class="pix-config">
-            <strong>Sua Chave PIX:</strong>
-            <input type="text" id="chavePix" onchange="salvarConfig()">
-            <div id="qrcodeAdmin" style="margin-top:10px"></div>
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <strong>Mês de Referência:</strong>
-            <select id="filtroMes" onchange="trocarMes()"></select>
-            <small style="color: #64748b; display: block; margin-top: 4px;">* Novos meses geram após dia 20 com base nos usuários cadastrados.</small>
+            <strong>Minha Chave PIX:</strong>
+            <input type="text" id="chavePix" placeholder="Digite sua chave e aperte Enter" onchange="salvarChave(this.value)">
         </div>
 
         <div class="stats">
             <div class="stat-card" style="background:var(--primary)">Total<br>R$ <span id="tGeral">0</span></div>
             <div class="stat-card" style="background:var(--success)">Pago<br>R$ <span id="tPago">0</span></div>
-            <div class="stat-card" style="background:var(--danger)">Pendente<br>R$ <span id="tPend">0</span></div>
+            <div class="stat-card" style="background:var(--danger)">Pend.<br>R$ <span id="tPend">0</span></div>
         </div>
 
-        <button class="btn btn-add" onclick="adicionarPessoa()">+ Adicionar Pessoa à Base</button>
+        <button class="btn btn-add" onclick="adicionarPessoa()">+ Adicionar Nova Pessoa</button>
 
         <div class="table-res">
             <table>
                 <thead>
                     <tr>
-                        <th>Nome / Tel</th>
+                        <th>Nome / WhatsApp</th>
                         <th>Valor</th>
                         <th>Status</th>
                         <th>Ações</th>
@@ -83,185 +80,133 @@
             <p>Valor a pagar:</p>
             <h1 style="color:var(--primary); margin:0">R$ <span id="cValor">0,00</span></h1>
             <div id="qrcodeCliente" style="display:flex; justify-content:center; margin:15px 0"></div>
+            <p style="font-size:12px; color:#666">Pague via QR Code ou Chave PIX acima</p>
         </div>
 
-        <p style="margin-top:20px"><strong>Selecione o comprovante:</strong></p>
-        <label for="fotoInput" class="file-label">📸 Galeria ou Câmera</label>
+        <p style="margin-top:20px"><strong>Anexe seu comprovante:</strong></p>
+        <label for="fotoInput" class="file-label">📸 Escolher Foto ou Câmera</label>
         <input type="file" id="fotoInput" accept="image/*" onchange="lerFoto(this)" style="display:none">
         
         <img id="imgPreview" class="preview-img">
         
-        <button id="btnConfirmar" class="btn" style="background:var(--success); color:white; width:100%; padding:15px; margin-top:20px; font-size:16px" onclick="confirmarPagamento()">
-            CONFIRMAR E MARCAR COMO PAGO
+        <button id="btnConfirmar" class="btn" style="background:var(--success); color:white; width:100%; padding:18px; margin-top:20px; font-size:16px" onclick="confirmarPagamento()">
+            ENVIAR COMPROVANTE
         </button>
     </div>
 
 </div>
 
 <script>
-    // Recuperação de dados
-    let db = JSON.parse(localStorage.getItem('cobranca_v6')) || {};
-    let baseUsuarios = JSON.parse(localStorage.getItem('base_v6')) || [];
-    let config = JSON.parse(localStorage.getItem('config_v6')) || { chave: "seu-email@pix.com" };
-    
-    function getMesAno() {
-        const d = new Date();
-        return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-    }
+    // Configurações do seu Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",
+        authDomain: "pool-e439a.firebaseapp.com",
+        databaseURL: "https://pool-e439a-default-rtdb.firebaseio.com",
+        projectId: "pool-e439a",
+        storageBucket: "pool-e439a.firebasestorage.app",
+        messagingSenderId: "94463318724",
+        appId: "1:94463318724:web:05208de1c8a9cbfd014791"
+    };
 
-    let mesVisivel = getMesAno();
-    let idUsuarioAtivo = null;
+    // Inicialização
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const mesReferencia = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
 
-    function init() {
-        const params = new URLSearchParams(window.location.search);
-        idUsuarioAtivo = params.get('p');
+    let idCliente = new URLSearchParams(window.location.search).get('p');
+    let chavePixAtual = "";
 
-        verificarViradaDeMes();
-
-        if (idUsuarioAtivo) {
-            document.body.className = "modo-cliente";
-            exibirPainelCliente(idUsuarioAtivo);
-        } else {
-            document.body.className = "modo-admin";
-            document.getElementById('chavePix').value = config.chave;
-            renderizarFiltro();
-            atualizarTudo();
-        }
-    }
-
-    function verificarViradaDeMes() {
-        const hoje = new Date();
-        const mesAtual = getMesAno();
-        
-        // Se após dia 20 e o mês atual não existe no DB, cria baseado na base de usuários
-        if (hoje.getDate() >= 20 && !db[mesAtual]) {
-            db[mesAtual] = baseUsuarios.map(u => ({ ...u, pago: false, comprovante: null }));
-            salvar();
-        }
-        if (!db[mesAtual]) db[mesAtual] = [];
-    }
-
-    function renderizarFiltro() {
-        const sel = document.getElementById('filtroMes');
-        const meses = Object.keys(db).length ? Object.keys(db) : [getMesAno()];
-        sel.innerHTML = meses.sort().reverse().map(m => `<option value="${m}" ${m === mesVisivel ? 'selected' : ''}>${m}</option>`).join('');
-    }
-
-    function trocarMes() {
-        mesVisivel = document.getElementById('filtroMes').value;
-        atualizarTudo();
-    }
-
-    // --- ADMIN ---
-    function atualizarTudo() {
-        const lista = db[mesVisivel] || [];
-        const corpo = document.getElementById('corpoTabela');
-        corpo.innerHTML = "";
-        
-        let total = 0, pago = 0, pend = 0;
-
-        lista.forEach(p => {
-            total += p.valor;
-            if(p.pago) pago += p.valor; else pend += p.valor;
-
-            corpo.innerHTML += `
-                <tr>
-                    <td>
-                        <input type="text" value="${p.nome}" onchange="editar(${p.id},'nome',this.value)" style="margin-bottom:2px"><br>
-                        <input type="text" value="${p.tel}" onchange="editar(${p.id},'tel',this.value)" style="font-size:11px; color:#666">
-                    </td>
-                    <td><input type="number" value="${p.valor}" onchange="editar(${p.id},'valor',this.value)"></td>
-                    <td>
-                        <button onclick="alternar(${p.id})" style="border:none; background:none; cursor:pointer; font-size:20px">
-                            ${p.pago ? '✅' : '⏳'}
-                        </button>
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:5px">
-                            <button class="btn btn-zap" onclick="cobrar(${p.id},'${p.nome}','${p.tel}',${p.valor})">📲</button>
-                            ${p.comprovante ? `<button class="btn" onclick="verFoto('${p.comprovante}')">👁️</button>` : ''}
-                            <button class="btn" onclick="excluir(${p.id})" style="background:#fee2e2">🗑️</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+    function iniciar() {
+        // Busca a chave PIX salva
+        db.ref('configuracoes/chavePix').on('value', snapshot => {
+            chavePixAtual = snapshot.val() || "Não configurada";
+            if (!idCliente) document.getElementById('chavePix').value = chavePixAtual;
         });
 
-        document.getElementById('tGeral').innerText = total.toFixed(2);
-        document.getElementById('tPago').innerText = pago.toFixed(2);
-        document.getElementById('tPend').innerText = pend.toFixed(2);
-        
-        const qrDiv = document.getElementById("qrcodeAdmin");
-        qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: config.chave, width: 80, height: 80 });
+        if (idCliente) {
+            document.body.className = "modo-cliente";
+            carregarPortalCliente();
+        } else {
+            document.body.className = "modo-admin";
+            escutarCobrancasAdmin();
+        }
+    }
+
+    // --- LÓGICA DO ADMINISTRADOR ---
+    function escutarCobrancasAdmin() {
+        db.ref('cobrancas/' + mesReferencia).on('value', snapshot => {
+            const dados = snapshot.val();
+            const corpo = document.getElementById('corpoTabela');
+            corpo.innerHTML = "";
+            let t = 0, pg = 0, pd = 0;
+
+            if (dados) {
+                Object.keys(dados).forEach(id => {
+                    const p = dados[id];
+                    t += p.valor || 0;
+                    if(p.pago) pg += p.valor; else pd += p.valor;
+
+                    corpo.innerHTML += `
+                        <tr>
+                            <td>
+                                <strong>${p.nome}</strong><br>
+                                <small>${p.tel}</small>
+                            </td>
+                            <td>R$ ${p.valor.toFixed(2)}</td>
+                            <td><span style="font-size:20px">${p.pago ? '✅' : '⏳'}</span></td>
+                            <td>
+                                <div style="display:flex; gap:5px">
+                                    <button class="btn" style="background:var(--whatsapp); color:white" onclick="enviarZap('${id}','${p.nome}','${p.tel}',${p.valor})">📲</button>
+                                    ${p.comprovante ? `<button class="btn" onclick="verFoto('${p.comprovante}')">👁️</button>` : ''}
+                                    <button class="btn" onclick="excluirPessoa('${id}')" style="background:#fee2e2">🗑️</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('tGeral').innerText = t.toFixed(2);
+            document.getElementById('tPago').innerText = pg.toFixed(2);
+            document.getElementById('tPend').innerText = pd.toFixed(2);
+        });
     }
 
     function adicionarPessoa() {
-        const id = Date.now();
-        const nova = { id, nome: "Novo Cliente", tel: "55", valor: 0, pago: false, comprovante: null };
+        const nome = prompt("Nome do Cliente:");
+        const tel = prompt("WhatsApp (Ex: 5511999999999):", "55");
+        const valor = parseFloat(prompt("Valor da Cobrança:", "0"));
         
-        baseUsuarios.push(nova);
-        if(!db[mesVisivel]) db[mesVisivel] = [];
-        db[mesVisivel].push({...nova});
-        
-        salvar();
-        atualizarTudo();
+        if (nome && tel && !isNaN(valor)) {
+            const novoId = Date.now();
+            db.ref('cobrancas/' + mesReferencia + '/' + novoId).set({
+                nome, tel, valor, pago: false, comprovante: null
+            });
+        }
     }
 
-    function cobrar(id, nome, tel, valor) {
+    function enviarZap(id, nome, tel, valor) {
         const link = window.location.href.split('?')[0] + "?p=" + id;
-        const msg = encodeURIComponent(`Olá ${nome}!\nLembrete de pagamento (${mesVisivel}):\n\nValor: R$ ${valor.toFixed(2)}\nPIX: ${config.chave}\n\nEnvie o comprovante pelo link:\n${link}`);
+        const msg = encodeURIComponent(`Olá ${nome}!\nValor: R$ ${valor.toFixed(2)}\nPIX: ${chavePixAtual}\n\nEnvie o comprovante aqui: ${link}`);
         window.open(`https://wa.me/${tel}?text=${msg}`);
     }
 
-    function editar(id, campo, valor) {
-        // Atualiza no mês
-        const p = db[mesVisivel].find(x => x.id === id);
-        if(p) p[campo] = campo === 'valor' ? parseFloat(valor) : valor;
-        // Atualiza na base para meses futuros
-        const pb = baseUsuarios.find(x => x.id === id);
-        if(pb) pb[campo] = campo === 'valor' ? parseFloat(valor) : valor;
-        salvar();
-        atualizarTudo();
-    }
+    function excluirPessoa(id) { if(confirm("Deseja excluir?")) db.ref('cobrancas/'+mesReferencia+'/'+id).remove(); }
+    function salvarChave(val) { db.ref('configuracoes/chavePix').set(val); }
 
-    function alternar(id) {
-        const p = db[mesVisivel].find(x => x.id === id);
-        if(p) { p.pago = !p.pago; if(!p.pago) p.comprovante = null; }
-        salvar();
-        atualizarTudo();
-    }
-
-    function excluir(id) {
-        if(confirm("Remover da base e deste mês?")) {
-            db[mesVisivel] = db[mesVisivel].filter(x => x.id !== id);
-            baseUsuarios = baseUsuarios.filter(x => x.id !== id);
-            salvar();
-            atualizarTudo();
-        }
-    }
-
-    // --- CLIENTE ---
-    function exibirPainelCliente(id) {
-        // Busca o usuário em qualquer mês que exista no DB para garantir que o valor apareça
-        let usuarioEncontrado = null;
-        let mesDaCobranca = "";
-
-        for (let mes in db) {
-            let u = db[mes].find(x => x.id == id);
-            if(u) { usuarioEncontrado = u; mesDaCobranca = mes; break; }
-        }
-
-        if (usuarioEncontrado) {
-            document.getElementById('cNome').innerText = "Olá, " + usuarioEncontrado.nome;
-            document.getElementById('cValor').innerText = usuarioEncontrado.valor.toFixed(2);
-            new QRCode(document.getElementById("qrcodeCliente"), { text: config.chave, width: 150, height: 150 });
-            
-            // Guarda o mês correto para salvar o comprovante
-            mesVisivel = mesDaCobranca; 
-        } else {
-            alert("Erro: Dados não encontrados.");
-        }
+    // --- LÓGICA DO CLIENTE ---
+    function carregarPortalCliente() {
+        db.ref('cobrancas/' + mesReferencia + '/' + idCliente).on('value', snapshot => {
+            const p = snapshot.val();
+            if (p) {
+                document.getElementById('cNome').innerText = "Olá, " + p.nome;
+                document.getElementById('cValor').innerText = p.valor.toFixed(2);
+                
+                const qrDiv = document.getElementById("qrcodeCliente");
+                qrDiv.innerHTML = "";
+                new QRCode(qrDiv, { text: chavePixAtual, width: 160, height: 160 });
+            } else {
+                alert("Cobrança não encontrada.");
+            }
+        });
     }
 
     function lerFoto(input) {
@@ -277,36 +222,24 @@
     }
 
     function confirmarPagamento() {
-        const img = document.getElementById('imgPreview').src;
-        if (!img || img.startsWith('data:image') === false) return alert("Selecione a foto do comprovante.");
+        const foto = document.getElementById('imgPreview').src;
+        if (!foto.startsWith('data:image')) return alert("Por favor, selecione a foto do comprovante.");
 
-        const p = db[mesVisivel].find(x => x.id == idUsuarioAtivo);
-        if (p) {
-            p.pago = true;
-            p.comprovante = img;
-            salvar();
-            alert("Sucesso! O administrador recebeu seu comprovante.");
-            window.location.search = ""; 
-        }
+        db.ref('cobrancas/' + mesReferencia + '/' + idCliente).update({
+            pago: true,
+            comprovante: foto
+        }).then(() => {
+            alert("✅ Comprovante enviado com sucesso!");
+            window.location.search = ""; // Volta ao início
+        });
     }
 
-    function salvarConfig() {
-        config.chave = document.getElementById('chavePix').value;
-        localStorage.setItem('config_v6', JSON.stringify(config));
-        atualizarTudo();
+    function verFoto(img) {
+        const v = window.open("");
+        v.document.write(`<body style="margin:0; background:black; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-width:100%"></body>`);
     }
 
-    function salvar() { 
-        localStorage.setItem('cobranca_v6', JSON.stringify(db)); 
-        localStorage.setItem('base_v6', JSON.stringify(baseUsuarios));
-    }
-
-    function verFoto(img) { 
-        const w = window.open(""); 
-        w.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-width:100%; max-height:100%"></body>`); 
-    }
-
-    init();
+    iniciar();
 </script>
 </body>
 </html>
