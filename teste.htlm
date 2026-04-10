@@ -13,21 +13,17 @@
         html.dark { background-color: #020617 !important; }
         html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; min-height: 100vh; }
-        .admin-only, .client-only { display: none; }
-        body.modo-admin .admin-only { display: block; }
-        body.modo-cliente .client-only { display: block; }
+        .admin-only { display: block; }
         .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
         .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
         .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
-        .dark .editable-input:focus { background: #0f172a; color: white !important; }
         .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; }
-        .filter-btn.active { background-color: #3b82f6; color: white; opacity: 1; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
-<div class="test-banner">Ambiente de Testes 2 - Lógica de Caixa Ativada</div>
+<div class="test-banner">Ambiente de Testes 2 - Correção de Reset e Cálculos</div>
 
 <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
     <div class="admin-only space-y-6">
@@ -44,37 +40,37 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <p class="text-[10px] font-black uppercase text-slate-400">Previsão Total</p>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-slate-400 italic">Previsão Mês Atual</p>
                 <div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div>
             </div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white">
-                <p class="text-[10px] font-black uppercase opacity-70">Confirmado (Inc. Adiantados)</p>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+                <p class="text-[10px] font-black uppercase opacity-70 italic">Confirmado + Saldo Adiantado</p>
                 <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
             </div>
             <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800">
-                <p class="text-[10px] font-black uppercase text-slate-400">A receber</p>
+                <p class="text-[10px] font-black uppercase text-slate-400 italic">A receber</p>
                 <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="bg-amber-600 p-4 rounded-xl text-white">
-                <p class="text-[10px] font-black uppercase">Chave PIX (TESTE)</p>
-                <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white placeholder:text-amber-200">
+                <p class="text-[10px] font-black uppercase tracking-widest">Chave PIX (TESTE)</p>
+                <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white placeholder:text-amber-200 focus:ring-0">
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
-                <p class="text-[10px] font-black text-slate-400 uppercase">Valor Padrão (R$)</p>
-                <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Padrão (R$)</p>
+                <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white focus:ring-0">
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             <table class="w-full text-left">
                 <thead class="bg-slate-50 dark:bg-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <tr>
                         <th class="px-6 py-4">Participante</th>
-                        <th class="px-6 py-4 text-center">Valor do Mês</th>
+                        <th class="px-6 py-4 text-center">Valor Cobrado</th>
                         <th class="px-6 py-4 text-center">Adiantadas</th>
                         <th class="px-6 py-4 text-center">Status</th>
                         <th class="px-6 py-4 text-right">Ações</th>
@@ -106,44 +102,55 @@
     let dadosLocais = [];
     let configGeral = { chavePix: "", valorPadrao: 0 };
 
-    function iniciar() {
-        db.ref(PASTA_CONFIG).on('value', s => { 
-            configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; 
-            document.getElementById('chavePix').value = configGeral.chavePix;
-            document.getElementById('valorPadrao').value = configGeral.valorPadrao;
-        });
+    async function iniciar() {
+        // 1. Carregar Configurações Primeiro
+        const configSnap = await db.ref(PASTA_CONFIG).once('value');
+        configGeral = configSnap.val() || { chavePix: "", valorPadrao: 0 };
+        document.getElementById('chavePix').value = configGeral.chavePix;
+        document.getElementById('valorPadrao').value = configGeral.valorPadrao;
+
+        // 2. Gerar Opções de Mês
         gerarOpcoesMes();
-        verificarResetMensal();
+
+        // 3. Rodar Reset (Verificando data atual)
+        await verificarResetMensal();
+
+        // 4. Carregar Dados
         carregarDadosAdmin();
         lucide.createIcons();
     }
 
     async function verificarResetMensal() {
         const hoje = new Date();
-        if (hoje.getDate() >= 10) {
+        // MUDADO PARA TESTE: Se hoje for maior ou igual ao dia 1
+        if (hoje.getDate() >= 1) { 
             const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
             const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
+            
             const s = await db.ref(`${PASTA_BANCO}/${keyProx}`).once('value');
             
             if (!s.exists()) {
-                const atual = await db.ref(`${PASTA_BANCO}/${mesAtual}`).once('value');
-                if (atual.exists()) {
-                    const lista = atual.val();
+                console.log("Detectado: Criando mês seguinte...");
+                const atualSnap = await db.ref(`${PASTA_BANCO}/${mesAtual}`).once('value');
+                if (atualSnap.exists()) {
+                    const lista = atualSnap.val();
                     const novaLista = {};
                     Object.keys(lista).forEach(id => {
                         const p = lista[id];
-                        const temCredito = (p.adiantadas || 0) > 0;
+                        const temCredito = (parseInt(p.adiantadas) || 0) > 0;
+                        
                         novaLista[id] = {
                             ...p,
                             pago: temCredito,
-                            // SE TEM CRÉDITO: Valor é 0. SE NÃO TEM: Valor volta ao padrão.
+                            // Se tem crédito, o valor da cobrança é 0. Senão, volta ao padrão.
                             valor: temCredito ? 0 : configGeral.valorPadrao,
-                            adiantadas: temCredito ? (p.adiantadas - 1) : 0,
+                            adiantadas: temCredito ? (parseInt(p.adiantadas) - 1) : 0,
                             msgEnviada: temCredito,
                             comprovante: null
                         };
                     });
                     await db.ref(`${PASTA_BANCO}/${keyProx}`).set(novaLista);
+                    alert("Mês seguinte gerado com sucesso!");
                 }
             }
         }
@@ -169,15 +176,14 @@
             const val = parseFloat(p.valor) || 0;
             const adiantadas = parseInt(p.adiantadas) || 0;
 
-            // LOGICA DE CAIXA:
-            // O Previsão Total sempre conta o valor do mês.
+            // Cálculo Previsão Mês: valor que está na tela
             t += val;
             
             if (p.pago) {
-                // Confirmado = Valor pago do mês + (valor do mês atual ou padrão * parcelas adiantadas)
-                // Usamos configGeral.valorPadrao para as adiantadas caso o valor do mês seja 0 (porque já é crédito)
-                const baseCalculo = val > 0 ? val : configGeral.valorPadrao;
-                pg += val + (adiantadas * baseCalculo);
+                // SOMA NO CONFIRMADO:
+                // Se o valor do mês é 0 (crédito), usamos o valor padrão para somar o que ele já deixou pago.
+                const valorBase = (val > 0) ? val : (configGeral.valorPadrao || 0);
+                pg += val + (adiantadas * valorBase);
             } else {
                 pd += val;
             }
@@ -185,14 +191,14 @@
             corpo.innerHTML += `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
                     <td class="px-6 py-4 font-bold dark:text-white">${p.nome}</td>
-                    <td class="px-6 py-4 text-center">R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',parseFloat(this.value))" class="editable-input w-20 text-center"></td>
-                    <td class="px-6 py-4 text-center"><input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value))" class="editable-input w-12 text-center text-blue-500 font-bold"></td>
+                    <td class="px-6 py-4 text-center">R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',parseFloat(this.value))" class="editable-input w-24 text-center font-mono"></td>
+                    <td class="px-6 py-4 text-center"><input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value))" class="editable-input w-16 text-center text-blue-500 font-bold"></td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase transition ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
                             ${p.pago ? 'Pago' : 'Pendente'}
                         </button>
                     </td>
-                    <td class="px-6 py-4 text-right"><button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                    <td class="px-6 py-4 text-right"><button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>`;
         });
 
@@ -209,7 +215,20 @@
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
     function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`${PASTA_BANCO}/${mesAtual}/${Date.now()}`).set({ nome: n, valor: configGeral.valorPadrao, adiantadas: 0, pago: false }); }
-    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); for(let i = -1; i <= 2; i++) { const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); } }
+    function gerarOpcoesMes() { 
+        const s = document.getElementById('filtroMes'); 
+        s.innerHTML = "";
+        for(let i = -1; i <= 2; i++) { 
+            const d = new Date(); 
+            d.setMonth(d.getMonth() + i); 
+            const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; 
+            const o = document.createElement('option'); 
+            o.value = k; 
+            o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); 
+            o.selected = k === mesAtual; 
+            s.appendChild(o); 
+        } 
+    }
 
     iniciar();
 </script>
