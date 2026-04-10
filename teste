@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="transition-colors duration-300">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESTES - Pool Manager v2</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { slate: { 850: '#1e293b', 950: '#020617' } }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        html.dark { background-color: #020617 !important; }
+        html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; min-height: 100vh; }
+        .admin-only, .client-only { display: none; }
+        body.modo-admin .admin-only { display: block; }
+        body.modo-cliente .client-only { display: block; }
+        .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
+        .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
+        .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
+        .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
+        .dark .editable-input:focus { background: #0f172a; color: white !important; }
+        #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        #modalImport.flex { display: flex; }
+        .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
+        .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
+        /* Alerta de Ambiente de Teste */
+        .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+
+<div class="test-banner">Ambiente de Testes 2 - Sincronizado por ID</div>
+
+<div class="p-4 md:p-8">
+    <div id="modalImport" onclick="fecharModal()">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600">
+                    <i data-lucide="flask-conical"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black dark:text-white">Importar para TESTES</h3>
+                    <p class="text-xs text-slate-500">Isolado do banco de dados oficial.</p>
+                </div>
+            </div>
+            <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
+                <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
+                <label for="arquivoCSV" class="cursor-pointer group">
+                    <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
+                    <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecionar CSV de Teste</p>
+                </label>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
+                <button onclick="processarCSV()" class="flex-1 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 shadow-lg shadow-amber-500/20 transition">Processar Teste</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        <div class="admin-only space-y-6">
+            <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
+                <div class="w-full lg:w-auto text-center lg:text-left">
+                    <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic text-amber-600">TEST ENVIRONMENT 2</h1>
+                    <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-amber-500 cursor-pointer"></select>
+                </div>
+                
+                <div class="flex flex-wrap justify-center items-center gap-2">
+                    <div class="relative group mr-2">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar nos testes..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none border-none w-40 md:w-56 transition-all">
+                    </div>
+
+                    <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
+                        <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
+                        <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
+                        <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
+                        <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition text-rose-500">Não Cobrados</button>
+                    </div>
+                    
+                    <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition" title="Exportar CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
+                    <button onclick="abrirModal()" class="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-amber-700 transition" title="Importar CSV Teste"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-white"></i></button>
+                    <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Teste"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
+                        <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4 cursor-pointer" onclick="toggleOrdemAlfabetica()">Participante</th>
+                                <th class="px-6 py-4 text-center">Valor</th>
+                                <th class="px-6 py-4 text-center italic">Adiantadas</th>
+                                <th class="px-6 py-4 text-center">Status</th>
+                                <th class="px-6 py-4 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="client-only max-w-md mx-auto py-10" id="portalCliente"></div>
+    </div>
+</div>
+
+<script>
+    // CREDENCIAIS DO FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",
+        authDomain: "pool-e439a.firebaseapp.com",
+        databaseURL: "https://pool-e439a-default-rtdb.firebaseio.com",
+        projectId: "pool-e439a",
+        storageBucket: "pool-e439a.firebasestorage.app",
+        messagingSenderId: "94463318724",
+        appId: "1:94463318724:web:05208de1c8a9cbfd014791"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // DEFINIÇÃO DO AMBIENTE (Mudar aqui se quiser trocar de pasta no banco)
+    const PASTA_BANCO = "testes_v2"; 
+    const PASTA_CONFIG = "configuracoes_testes";
+
+    let mesAtual = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
+    let dadosLocais = [];
+    let filtroStatus = 'todos';
+    let ordemCrescente = true;
+    let idCliente = new URLSearchParams(window.location.search).get('p');
+    let configGeral = { chavePix: "CHAVE-TESTE", valorPadrao: 0 };
+
+    function iniciar() {
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        db.ref(PASTA_CONFIG).on('value', s => { configGeral = s.val() || { chavePix: "CHAVE-TESTE", valorPadrao: 0 }; });
+        
+        gerarOpcoesMes();
+        verificarResetMensal(); 
+
+        if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
+        else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
+        lucide.createIcons();
+    }
+
+    async function verificarResetMensal() {
+        const hoje = new Date();
+        if (hoje.getDate() >= 20) {
+            const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
+            const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
+            const s = await db.ref(`${PASTA_BANCO}/${keyProx}`).once('value');
+            
+            if (!s.exists()) {
+                const atual = await db.ref(`${PASTA_BANCO}/${mesAtual}`).once('value');
+                if (atual.exists()) {
+                    const lista = atual.val();
+                    const novaLista = {};
+                    Object.keys(lista).forEach(id => {
+                        const p = lista[id];
+                        const temAdiantamento = (p.adiantadas || 0) > 0;
+                        novaLista[id] = {
+                            ...p,
+                            pago: temAdiantamento,
+                            adiantadas: temAdiantamento ? (p.adiantadas - 1) : 0,
+                            msgEnviada: temAdiantamento,
+                            comprovante: null
+                        };
+                    });
+                    await db.ref(`${PASTA_BANCO}/${keyProx}`).set(novaLista);
+                }
+            }
+        }
+    }
+
+    function carregarDadosAdmin() {
+        db.ref(`${PASTA_BANCO}/${mesAtual}`).on('value', s => {
+            const dados = s.val() || {};
+            dadosLocais = Object.keys(dados).map(id => ({ id, ...dados[id] }));
+            renderizarTabela();
+        });
+    }
+
+    function renderizarTabela() {
+        const corpo = document.getElementById('corpoTabela');
+        const termoBusca = document.getElementById('inputPesquisa').value.toLowerCase();
+        if(!corpo) return;
+
+        let filtrados = [...dadosLocais];
+        if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
+        if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
+        if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
+        if (termoBusca) filtrados = filtrados.filter(p => p.nome.toLowerCase().includes(termoBusca) || (p.tel && p.tel.includes(termoBusca)));
+
+        filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
+
+        corpo.innerHTML = "";
+        filtrados.forEach(p => {
+            const val = parseFloat(p.valor) || 0;
+            const adiantadas = p.adiantadas || 0;
+            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400';
+            corpo.innerHTML += `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full">
+                            ${adiantadas > 0 ? `<span class="bg-blue-100 text-blue-600 text-[9px] px-2 py-0.5 rounded-full font-black">+${adiantadas}</span>` : ''}
+                        </div>
+                        <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full">
+                    </td>
+                    <td class="px-6 py-4 text-center font-mono font-bold italic dark:text-white">
+                        R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-20 text-center">
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value || 0))" class="editable-input w-12 text-center font-bold text-blue-500">
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase transition ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                            ${p.pago ? 'Pago' : 'Pendente'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-1">
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-4 h-4"></i></button>
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`;
+        });
+        lucide.createIcons();
+    }
+
+    function exportarExcel() {
+        if (dadosLocais.length === 0) return alert("Vazio!");
+        let csv = "ID;Nome;Telefone;Valor;Adiantadas;Status\n";
+        dadosLocais.forEach(p => { csv += `${p.id};${p.nome};${p.tel || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'}\n`; });
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `TESTE_pool_${mesAtual}.csv`;
+        link.click();
+    }
+
+    function processarCSV() {
+        const fileInput = document.getElementById('arquivoCSV');
+        if (!fileInput.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const linhas = e.target.result.split('\n');
+            const updates = {};
+            linhas.forEach((linha, i) => {
+                if (i === 0 || !linha.trim()) return;
+                let cols = linha.split(/[;,]/);
+                let id = cols[0] && cols[0].trim() !== "" ? cols[0].trim() : (Date.now() + i);
+                updates[id] = { 
+                    nome: cols[1]?.trim() || "Teste", tel: cols[2]?.trim() || "", 
+                    valor: cols[3] ? parseFloat(cols[3].replace(',', '.')) : configGeral.valorPadrao,
+                    adiantadas: cols[4] ? parseInt(cols[4]) : 0, 
+                    pago: cols[5]?.trim() === "Pago", msgEnviada: false 
+                };
+            });
+            db.ref(`${PASTA_BANCO}/${mesAtual}`).update(updates).then(() => { fecharModal(); alert("Sincronizado em TESTES!"); });
+        };
+        reader.readAsText(fileInput.files[0], 'UTF-8');
+    }
+
+    function setFiltroStatus(s) { filtroStatus = s; document.querySelectorAll('.filter-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); b.classList.toggle('opacity-40', b.id !== `btn-${s}`); }); renderizarTabela(); }
+    function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
+    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
+    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
+    function editar(id, c, v) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ [c]: v }); }
+    function togglePago(id, s) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ pago: !s }); }
+    function excluir(id) { if(confirm("Apagar teste?")) db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).remove(); }
+    function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
+    function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
+    function adicionarPessoa() { const n = prompt("Nome Teste:"); if(n) db.ref(`${PASTA_BANCO}/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false }); }
+    function enviarZap(id, n, t, v) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ msgEnviada: true }); alert("Modo Teste: Mensagem não enviada de verdade."); }
+    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); for(let i = -2; i <= 4; i++) { const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); } }
+    function validarArquivo(i) { document.getElementById('nomeArquivo').innerText = i.files[0].name; }
+
+    iniciar();
+</script>
+</body>
+</html>
