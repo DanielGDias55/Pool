@@ -26,99 +26,63 @@
         html.dark { background-color: #020617 !important; }
         html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; min-height: 100vh; }
-        .admin-only { display: block; }
         .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
         .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
         .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
         .dark .editable-input:focus { background: #0f172a; color: white !important; }
-        #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        #modalImport.flex { display: flex; }
         .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
         .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-4 md:p-8">
 
-<div id="modalImport" onclick="fecharModal()">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl text-emerald-600">
-                <i data-lucide="file-spreadsheet"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-black dark:text-white">Importar para STAGING</h3>
-            </div>
+<div class="max-w-6xl mx-auto space-y-6">
+    <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
+        <div class="w-full lg:w-auto text-center lg:text-left">
+            <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic">Pool Manager <span class="text-amber-500">STAGING</span></h1>
+            <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold"></select>
         </div>
-        <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
-            <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
-            <label for="arquivoCSV" class="cursor-pointer group">
-                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
-                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Clique para selecionar o CSV</p>
-            </label>
+        
+        <div class="flex flex-wrap justify-center items-center gap-2">
+            <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition"><i data-lucide="download" class="w-4 h-4 mr-2"></i> CSV</button>
+            <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
+                <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
+            </button>
         </div>
-        <div class="flex gap-3 mt-6">
-            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
-            <button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition">Processar</button>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest italic">Previsão Mês</p>
+            <div class="text-3xl font-black dark:text-white italic text-slate-800">R$ <span id="tGeral">0,00</span></div>
+        </div>
+        <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl">
+            <p class="opacity-70 text-[10px] font-black uppercase italic">Recebido</p>
+            <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 shadow-sm">
+            <p class="text-slate-400 text-[10px] font-black uppercase italic">A receber</p>
+            <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
         </div>
     </div>
-</div>
 
-<div class="max-w-6xl mx-auto space-y-6">
-    <div class="admin-only space-y-6">
-        <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
-            <div class="w-full lg:w-auto text-center lg:text-left">
-                <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic">Pool Manager <span class="text-amber-500">STAGING</span></h1>
-                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold"></select>
-            </div>
-            
-            <div class="flex flex-wrap justify-center items-center gap-2">
-                <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
-                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
-                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
-                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
-                </div>
-                
-                <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition" title="Exportar CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-slate-200 transition"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i></button>
-                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
-                    <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
-                </button>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest italic">Previsão (STG)</p>
-                <div class="text-3xl font-black dark:text-white italic">R$ <span id="tGeral">0,00</span></div>
-            </div>
-            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl">
-                <p class="opacity-70 text-[10px] font-black uppercase italic">Pago (STG)</p>
-                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-black uppercase italic">Pendente (STG)</p>
-                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase">
-                        <tr>
-                            <th class="px-6 py-4">Participante</th>
-                            <th class="px-6 py-4 text-center">Valor Base</th>
-                            <th class="px-6 py-4 text-center">Adiantamentos</th>
-                            <th class="px-6 py-4 text-center">A Pagar</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4 text-right">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-                </table>
-            </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase">
+                    <tr>
+                        <th class="px-6 py-4">Participante</th>
+                        <th class="px-6 py-4 text-center">Valor Base</th>
+                        <th class="px-6 py-4 text-center">Meses de Crédito</th>
+                        <th class="px-6 py-4 text-center">Total Pago Inicial</th>
+                        <th class="px-6 py-4 text-center">A Pagar (Mês)</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -130,118 +94,162 @@
         databaseURL: "https://pool-e439a-default-rtdb.firebaseio.com",
         projectId: "pool-e439a",
         storageBucket: "pool-e439a.firebasestorage.app",
-        messagingSenderId: "94463318724",
         appId: "1:94463318724:web:05208de1c8a9cbfd014791"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const AMBIENTE = "staging";
-    const VALOR_PADRAO_SISTEMA = 50;
 
-    let mesAtual = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
+    let mesAtualKey = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
     let dadosLocais = [];
-    let filtroStatus = 'todos';
 
     function iniciar() {
         if (localStorage.theme === 'dark') document.documentElement.classList.add('dark');
         gerarOpcoesMes();
-        carregarDadosAdmin();
+        carregarDados();
         lucide.createIcons();
     }
 
-    function carregarDadosAdmin() {
-        db.ref(`${AMBIENTE}/cobrancas/${mesAtual}`).on('value', s => {
-            const dados = s.val() || {};
-            dadosLocais = Object.keys(dados).map(id => ({ id, ...dados[id] }));
-            renderizarTabela();
+    function carregarDados() {
+        // Buscamos os participantes na raiz do ambiente para manter histórico de adiantamento global
+        db.ref(`${AMBIENTE}/participantes`).on('value', s => {
+            const participantes = s.val() || {};
+            // Buscamos o status de pagamento do mês específico
+            db.ref(`${AMBIENTE}/pagamentos/${mesAtualKey}`).once('value', sp => {
+                const pagosNoMes = sp.val() || {};
+                dadosLocais = Object.keys(participantes).map(id => ({
+                    id,
+                    ...participantes[id],
+                    pago: pagosNoMes[id] ? true : false
+                }));
+                renderizarTabela();
+            });
         });
     }
 
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
         if(!corpo) return;
-
-        let filtrados = [...dadosLocais];
-        if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
-        if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
-
         corpo.innerHTML = "";
-        let tTotal = 0, tPago = 0, tPend = 0;
 
-        filtrados.forEach(p => {
-            // LÓGICA DE ADIANTAMENTO SOLICITADA
-            const adiantamentos = parseInt(p.adiantadas) || 0;
-            const valorBase = parseFloat(p.valor) || VALOR_PADRAO_SISTEMA;
+        let tGeral = 0, tPago = 0, tPend = 0;
+
+        dadosLocais.forEach(p => {
+            const valorBase = parseFloat(p.valor) || 50;
+            const mesesCreditoTotal = parseInt(p.mesesAdiantados) || 0;
+            const dataInicio = p.dataAdiantamento ? new Date(p.dataAdiantamento) : null;
             
-            // Se tem adiantamento, valor a pagar é 0. Se não, é o valor base.
-            let aPagar = adiantamentos > 0 ? 0 : valorBase;
-            
-            tTotal += aPagar;
-            if(p.pago || adiantamentos > 0) tPago += aPagar; else tPend += aPagar;
+            let mesesRestantes = 0;
+            let aPagarMês = valorBase;
+
+            if (dataInicio && mesesCreditoTotal > 0) {
+                // Cálculo de quantos meses se passaram desde o início do adiantamento
+                const [m, y] = mesAtualKey.split('-').map(Number);
+                const dataSelecionada = new Date(y, m - 1, 1);
+                const dataInicioReset = new Date(dataInicio.getFullYear(), dataInicio.getMonth(), 1);
+                
+                const diffMeses = (dataSelecionada.getFullYear() - dataInicioReset.getFullYear()) * 12 + (dataSelecionada.getMonth() - dataInicioReset.getMonth());
+
+                // Lógica de Amortização
+                mesesRestantes = mesesCreditoTotal - diffMeses;
+
+                if (diffMeses === 0) {
+                    // Mês Inicial: Multiplica valor pelo total adiantado
+                    aPagarMês = valorBase * mesesCreditoTotal;
+                } else if (mesesRestantes > 0) {
+                    // Meses seguintes: Fica 0 enquanto houver crédito
+                    aPagarMês = 0;
+                } else {
+                    // Crédito acabou
+                    mesesRestantes = 0;
+                    aPagarMês = valorBase;
+                }
+            }
+
+            tGeral += aPagarMês;
+            if (p.pago || (mesesRestantes > 0 && aPagarMês === 0)) tPago += aPagarMês;
+            else tPend += aPagarMês;
 
             corpo.innerHTML += `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition text-sm">
-                    <td class="px-6 py-4 font-bold dark:text-white">${p.nome}</td>
-                    <td class="px-6 py-4 text-center font-mono">R$ ${valorBase.toFixed(2)}</td>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
+                    <td class="px-6 py-4 font-bold">${p.nome}</td>
+                    <td class="px-6 py-4 text-center">R$ ${valorBase.toFixed(2)}</td>
                     <td class="px-6 py-4 text-center">
-                        <input type="number" value="${adiantamentos}" 
-                            onblur="atualizarAdiantamento('${p.id}', this.value)" 
-                            class="editable-input w-12 text-center text-blue-500 font-bold border-b border-blue-200">
+                        <input type="number" value="${mesesRestantes}" 
+                            onblur="setAdiantamento('${p.id}', this.value)" 
+                            class="editable-input w-12 text-center text-blue-500 font-bold">
                     </td>
-                    <td class="px-6 py-4 text-center font-black ${aPagar === 0 ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}">
-                        ${aPagar === 0 ? 'COBERTO' : 'R$ ' + aPagar.toFixed(2)}
+                    <td class="px-6 py-4 text-center text-xs text-slate-400">
+                        ${diffMeses === 0 ? '<b>R$ ' + (valorBase * mesesCreditoTotal).toFixed(2) + '</b>' : '---'}
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.pago || adiantamentos > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
-                            ${p.pago || adiantamentos > 0 ? 'OK' : 'Pendente'}
-                        </button>
+                    <td class="px-6 py-4 text-center font-black">
+                        ${aPagarMês === 0 ? '<span class="text-emerald-500">CRÉDITO</span>' : 'R$ ' + aPagarMês.toFixed(2)}
                     </td>
                     <td class="px-6 py-4 text-right space-x-2">
-                        <button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4 inline"></i></button>
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.pago || (mesesRestantes > 0 && aPagarMês === 0) ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                            ${p.pago || (mesesRestantes > 0 && aPagarMês === 0) ? 'Pago' : 'Pendente'}
+                        </button>
+                        <button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4 inline"></i></button>
                     </td>
                 </tr>`;
         });
 
-        document.getElementById('tGeral').innerText = tTotal.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tGeral').innerText = tGeral.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPago').innerText = tPago.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPend').innerText = tPend.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
-    // NOVA FUNÇÃO DE ATUALIZAÇÃO COM LÓGICA DE ADIANTAMENTO
-    function atualizarAdiantamento(id, valor) {
-        const num = parseInt(valor) || 0;
-        // Se o usuário colocar 0, garantimos que o valor volte a 50 (se estivesse 0)
-        const updates = { adiantadas: num };
-        db.ref(`${AMBIENTE}/cobrancas/${mesAtual}/${id}`).update(updates);
+    function setAdiantamento(id, qtd) {
+        const num = parseInt(qtd) || 0;
+        if (num <= 0) {
+            db.ref(`${AMBIENTE}/participantes/${id}`).update({ mesesAdiantados: 0, dataAdiantamento: null });
+        } else {
+            // Salva a data do início do adiantamento para poder calcular os meses seguintes
+            const [m, y] = mesAtualKey.split('-').map(Number);
+            const dataRef = new Date(y, m - 1, 1).toISOString();
+            db.ref(`${AMBIENTE}/participantes/${id}`).update({ 
+                mesesAdiantados: num, 
+                dataAdiantamento: dataRef 
+            });
+        }
+    }
+
+    function togglePago(id, status) {
+        db.ref(`${AMBIENTE}/pagamentos/${mesAtualKey}/${id}`).set(status ? null : true);
+        carregarDados();
     }
 
     function exportarExcel() {
-        if (dadosLocais.length === 0) return alert("Sem dados.");
-        let csv = "Nome;Valor Base;Adiantamentos;A Pagar;Status\n";
-        dadosLocais.forEach(p => {
-            const aPagar = (p.adiantadas || 0) > 0 ? 0 : (p.valor || 50);
-            csv += `${p.nome};${p.valor || 50};${p.adiantadas || 0};${aPagar};${p.pago ? 'Pago' : 'Pendente'}\n`;
-        });
+        let csv = "Nome;Valor Base;Meses Credito;A Pagar Mês\n";
+        dadosLocais.forEach(p => csv += `${p.nome};${p.valor};${p.mesesAdiantados||0};${p.pago ? 'Sim' : 'Não'}\n`);
         const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `pool_staging_${mesAtual}.csv`;
+        link.download = `pool_export.csv`;
         link.click();
     }
 
-    // Funções Básicas
-    function togglePago(id, s) { db.ref(`${AMBIENTE}/cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
-    function excluir(id) { if(confirm("Remover?")) db.ref(`${AMBIENTE}/cobrancas/${mesAtual}/${id}`).remove(); }
-    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`${AMBIENTE}/cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, valor: 50, adiantadas: 0, pago: false }); }
-    function setFiltroStatus(s) { filtroStatus = s; document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${s}`)); renderizarTabela(); }
+    function adicionarPessoa() {
+        const n = prompt("Nome:");
+        if(n) db.ref(`${AMBIENTE}/participantes/${Date.now()}`).set({ nome: n, valor: 50, mesesAdiantados: 0 });
+    }
+
+    function excluir(id) { if(confirm("Remover?")) db.ref(`${AMBIENTE}/participantes/${id}`).remove(); }
+    function mudarMes(v) { mesAtualKey = v; carregarDados(); }
+    function gerarOpcoesMes() {
+        const s = document.getElementById('filtroMes');
+        s.innerHTML = "";
+        for(let i=-2; i<=6; i++){
+            const d=new Date(); d.setMonth(d.getMonth()+i);
+            const k=`${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+            const o=document.createElement('option'); o.value=k; o.innerText=d.toLocaleDateString('pt-br',{month:'long',year:'numeric'});
+            o.selected = k === mesAtualKey;
+            s.appendChild(o);
+        }
+    }
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
-    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
-    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
-    function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
-    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); for(let i=-1; i<=2; i++){ const d=new Date(); d.setMonth(d.getMonth()+i); const k=`${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; const o=document.createElement('option'); o.value=k; o.innerText=d.toLocaleDateString('pt-br',{month:'long',year:'numeric'}); o.selected=k===mesAtual; s.appendChild(o); } }
-    function validarArquivo(i) { document.getElementById('nomeArquivo').innerText = i.files[0].name; }
 
     iniciar();
 </script>
