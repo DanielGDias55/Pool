@@ -78,14 +78,26 @@
             </div>
             
             <div class="flex flex-wrap justify-center items-center gap-2">
+                <div class="relative group mr-2">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none border-none w-40 md:w-56 transition-all">
+                </div>
+
                 <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
                     <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[11px] font-black uppercase transition">Todos</button>
                     <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pendentes</button>
                     <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition">Pagos</button>
-                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[11px] font-black uppercase opacity-40 dark:text-slate-300 transition text-rose-500">Não Cobrados</button>
                 </div>
-                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-slate-200 transition" title="Importar CSV"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i></button>
-                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Participante"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                
+                <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition" title="Exportar CSV">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+                <button onclick="abrirModal()" class="bg-slate-100 dark:bg-slate-800 dark:text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-slate-200 transition" title="Importar CSV">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-500"></i>
+                </button>
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Participante">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
                 <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
                     <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
                 </button>
@@ -107,23 +119,6 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-slate-900 dark:bg-blue-950 p-4 rounded-xl text-white flex items-center gap-4 shadow-md">
-                <i data-lucide="key" class="text-blue-400"></i>
-                <div class="flex-1">
-                    <p class="text-[10px] font-black uppercase opacity-50 tracking-widest">Chave PIX Ativa</p>
-                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white placeholder:text-slate-600" placeholder="Digite sua chave...">
-                </div>
-            </div>
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-sm">
-                <i data-lucide="dollar-sign" class="text-blue-600"></i>
-                <div class="flex-1">
-                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Valor Padrão (R$)</p>
-                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold dark:text-white" placeholder="0.00">
-                </div>
-            </div>
-        </div>
-
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -140,9 +135,7 @@
             </div>
         </div>
     </div>
-
-    <div class="client-only max-w-md mx-auto py-10" id="portalCliente">
-        </div>
+    <div class="client-only max-w-md mx-auto py-10" id="portalCliente"></div>
 </div>
 
 <script>
@@ -173,38 +166,12 @@
 
         db.ref('configuracoes').on('value', s => {
             configGeral = s.val() || { chavePix: "", valorPadrao: 0 };
-            const cp = document.getElementById('chavePix');
-            const vp = document.getElementById('valorPadrao');
-            if(cp) cp.value = configGeral.chavePix;
-            if(vp) vp.value = configGeral.valorPadrao;
         });
 
         gerarOpcoesMes();
-        verificarResetMensal();
-        
         if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
         else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
         lucide.createIcons();
-    }
-
-    async function verificarResetMensal() {
-        const hoje = new Date();
-        if (hoje.getDate() >= 20) {
-            const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
-            const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
-            const s = await db.ref(`cobrancas/${keyProx}`).once('value');
-            if (!s.exists()) {
-                const atual = await db.ref(`cobrancas/${mesAtual}`).once('value');
-                if (atual.exists()) {
-                    const lista = atual.val();
-                    const novaLista = {};
-                    Object.keys(lista).forEach(id => { 
-                        novaLista[id] = { ...lista[id], pago: false, msgEnviada: false, comprovante: null }; 
-                    });
-                    await db.ref(`cobrancas/${keyProx}`).set(novaLista);
-                }
-            }
-        }
     }
 
     function carregarDadosAdmin() {
@@ -217,12 +184,22 @@
 
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
+        const termoBusca = document.getElementById('inputPesquisa').value.toLowerCase();
         if(!corpo) return;
+
         let filtrados = [...dadosLocais];
         
+        // Filtro de Status
         if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
         if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
-        if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
+
+        // Filtro de Pesquisa
+        if (termoBusca) {
+            filtrados = filtrados.filter(p => 
+                p.nome.toLowerCase().includes(termoBusca) || 
+                p.tel.includes(termoBusca)
+            );
+        }
 
         filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
@@ -233,7 +210,6 @@
             const val = parseFloat(p.valor) || 0;
             t += val; if(p.pago) pg += val; else pd += val;
             
-            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400 dark:text-slate-600';
             const msgIcone = p.msgEnviada ? 'check-check' : 'send';
             
             corpo.innerHTML += `
@@ -251,12 +227,8 @@
                         </button>
                     </td>
                     <td class="px-6 py-4 text-right space-x-1">
-                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
-                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 inline-flex transition hover:scale-110" title="Ver Comprovante"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
-                        ${p.comprovante ? `<button onclick="removerComprovante('${p.id}')" class="p-2 text-rose-500 inline-flex transition hover:scale-110" title="Apagar Comprovante"><i data-lucide="file-x" class="w-4 h-4"></i></button>` : ''}
-                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 dark:text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition inline-flex">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 transition inline-flex" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                        <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>`;
         });
@@ -267,100 +239,52 @@
         lucide.createIcons();
     }
 
-    function carregarPortalCliente() {
-        db.ref(`cobrancas/${mesAtual}/${idCliente}`).on('value', s => {
-            const p = s.val();
-            const container = document.getElementById('portalCliente');
-            if(p) {
-                if(p.comprovante) {
-                    container.innerHTML = `
-                        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 p-12 text-center space-y-6">
-                            <div class="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <i data-lucide="check-circle-2" class="w-12 h-12 text-emerald-500"></i>
-                            </div>
-                            <h2 class="text-3xl font-black dark:text-white">Comprovante Enviado!</h2>
-                            <p class="text-slate-500 dark:text-slate-400 font-medium">Obrigado, ${p.nome.split(' ')[0]}! Seu pagamento está em análise.</p>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `
-                        <div class="bg-white dark:bg-slate-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden p-8 text-center space-y-6">
-                            <h2 class="text-4xl font-black italic dark:text-white tracking-tight">Olá, ${p.nome.split(' ')[0]}!</h2>
-                            <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-blue-500/20">
-                                <p class="text-[10px] font-black uppercase opacity-70 italic text-white">Valor a Pagar</p>
-                                <h3 class="text-5xl font-black italic">R$ ${p.valor.toLocaleString('pt-br',{minimumFractionDigits:2})}</h3>
-                            </div>
-                            <p class="font-mono font-bold text-lg dark:text-white select-all break-all italic bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">${configGeral.chavePix || 'Aguardando Chave...'}</p>
-                            <input type="file" id="fotoInput" accept="image/*" class="hidden" onchange="lerFoto(this)">
-                            <label for="fotoInput" class="flex flex-col items-center justify-center gap-4 w-full bg-slate-50 dark:bg-slate-850 border-2 border-dashed border-slate-200 dark:border-slate-700 p-8 rounded-[2.5rem] cursor-pointer hover:border-blue-500 transition-all active:scale-95 group">
-                                <i data-lucide="camera" class="w-8 h-8 text-blue-500 group-hover:scale-110 transition"></i>
-                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Anexar Comprovante</span>
-                            </label>
-                        </div>
-                    `;
-                }
-                lucide.createIcons();
-            }
+    function exportarExcel() {
+        if (dadosLocais.length === 0) return alert("Não há dados para exportar.");
+        let csv = "Nome;Telefone;Valor;Status\n";
+        dadosLocais.forEach(p => {
+            csv += `${p.nome};${p.tel};${p.valor};${p.pago ? 'Pago' : 'Pendente'}\n`;
         });
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `planilha_pool_${mesAtual}.csv`;
+        link.click();
     }
 
-    function removerComprovante(id) {
-        if(confirm("Deseja apagar este comprovante? O cliente poderá enviar novamente.")) {
-            db.ref(`cobrancas/${mesAtual}/${id}`).update({ 
-                comprovante: null, 
-                pago: false 
-            });
-        }
-    }
-
-    function lerFoto(i) {
-        if (i.files && i.files[0]) {
-            const r = new FileReader();
-            r.onload = e => {
-                db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ pago: true, comprovante: e.target.result });
-            };
-            r.readAsDataURL(i.files[0]);
-        }
-    }
-
-    // --- FUNÇÕES RESTANTES MANTIDAS ---
-    function validarArquivo(input) { document.getElementById('nomeArquivo').innerText = input.files[0] ? input.files[0].name : "Clique para selecionar o CSV"; }
     function processarCSV() {
         const fileInput = document.getElementById('arquivoCSV');
         const file = fileInput.files[0];
-        if (!file) return alert("Selecione um arquivo CSV.");
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             const linhas = e.target.result.split('\n');
             const updates = {};
-            for (let i = 1; i < linhas.length; i++) {
-                if (linhas[i].trim() === "") continue;
-                let colunas = linhas[i].split(/[;,]/);
-                let nome = colunas[0] ? colunas[0].trim() : null;
-                let tel = colunas[1] ? colunas[1].trim() : "55";
-                if (nome) {
-                    const id = Date.now() + Math.floor(Math.random() * 9999) + i;
-                    updates[id] = { nome, tel, valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false, comprovante: null };
-                }
-            }
-            db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => { fecharModal(); fileInput.value = ""; });
+            linhas.forEach((linha, i) => {
+                if (i === 0 || !linha.trim()) return;
+                let cols = linha.split(/[;,]/);
+                let id = Date.now() + i;
+                updates[id] = { nome: cols[0].trim(), tel: cols[1].trim(), valor: configGeral.valorPadrao, pago: false, msgEnviada: false };
+            });
+            db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => fecharModal());
         };
         reader.readAsText(file, 'UTF-8');
     }
+
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
-    function setFiltroStatus(status) { filtroStatus = status; document.querySelectorAll('.filter-btn').forEach(btn => { btn.classList.add('opacity-40'); btn.classList.remove('active'); }); document.getElementById(`btn-${status}`).classList.remove('opacity-40'); document.getElementById(`btn-${status}`).classList.add('active'); renderizarTabela(); }
-    function enviarZap(id, nome, tel, valor) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); const link = window.location.href.split('?')[0] + "?p=" + id; const p = mesAtual.split('-'); const nomeMes = new Date(p[1], p[0]-1).toLocaleDateString('pt-br', { month: 'long', year: 'numeric' }); const msg = encodeURIComponent(`Olá, ${nome}!\n\nCobrança do pool de bolas Saldanha *${nomeMes}*.\n\n*Valor:* R$ ${valor.toFixed(2).replace('.', ',')}\n*PIX:* ${configGeral.chavePix}\n\nEnvie o comprovante por esse link para confirar pagamento:\n${link}`); window.open(`https://wa.me/${tel}?text=${msg}`); }
+    function setFiltroStatus(s) { filtroStatus = s; document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${s}`)); renderizarTabela(); }
     function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
     function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
     function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
-    function excluir(id) { if(confirm("Apagar participante?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
-    function salvarConfig(c, v) { db.ref('configuracoes').update({ [c]: v }); }
+    function excluir(id) { if(confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
-    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao || 0, pago: false, msgEnviada: false, comprovante: null }); }
-    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); if(!s) return; const a = new Date(); for(let i = -2; i <= 4; i++) { const d = new Date(a.getFullYear(), a.getMonth() + i, 1); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); if(k === mesAtual) o.selected = true; s.appendChild(o); } }
-    function verFoto(img) { const v = window.open(""); v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`); }
+    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao, pago: false }); }
+    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); for(let i = -2; i <= 2; i++) { const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); } }
+    function validarArquivo(i) { document.getElementById('nomeArquivo').innerText = i.files[0].name; }
+    function enviarZap(id, n, t, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); window.open(`https://wa.me/${t}?text=Olá ${n}, valor R$ ${v}`); }
 
     iniciar();
 </script>
