@@ -218,7 +218,7 @@
             <!-- Gaveta de Filtros e Opções -->
             <div id="drawerWrapper">
                 <div class="glass-card rounded-[2rem] p-6 shadow-inner border border-slate-200/50 dark:border-slate-800/50 relative z-0">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
                         <div class="space-y-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Pesquisar</label>
                             <div class="relative group">
@@ -232,6 +232,14 @@
                             <select id="filtroMes" onchange="mudarMes(this.value)" class="w-full bg-white dark:bg-slate-950 dark:text-white px-4 py-3 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm cursor-pointer transition"></select>
                         </div>
 
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Sua Chave PIX</label>
+                            <div class="relative group">
+                                <i data-lucide="key" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                                <input type="text" id="inputChavePix" onblur="salvarChavePix(this.value)" placeholder="Sua chave PIX..." class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+                            </div>
+                        </div>
+
                         <div class="space-y-2 lg:col-span-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Status</label>
                             <div class="bg-white dark:bg-slate-950 p-1.5 rounded-2xl flex flex-wrap gap-1 shadow-sm border border-slate-100 dark:border-slate-900 transition">
@@ -242,7 +250,7 @@
                             </div>
                         </div>
 
-                        <div class="lg:col-span-4 flex flex-wrap gap-3 pt-6 mt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="lg:col-span-5 flex flex-wrap gap-3 pt-6 mt-2 border-t border-slate-100 dark:border-slate-800">
                             <button onclick="abrirModal()" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500/10 text-emerald-600 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/20 transition">
                                 <i data-lucide="upload" class="w-4 h-4"></i> Importar CSV
                             </button>
@@ -337,7 +345,11 @@
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-        db.ref('configuracoes').on('value', s => { configGeral = s.val() || configGeral; });
+        db.ref('configuracoes').on('value', s => { 
+            if (s.val()) configGeral = { ...configGeral, ...s.val() }; 
+            const inputPix = document.getElementById('inputChavePix');
+            if (inputPix) inputPix.value = configGeral.chavePix;
+        });
         gerarOpcoesMes();
         if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
         else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
@@ -666,6 +678,11 @@
     function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
     function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, comprovante: null }); }
     
+    function salvarChavePix(valor) {
+        configGeral.chavePix = valor;
+        db.ref('configuracoes').update({ chavePix: valor });
+    }
+    
     // Gera as opções do dropdown também considerando o avanço do dia 20
     function gerarOpcoesMes() { 
         const s = document.getElementById('filtroMes'); 
@@ -693,8 +710,8 @@
         db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); 
         const link = window.location.href.split('?')[0] + "?p=" + id; 
         
-        // Adicionando parágrafos com \n\n
-        const msg = encodeURIComponent(`Olá, ${n}!\n\nA sua mensalidade no valor de R$ ${v.toFixed(2)} já está disponível para pagamento.\n\nPor favor, clique no link abaixo para ver os detalhes e anexar o seu comprovativo:\n${link}`); 
+        // Adicionando parágrafos com \n\n e a chave PIX
+        const msg = encodeURIComponent(`Olá, ${n}!\n\nA sua mensalidade no valor de R$ ${v.toFixed(2)} já está disponível para pagamento.\nChave PIX: ${configGeral.chavePix}\n\nPor favor, clique no link abaixo para ver os detalhes e anexar o seu comprovativo:\n${link}`); 
         
         window.open(`https://wa.me/${t}?text=${msg}`); 
     }
