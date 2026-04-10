@@ -159,7 +159,7 @@
     async function verificarResetMensal() {
         const hoje = new Date();
         // MUDADO PARA DIA 1 PARA TESTE FACIL
-        if (hoje.getDate() >= 1) { 
+        if (hoje.getDate() >= 10) { 
             const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
             const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
             const s = await db.ref(`${PASTA_BANCO}/${keyProx}`).once('value');
