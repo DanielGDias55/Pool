@@ -197,8 +197,8 @@
                         <i data-lucide="layers" class="text-white w-6 h-6"></i>
                     </div>
                     <div>
-                        <h1 class="text-xl font-black tracking-tighter dark:text-white uppercase leading-none">Pool Saldanha</h1>
-                        <span class="text-[10px] font-bold text-brand-500 uppercase tracking-widest">v2.3</span>
+                        <h1 class="text-xl font-black tracking-tighter dark:text-white uppercase leading-none">Pool Manager</h1>
+                        <span class="text-[10px] font-bold text-brand-500 uppercase tracking-widest">SaaS Pro v2.3</span>
                     </div>
                 </div>
                 
@@ -688,7 +688,17 @@
     }
     
     function validarArquivo(i) { if(i.files[0]) document.getElementById('nomeArquivo').innerText = i.files[0].name; }
-    function enviarZap(id, n, t, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); const link = window.location.href.split('?')[0] + "?p=" + id; const msg = encodeURIComponent(`Olá, ${n}!\nValor do Pool saldanha desse mês: R$ ${v.toFixed(2)}\nMe manda o comprovante nesse link: ${link}`); window.open(`https://wa.me/${t}?text=${msg}`); }
+    
+    function enviarZap(id, n, t, v) { 
+        db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); 
+        const link = window.location.href.split('?')[0] + "?p=" + id; 
+        
+        // Adicionando parágrafos com \n\n
+        const msg = encodeURIComponent(`Olá, ${n}!\n\nA sua mensalidade no valor de R$ ${v.toFixed(2)} já está disponível para pagamento.\n\nPor favor, clique no link abaixo para ver os detalhes e anexar o seu comprovativo:\n${link}`); 
+        
+        window.open(`https://wa.me/${t}?text=${msg}`); 
+    }
+    
     function verFoto(img) { const v = window.open(""); v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%; border-radius:10px;"></body>`); }
 
     iniciar();
