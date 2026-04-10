@@ -50,9 +50,10 @@
             </div>
             <div>
                 <h3 class="text-xl font-black dark:text-white">Importar Planilha CSV</h3>
-                <p class="text-xs text-slate-500">Colunas esperadas: Nome, Telefone</p>
+                <p class="text-xs text-slate-500">Colunas esperadas: ID, Nome, Telefone, Valor, Adiantadas, Status</p>
             </div>
         </div>
+
         <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
             <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
             <label for="arquivoCSV" class="cursor-pointer group">
@@ -60,6 +61,7 @@
                 <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Clique para selecionar o CSV</p>
             </label>
         </div>
+
         <div class="flex gap-3 mt-6">
             <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
             <button onclick="processarCSV()" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition">Processar Planilha</button>
@@ -96,6 +98,21 @@
                 </button>
             </div>
         </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1 italic">Previsão Total</p>
+                <div class="text-3xl font-black dark:text-white italic text-slate-800">R$ <span id="tGeral">0,00</span></div>
+            </div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 italic text-white">Confirmado</p>
+                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">A receber</p>
+                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
+            </div>
+        </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
@@ -142,7 +159,13 @@
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-        db.ref('configuracoes').on('value', s => { configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; });
+        db.ref('configuracoes').on('value', s => { 
+            configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; 
+            const cp = document.getElementById('chavePix');
+            const vp = document.getElementById('valorPadrao');
+            if(cp) cp.value = configGeral.chavePix;
+            if(vp) vp.value = configGeral.valorPadrao;
+        });
         gerarOpcoesMes();
         if (idCliente) { carregarPortalCliente(); document.body.className = "modo-cliente"; }
         else { carregarDadosAdmin(); document.body.className = "modo-admin"; }
@@ -175,9 +198,13 @@
         filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
         corpo.innerHTML = "";
+        let t = 0, pg = 0, pd = 0;
+
         filtrados.forEach(p => {
             const val = parseFloat(p.valor) || 0;
             const adiantadas = p.adiantadas || 0;
+            t += val; if(p.pago) pg += val; else pd += val;
+            
             const msgIcone = p.msgEnviada ? 'check-check' : 'send';
             const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400';
             
@@ -202,22 +229,30 @@
                         </button>
                     </td>
                     <td class="px-6 py-4 text-right space-x-1">
-                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                        ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2 text-blue-500 inline-flex transition hover:scale-110" title="Ver Comprovante"><i data-lucide="eye" class="w-4 h-4"></i></button>` : ''}
                         <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>`;
         });
+
+        document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
     function exportarExcel() {
-        if (dadosLocais.length === 0) return alert("Vazio!");
-        let csv = "Nome;Telefone;Valor;Adiantadas;Status\n";
-        dadosLocais.forEach(p => { csv += `${p.nome};${p.tel};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'}\n`; });
+        if (dadosLocais.length === 0) return alert("Não há dados para exportar.");
+        let csv = "ID;Nome;Telefone;Valor;Adiantadas;Status\n";
+        dadosLocais.forEach(p => { 
+            const status = p.pago ? 'Pago' : 'Pendente';
+            csv += `${p.id};${p.nome};${p.tel};${p.valor};${p.adiantadas || 0};${status}\n`; 
+        });
         const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `pool_${mesAtual}.csv`;
+        link.download = `pool_manager_${mesAtual}.csv`;
         link.click();
     }
 
@@ -232,10 +267,21 @@
             linhas.forEach((linha, i) => {
                 if (i === 0 || !linha.trim()) return;
                 let cols = linha.split(/[;,]/);
-                let id = Date.now() + i;
-                updates[id] = { nome: cols[0].trim(), tel: cols[1].trim(), valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false };
+                let idExistente = cols[0] && cols[0].trim() !== "" ? cols[0].trim() : null;
+                let id = idExistente || (Date.now() + i); 
+                updates[id] = { 
+                    nome: cols[1] ? cols[1].trim() : "Sem Nome", 
+                    tel: cols[2] ? cols[2].trim() : "", 
+                    valor: cols[3] ? parseFloat(cols[3].replace(',', '.')) : configGeral.valorPadrao, 
+                    adiantadas: cols[4] ? parseInt(cols[4]) : 0,
+                    pago: cols[5] ? cols[5].trim() === "Pago" : false,
+                    msgEnviada: false 
+                };
             });
-            db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => fecharModal());
+            db.ref(`cobrancas/${mesAtual}`).update(updates).then(() => {
+                fecharModal();
+                alert("Lista sincronizada com sucesso!");
+            });
         };
         reader.readAsText(file, 'UTF-8');
     }
@@ -256,10 +302,11 @@
     function excluir(id) { if(confirm("Apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
-    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao, adiantadas: 0, pago: false }); }
-    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); for(let i = -2; i <= 2; i++) { const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); } }
+    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`cobrancas/${mesAtual}/${Date.now()}`).set({ nome: n, tel: "55", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, comprovante: null }); }
+    function gerarOpcoesMes() { const s = document.getElementById('filtroMes'); if(!s) return; for(let i = -2; i <= 4; i++) { const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); } }
     function validarArquivo(i) { document.getElementById('nomeArquivo').innerText = i.files[0].name; }
-    function enviarZap(id, n, t, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); window.open(`https://wa.me/${t}?text=Olá ${n}, valor R$ ${v}`); }
+    function enviarZap(id, n, t, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ msgEnviada: true }); const link = window.location.href.split('?')[0] + "?p=" + id; const msg = encodeURIComponent(`Olá, ${n}!\nValor: R$ ${v.toFixed(2)}\nLink: ${link}`); window.open(`https://wa.me/${t}?text=${msg}`); }
+    function verFoto(img) { const v = window.open(""); v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%"></body>`); }
 
     iniciar();
 </script>
