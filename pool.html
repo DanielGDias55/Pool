@@ -392,8 +392,11 @@
                     <td class="px-8 py-5 text-right">
                         <div class="flex justify-end gap-1 opacity-40 group-hover:opacity-100 transition">
                             <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2.5 ${msgEstilo}" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
-                            ${p.comprovante ? `<button onclick="verFoto('${p.comprovante}')" class="p-2.5 text-brand-500"><i data-lucide="image" class="w-4 h-4"></i></button>` : ''}
-                            <button onclick="excluir('${p.id}')" class="p-2.5 text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            ${p.comprovante ? `
+                                <button onclick="verFoto('${p.comprovante}')" class="p-2.5 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition" title="Ver Comprovante"><i data-lucide="image" class="w-4 h-4"></i></button>
+                                <button onclick="removerComprovante('${p.id}')" class="p-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="Apagar Comprovante Inválido"><i data-lucide="image-minus" class="w-4 h-4"></i></button>
+                            ` : ''}
+                            <button onclick="excluir('${p.id}')" class="p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Excluir Participante"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -497,7 +500,10 @@
         const file = input.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
-            db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ comprovante: e.target.result }).then(() => alert("Comprovante enviado!"));
+            db.ref(`cobrancas/${mesAtual}/${idCliente}`).update({ 
+                comprovante: e.target.result,
+                pago: true // Agora o sistema marca como pago automaticamente
+            }).then(() => alert("Comprovante enviado com sucesso!"));
         };
         reader.readAsDataURL(file);
     }
@@ -507,6 +513,7 @@
     function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
     function editar(id, c, v) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`cobrancas/${mesAtual}/${id}`).update({ pago: !s }); }
+    function removerComprovante(id) { if(confirm("Deseja apagar este comprovante e marcar a cobrança como pendente?")) db.ref(`cobrancas/${mesAtual}/${id}`).update({ comprovante: null, pago: false }); }
     function excluir(id) { if(confirm("Deseja apagar?")) db.ref(`cobrancas/${mesAtual}/${id}`).remove(); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
