@@ -4,23 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEST ENVIRONMENT 2 - Pool Manager Pro</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { slate: { 850: '#1e293b', 950: '#020617' } }
-                }
-            }
-        }
-    </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         html.dark { background-color: #020617 !important; }
@@ -31,54 +18,38 @@
         .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
         .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
         .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; }
-        #modalImport { display: none; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        #modalImport.flex { display: flex; }
+        .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
+        .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
-<div class="test-banner">Ambiente de Testes 2 - Reset & Caixa v2.0</div>
-
-<div id="modalImport" onclick="fecharModal()">
-    <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600">
-                <i data-lucide="flask-conical"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-black dark:text-white">Importar Planilha (TESTE)</h3>
-                <p class="text-xs text-slate-500">Colunas: ID, Nome, Telefone, Valor, Adiantadas, Status</p>
-            </div>
-        </div>
-        <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
-            <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
-            <label for="arquivoCSV" class="cursor-pointer group">
-                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
-                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Clique para selecionar o CSV</p>
-            </label>
-        </div>
-        <div class="flex gap-3 mt-6">
-            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
-            <button onclick="processarCSV()" class="flex-1 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition">Processar Planilha</button>
-        </div>
-    </div>
-</div>
+<div class="test-banner">Ambiente de Testes 2 - Filtros & Multiplicação</div>
 
 <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
     <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
         <div class="w-full lg:w-auto text-center lg:text-left">
             <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic text-amber-600">TEST ENVIRONMENT 2</h1>
-            <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold cursor-pointer outline-none ring-2 ring-transparent focus:ring-amber-500"></select>
+            <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold cursor-pointer outline-none"></select>
         </div>
-        <div class="flex flex-wrap justify-center gap-2">
-            <div class="relative group">
+        
+        <div class="flex flex-wrap justify-center items-center gap-2">
+            <div class="relative group mr-2">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar participante..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-40 md:w-56 focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-40 md:w-56 transition-all">
             </div>
-            <button onclick="exportarExcel()" class="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 transition" title="Exportar CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
-            <button onclick="abrirModal()" class="bg-amber-600 text-white p-2.5 rounded-xl hover:bg-amber-700 transition" title="Importar CSV"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i></button>
-            <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-700 transition" title="Adicionar Manual"><i data-lucide="plus" class="w-4 h-4"></i></button>
-            <button onclick="toggleDarkMode()" class="bg-slate-200 dark:bg-slate-700 p-2.5 rounded-xl"><i data-lucide="moon" class="w-4 h-4"></i></button>
+
+            <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
+                <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
+                <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
+                <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
+                <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition text-rose-500">Não Cobrados</button>
+            </div>
+            
+            <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition hover:bg-blue-700"><i data-lucide="plus" class="w-4 h-4"></i></button>
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
+                <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
+            </button>
         </div>
     </header>
 
@@ -88,7 +59,7 @@
             <div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div>
         </div>
         <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
-            <p class="text-[10px] font-black uppercase opacity-70 italic">Confirmado + Saldo Adiantado</p>
+            <p class="text-[10px] font-black uppercase opacity-70 italic">Confirmado (Total Recebido)</p>
             <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
         </div>
         <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800">
@@ -98,31 +69,29 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-amber-600 p-4 rounded-xl text-white">
-            <p class="text-[10px] font-black uppercase">Chave PIX (TESTE)</p>
+        <div class="bg-amber-600 p-4 rounded-xl text-white shadow-md">
+            <p class="text-[10px] font-black uppercase tracking-widest">Chave PIX (TESTE)</p>
             <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white placeholder:text-amber-200 focus:ring-0">
         </div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
-            <p class="text-[10px] font-black text-slate-400 uppercase">Valor Padrão (R$)</p>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Padrão (R$)</p>
             <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white focus:ring-0">
         </div>
     </div>
 
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 dark:bg-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <tr>
-                        <th class="px-6 py-4">Participante</th>
-                        <th class="px-6 py-4 text-center">Valor Cobrado</th>
-                        <th class="px-6 py-4 text-center">Adiantadas</th>
-                        <th class="px-6 py-4 text-center">Status</th>
-                        <th class="px-6 py-4 text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-            </table>
-        </div>
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 dark:bg-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                <tr>
+                    <th class="px-6 py-4">Participante</th>
+                    <th class="px-6 py-4 text-center">Valor Cobrado</th>
+                    <th class="px-6 py-4 text-center">Parcelas Adiantadas</th>
+                    <th class="px-6 py-4 text-center">Status</th>
+                    <th class="px-6 py-4 text-right">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+        </table>
     </div>
 </div>
 
@@ -145,59 +114,26 @@
     let mesAtual = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
     let dadosLocais = [];
     let configGeral = { chavePix: "", valorPadrao: 0 };
+    let filtroStatus = 'todos';
 
-    // --- INICIALIZAÇÃO ---
     async function iniciar() {
-        try {
-            console.log("Iniciando carregamento...");
-            
-            // 1. Carregar Configurações
-            const configSnap = await db.ref(PASTA_CONFIG).once('value');
-            if(configSnap.exists()) {
-                configGeral = configSnap.val();
-                document.getElementById('chavePix').value = configGeral.chavePix || "";
-                document.getElementById('valorPadrao').value = configGeral.valorPadrao || 0;
-            }
+        const configSnap = await db.ref(PASTA_CONFIG).once('value');
+        configGeral = configSnap.val() || { chavePix: "TESTE", valorPadrao: 50 };
+        document.getElementById('chavePix').value = configGeral.chavePix;
+        document.getElementById('valorPadrao').value = configGeral.valorPadrao;
 
-            // 2. Gerar Filtro de Meses
-            gerarOpcoesMes();
-
-            // 3. Verificar Reset e Carregar Dados
-            await verificarResetMensal();
-            carregarDadosAdmin();
-            
-            lucide.createIcons();
-        } catch (e) {
-            console.error("Erro na inicialização:", e);
-        }
-    }
-
-    function gerarOpcoesMes() { 
-        const select = document.getElementById('filtroMes'); 
-        if (!select) return;
-        select.innerHTML = "";
-        
-        // Gera 2 meses antes até 3 meses depois
-        for(let i = -2; i <= 3; i++) { 
-            const d = new Date(); 
-            d.setMonth(d.getMonth() + i); 
-            const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; 
-            const o = document.createElement('option'); 
-            o.value = k; 
-            o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); 
-            if (k === mesAtual) o.selected = true; 
-            select.appendChild(o); 
-        } 
+        gerarOpcoesMes();
+        await verificarResetMensal();
+        carregarDadosAdmin();
+        lucide.createIcons();
     }
 
     async function verificarResetMensal() {
         const hoje = new Date();
-        // Lógica de reset (exemplo: se for dia 1, gera o próximo mês se não existir)
         if (hoje.getDate() >= 1) { 
             const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
             const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
             const s = await db.ref(`${PASTA_BANCO}/${keyProx}`).once('value');
-            
             if (!s.exists()) {
                 const atualSnap = await db.ref(`${PASTA_BANCO}/${mesAtual}`).once('value');
                 if (atualSnap.exists()) {
@@ -205,13 +141,13 @@
                     const novaLista = {};
                     Object.keys(lista).forEach(id => {
                         const p = lista[id];
-                        const adiantadas = parseInt(p.adiantadas || 0);
-                        const temCredito = adiantadas > 0;
+                        const adiantadasNum = parseInt(p.adiantadas || 0);
+                        const temCredito = adiantadasNum > 0;
                         novaLista[id] = {
                             ...p,
                             pago: temCredito,
-                            valor: temCredito ? 0 : (configGeral.valorPadrao || 50),
-                            adiantadas: temCredito ? (adiantadas - 1) : 0,
+                            valor: temCredito ? 0 : (configGeral.valorPadrao || 0),
+                            adiantadas: temCredito ? (adiantadasNum - 1) : 0,
                             msgEnviada: temCredito,
                             comprovante: null
                         };
@@ -236,113 +172,68 @@
         let t = 0, pg = 0, pd = 0;
         corpo.innerHTML = "";
 
-        dadosLocais.forEach(p => {
-            // Filtro de Busca por Nome
-            if (termoBusca && !p.nome.toLowerCase().includes(termoBusca)) return;
+        let filtrados = [...dadosLocais];
+        if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
+        if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
+        if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
+        if (termoBusca) filtrados = filtrados.filter(p => p.nome.toLowerCase().includes(termoBusca));
 
+        filtrados.sort((a,b) => a.nome.localeCompare(b.nome));
+
+        filtrados.forEach(p => {
             const val = parseFloat(p.valor) || 0;
             const adiantadas = parseInt(p.adiantadas) || 0;
-            
             t += val;
             if (p.pago) {
-                const baseCalculo = (val > 0) ? val : (configGeral.valorPadrao || 50);
-                pg += val + (adiantadas * baseCalculo);
+                const base = val > 0 ? val : (configGeral.valorPadrao || 0);
+                pg += val + (adiantadas * base);
             } else {
                 pd += val;
             }
 
             corpo.innerHTML += `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
                     <td class="px-6 py-4 font-bold dark:text-white">${p.nome}</td>
                     <td class="px-6 py-4 text-center">R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',parseFloat(this.value))" class="editable-input w-24 text-center"></td>
                     <td class="px-6 py-4 text-center"><input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value))" class="editable-input w-16 text-center text-blue-500 font-bold"></td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase transition-all ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 py-1 rounded-full text-[9px] font-black uppercase transition ${p.pago ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}">
                             ${p.pago ? 'Pago' : 'Pendente'}
                         </button>
                     </td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </td>
+                    <td class="px-6 py-4 text-right"><button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
                 </tr>`;
         });
-
         document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
-    // --- AÇÕES ---
+    function setFiltroStatus(s) { 
+        filtroStatus = s; 
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.toggle('active', b.id === `btn-${s}`);
+            b.classList.toggle('opacity-40', b.id !== `btn-${s}`);
+        }); 
+        renderizarTabela(); 
+    }
     function editar(id, c, v) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ pago: !s }); }
-    function excluir(id) { if(confirm("Apagar participante?")) db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).remove(); }
+    function excluir(id) { if(confirm("Apagar?")) db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).remove(); }
     function salvarConfig(c, v) { db.ref(PASTA_CONFIG).update({ [c]: v }); }
-    function mudarMes(v) { 
-        mesAtual = v; 
-        carregarDadosAdmin(); 
-    }
-    
+    function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
-    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
-    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
-    function validarArquivo(i) { document.getElementById('nomeArquivo').innerText = i.files[0].name; }
-
-    function adicionarPessoa() { 
-        const n = prompt("Nome do participante:"); 
-        if(n) {
-            db.ref(`${PASTA_BANCO}/${mesAtual}/${Date.now()}`).set({ 
-                nome: n, 
-                valor: configGeral.valorPadrao || 50, 
-                adiantadas: 0, 
-                pago: false 
-            }); 
-        }
+    function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`${PASTA_BANCO}/${mesAtual}/${Date.now()}`).set({ nome: n, valor: configGeral.valorPadrao, adiantadas: 0, pago: false }); }
+    function gerarOpcoesMes() { 
+        const s = document.getElementById('filtroMes'); s.innerHTML = "";
+        for(let i = -1; i <= 2; i++) { 
+            const d = new Date(); d.setMonth(d.getMonth() + i); const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; 
+            const o = document.createElement('option'); o.value = k; o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); o.selected = k === mesAtual; s.appendChild(o); 
+        } 
     }
 
-    function exportarExcel() {
-        if (dadosLocais.length === 0) return alert("Não há dados para exportar!");
-        let csv = "ID;Nome;Telefone;Valor;Adiantadas;Status\n";
-        dadosLocais.forEach(p => { 
-            csv += `${p.id};${p.nome};${p.tel || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'}\n`; 
-        });
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `pool_${mesAtual}.csv`;
-        link.click();
-    }
-
-    function processarCSV() {
-        const fileInput = document.getElementById('arquivoCSV');
-        if (!fileInput.files[0]) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const linhas = e.target.result.split('\n');
-            const updates = {};
-            linhas.forEach((linha, i) => {
-                if (i === 0 || !linha.trim()) return;
-                let cols = linha.split(/[;,]/);
-                let id = cols[0] && cols[0].trim() !== "" ? cols[0].trim() : (Date.now() + i);
-                updates[id] = { 
-                    nome: cols[1]?.trim() || "Sem Nome", 
-                    tel: cols[2]?.trim() || "", 
-                    valor: cols[3] ? parseFloat(cols[3].replace(',', '.')) : (configGeral.valorPadrao || 50),
-                    adiantadas: cols[4] ? parseInt(cols[4]) : 0, 
-                    pago: cols[5]?.trim().toLowerCase() === "pago", 
-                    msgEnviada: false 
-                };
-            });
-            db.ref(`${PASTA_BANCO}/${mesAtual}`).update(updates).then(() => { 
-                fecharModal(); 
-                alert("Importação concluída!"); 
-            });
-        };
-        reader.readAsText(fileInput.files[0], 'UTF-8');
-    }
-
-    // --- START ---
-    window.addEventListener('load', iniciar);
+    iniciar();
 </script>
 </body>
 </html>
