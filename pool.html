@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TESTES - Pool Manager v2</title>
+    <title>TEST ENVIRONMENT 2 - Pool Manager</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -38,6 +38,7 @@
         #modalImport.flex { display: flex; }
         .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
         .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
+        
         /* Alerta de Ambiente de Teste */
         .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; }
     </style>
@@ -46,85 +47,114 @@
 
 <div class="test-banner">Ambiente de Testes 2 - Sincronizado por ID</div>
 
-<div class="p-4 md:p-8">
-    <div id="modalImport" onclick="fecharModal()">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600">
-                    <i data-lucide="flask-conical"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-black dark:text-white">Importar para TESTES</h3>
-                    <p class="text-xs text-slate-500">Isolado do banco de dados oficial.</p>
-                </div>
+<div id="modalImport" onclick="fecharModal()">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-lg p-8 rounded-3xl shadow-2xl mx-4" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600">
+                <i data-lucide="flask-conical"></i>
             </div>
-            <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
-                <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
-                <label for="arquivoCSV" class="cursor-pointer group">
-                    <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
-                    <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecionar CSV de Teste</p>
-                </label>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
-                <button onclick="processarCSV()" class="flex-1 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 shadow-lg shadow-amber-500/20 transition">Processar Teste</button>
+            <div>
+                <h3 class="text-xl font-black dark:text-white">Importar Planilha (TESTE)</h3>
+                <p class="text-xs text-slate-500">Colunas: ID, Nome, Telefone, Valor, Adiantadas, Status</p>
             </div>
         </div>
-    </div>
-
-    <div class="max-w-6xl mx-auto space-y-6">
-        <div class="admin-only space-y-6">
-            <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
-                <div class="w-full lg:w-auto text-center lg:text-left">
-                    <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic text-amber-600">TEST ENVIRONMENT 2</h1>
-                    <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-amber-500 cursor-pointer"></select>
-                </div>
-                
-                <div class="flex flex-wrap justify-center items-center gap-2">
-                    <div class="relative group mr-2">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar nos testes..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none border-none w-40 md:w-56 transition-all">
-                    </div>
-
-                    <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
-                        <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
-                        <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
-                        <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
-                        <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition text-rose-500">Não Cobrados</button>
-                    </div>
-                    
-                    <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition" title="Exportar CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
-                    <button onclick="abrirModal()" class="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-amber-700 transition" title="Importar CSV Teste"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-white"></i></button>
-                    <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Teste"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                    <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
-                        <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
-                    </button>
-                </div>
-            </header>
-
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            <tr>
-                                <th class="px-6 py-4 cursor-pointer" onclick="toggleOrdemAlfabetica()">Participante</th>
-                                <th class="px-6 py-4 text-center">Valor</th>
-                                <th class="px-6 py-4 text-center italic">Adiantadas</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-8 text-center bg-slate-50 dark:bg-slate-850/50">
+            <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
+            <label for="arquivoCSV" class="cursor-pointer group">
+                <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto mb-2 text-slate-300 group-hover:text-blue-500 transition"></i>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Clique para selecionar o CSV</p>
+            </label>
         </div>
-        <div class="client-only max-w-md mx-auto py-10" id="portalCliente"></div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">Cancelar</button>
+            <button onclick="processarCSV()" class="flex-1 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition">Processar Planilha</button>
+        </div>
     </div>
 </div>
 
+<div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+    <div class="admin-only space-y-6">
+        <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
+            <div class="w-full lg:w-auto text-center lg:text-left">
+                <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic text-amber-600">TEST ENVIRONMENT 2</h1>
+                <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold focus:ring-2 focus:ring-amber-500 cursor-pointer"></select>
+            </div>
+            
+            <div class="flex flex-wrap justify-center items-center gap-2">
+                <div class="relative group mr-2">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none border-none w-40 md:w-56 transition-all">
+                </div>
+
+                <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
+                    <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
+                    <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
+                    <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
+                    <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition text-rose-500">Não Cobrados</button>
+                </div>
+                
+                <button onclick="exportarExcel()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-emerald-700 transition" title="Exportar CSV"><i data-lucide="download" class="w-4 h-4"></i></button>
+                <button onclick="abrirModal()" class="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-amber-700 transition" title="Importar CSV"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-white"></i></button>
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex hover:bg-blue-700 transition" title="Novo Participante"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
+                    <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1 italic">Previsão Total</p>
+                <div class="text-3xl font-black dark:text-white italic text-slate-800">R$ <span id="tGeral">0,00</span></div>
+            </div>
+            <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+                <p class="opacity-70 text-[10px] font-black uppercase tracking-widest mb-1 italic text-white">Confirmado</p>
+                <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 border-l-4 border-l-rose-500 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 italic">A receber</p>
+                <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-amber-600 p-4 rounded-xl text-white flex items-center gap-4 shadow-md">
+                <i data-lucide="key" class="text-white"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black uppercase opacity-70 tracking-widest">Chave PIX (TESTE)</p>
+                    <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-mono text-white placeholder:text-amber-200" placeholder="Chave de teste...">
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-sm">
+                <i data-lucide="dollar-sign" class="text-amber-600"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Valor Padrão Teste (R$)</p>
+                    <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full focus:ring-0 font-bold dark:text-white" placeholder="0.00">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <tr>
+                            <th class="px-6 py-4 cursor-pointer" onclick="toggleOrdemAlfabetica()">Participante</th>
+                            <th class="px-6 py-4 text-center">Valor</th>
+                            <th class="px-6 py-4 text-center italic">Adiantadas</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="client-only max-w-md mx-auto py-10" id="portalCliente"></div>
+</div>
+
 <script>
-    // CREDENCIAIS DO FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",
         authDomain: "pool-e439a.firebaseapp.com",
@@ -138,7 +168,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // DEFINIÇÃO DO AMBIENTE (Mudar aqui se quiser trocar de pasta no banco)
     const PASTA_BANCO = "testes_v2"; 
     const PASTA_CONFIG = "configuracoes_testes";
 
@@ -147,13 +176,19 @@
     let filtroStatus = 'todos';
     let ordemCrescente = true;
     let idCliente = new URLSearchParams(window.location.search).get('p');
-    let configGeral = { chavePix: "CHAVE-TESTE", valorPadrao: 0 };
+    let configGeral = { chavePix: "", valorPadrao: 0 };
 
     function iniciar() {
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         }
-        db.ref(PASTA_CONFIG).on('value', s => { configGeral = s.val() || { chavePix: "CHAVE-TESTE", valorPadrao: 0 }; });
+        db.ref(PASTA_CONFIG).on('value', s => { 
+            configGeral = s.val() || { chavePix: "", valorPadrao: 0 }; 
+            const cp = document.getElementById('chavePix');
+            const vp = document.getElementById('valorPadrao');
+            if(cp) cp.value = configGeral.chavePix;
+            if(vp) vp.value = configGeral.valorPadrao;
+        });
         
         gerarOpcoesMes();
         verificarResetMensal(); 
@@ -169,7 +204,6 @@
             const prox = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1);
             const keyProx = `${String(prox.getMonth() + 1).padStart(2, '0')}-${prox.getFullYear()}`;
             const s = await db.ref(`${PASTA_BANCO}/${keyProx}`).once('value');
-            
             if (!s.exists()) {
                 const atual = await db.ref(`${PASTA_BANCO}/${mesAtual}`).once('value');
                 if (atual.exists()) {
@@ -179,11 +213,9 @@
                         const p = lista[id];
                         const temAdiantamento = (p.adiantadas || 0) > 0;
                         novaLista[id] = {
-                            ...p,
-                            pago: temAdiantamento,
+                            ...p, pago: temAdiantamento,
                             adiantadas: temAdiantamento ? (p.adiantadas - 1) : 0,
-                            msgEnviada: temAdiantamento,
-                            comprovante: null
+                            msgEnviada: temAdiantamento, comprovante: null
                         };
                     });
                     await db.ref(`${PASTA_BANCO}/${keyProx}`).set(novaLista);
@@ -214,10 +246,11 @@
         filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
         corpo.innerHTML = "";
+        let t = 0, pg = 0, pd = 0;
         filtrados.forEach(p => {
             const val = parseFloat(p.valor) || 0;
             const adiantadas = p.adiantadas || 0;
-            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-400';
+            t += val; if(p.pago) pg += val; else pd += val;
             corpo.innerHTML += `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition">
                     <td class="px-6 py-4">
@@ -239,11 +272,14 @@
                         </button>
                     </td>
                     <td class="px-6 py-4 text-right space-x-1">
-                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 ${msgEstilo} transition inline-flex"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-4 h-4"></i></button>
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 transition inline-flex"><i data-lucide="${p.msgEnviada ? 'check-check' : 'send'}" class="w-4 h-4"></i></button>
                         <button onclick="excluir('${p.id}')" class="p-2 text-slate-400 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
                 </tr>`;
         });
+        document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
+        document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
@@ -281,6 +317,7 @@
         reader.readAsText(fileInput.files[0], 'UTF-8');
     }
 
+    function salvarConfig(c, v) { db.ref(PASTA_CONFIG).update({ [c]: v }); }
     function setFiltroStatus(s) { filtroStatus = s; document.querySelectorAll('.filter-btn').forEach(b => { b.classList.toggle('active', b.id === `btn-${s}`); b.classList.toggle('opacity-40', b.id !== `btn-${s}`); }); renderizarTabela(); }
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
     function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
