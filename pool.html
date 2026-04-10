@@ -13,85 +13,78 @@
         html.dark { background-color: #020617 !important; }
         html.dark body { background-color: #020617 !important; color: #f1f5f9 !important; }
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease; min-height: 100vh; }
-        .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
-        .editable-input:hover { background: rgba(0,0,0,0.05); border-color: #cbd5e1; }
-        .dark .editable-input:hover { background: rgba(255,255,255,0.1); border-color: #334155; }
-        .editable-input:focus { background: white; border-color: #3b82f6; outline: none; color: #1e293b; }
-        .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; }
-        .filter-btn.active { background-color: white; color: #1e293b; font-weight: 700; opacity: 1; }
-        .dark .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
+        
+        /* Ajuste de inputs para não ficarem brancos no hover/foco */
+        .editable-input { background: transparent; border: 1px solid transparent; padding: 2px 5px; border-radius: 4px; transition: 0.2s; color: inherit; }
+        .editable-input:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+        .editable-input:focus { outline: none; border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        
+        .test-banner { background: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #dc2626 10px, #dc2626 20px); color: white; text-align: center; font-size: 10px; font-weight: 900; padding: 4px; text-transform: uppercase; letter-spacing: 2px; position: relative; z-index: 100; }
+        .filter-btn.active { background-color: #3b82f6 !important; color: white !important; opacity: 1 !important; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
-<div class="test-banner">Ambiente de Testes 2 - Filtros & Multiplicação</div>
+<div class="test-banner">Ambiente de Testes 2 - Correções de Layout e WhatsApp</div>
 
 <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-    <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4 shadow-sm">
-        <div class="w-full lg:w-auto text-center lg:text-left">
+    <header class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col xl:flex-row justify-between items-center gap-4 shadow-sm relative z-10">
+        <div class="w-full xl:w-auto text-center xl:text-left">
             <h1 class="text-2xl font-black tracking-tight dark:text-white uppercase italic text-amber-600">TEST ENVIRONMENT 2</h1>
             <select id="filtroMes" onchange="mudarMes(this.value)" class="mt-2 bg-slate-100 dark:bg-slate-800 dark:text-white border-none rounded-lg px-3 py-1.5 text-sm font-bold cursor-pointer outline-none"></select>
         </div>
         
-        <div class="flex flex-wrap justify-center items-center gap-2">
-            <div class="relative group mr-2">
+        <div class="flex flex-wrap justify-center items-center gap-3">
+            <div class="relative group">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-40 md:w-56 transition-all">
+                <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 dark:text-white pl-9 pr-4 py-2 rounded-xl text-sm outline-none w-48 transition-all">
             </div>
 
             <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex gap-1">
                 <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition">Todos</button>
                 <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pendentes</button>
                 <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition">Pagos</button>
-                <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn px-3 py-1.5 rounded-lg text-[10px] font-black uppercase opacity-40 transition text-rose-500">Não Cobrados</button>
             </div>
             
-            <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition hover:bg-blue-700"><i data-lucide="plus" class="w-4 h-4"></i></button>
-            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700">
-                <i data-lucide="moon" class="dark:hidden"></i><i data-lucide="sun" class="hidden dark:block"></i>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="adicionarPessoa()" class="bg-blue-600 text-white p-2.5 rounded-xl transition hover:bg-blue-700 shadow-md"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border dark:border-slate-700"><i data-lucide="sun"></i></button>
+            </div>
         </div>
     </header>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center md:text-left">
             <p class="text-[10px] font-black uppercase text-slate-400 italic">Previsão Mês Atual</p>
             <div class="text-3xl font-black italic">R$ <span id="tGeral">0,00</span></div>
         </div>
-        <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20">
+        <div class="bg-emerald-500 p-6 rounded-2xl text-white shadow-xl shadow-emerald-500/20 text-center md:text-left">
             <p class="text-[10px] font-black uppercase opacity-70 italic">Confirmado (Total Recebido)</p>
             <div class="text-3xl font-black italic">R$ <span id="tPago">0,00</span></div>
         </div>
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-l-4 border-l-rose-500 border-slate-200 dark:border-slate-800 text-center md:text-left shadow-sm">
             <p class="text-[10px] font-black uppercase text-slate-400 italic">A receber</p>
             <div class="text-3xl font-black text-rose-500 italic">R$ <span id="tPend">0,00</span></div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-amber-600 p-4 rounded-xl text-white shadow-md">
-            <p class="text-[10px] font-black uppercase tracking-widest">Chave PIX (TESTE)</p>
-            <input type="text" id="chavePix" onchange="salvarConfig('chavePix', this.value)" class="bg-transparent border-none p-0 text-sm w-full font-mono text-white placeholder:text-amber-200 focus:ring-0">
-        </div>
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Valor Padrão (R$)</p>
-            <input type="number" id="valorPadrao" onchange="salvarConfig('valorPadrao', parseFloat(this.value))" class="bg-transparent border-none p-0 text-sm w-full font-bold dark:text-white focus:ring-0">
-        </div>
-    </div>
-
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50 dark:bg-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                    <th class="px-6 py-4">Participante</th>
-                    <th class="px-6 py-4 text-center">Valor Cobrado</th>
-                    <th class="px-6 py-4 text-center">Parcelas Adiantadas</th>
-                    <th class="px-6 py-4 text-center">Status</th>
-                    <th class="px-6 py-4 text-right">Ações</th>
-                </tr>
-            </thead>
-            <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                        <th class="px-6 py-4 cursor-pointer hover:text-blue-500 transition flex items-center gap-1" onclick="toggleOrdemAlfabetica()">
+                            Participante <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+                        </th>
+                        <th class="px-6 py-4 text-center">Valor Cobrado</th>
+                        <th class="px-6 py-4 text-center">Adiantadas</th>
+                        <th class="px-6 py-4 text-center">Status</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -113,15 +106,14 @@
 
     let mesAtual = `${String(new Date().getMonth() + 1).padStart(2, '0')}-${new Date().getFullYear()}`;
     let dadosLocais = [];
-    let configGeral = { chavePix: "", valorPadrao: 0 };
+    let configGeral = { chavePix: "TESTE", valorPadrao: 50 };
     let filtroStatus = 'todos';
+    let ordemCrescente = true;
 
     async function iniciar() {
         const configSnap = await db.ref(PASTA_CONFIG).once('value');
-        configGeral = configSnap.val() || { chavePix: "TESTE", valorPadrao: 50 };
-        document.getElementById('chavePix').value = configGeral.chavePix;
-        document.getElementById('valorPadrao').value = configGeral.valorPadrao;
-
+        if(configSnap.exists()) configGeral = configSnap.val();
+        
         gerarOpcoesMes();
         await verificarResetMensal();
         carregarDadosAdmin();
@@ -175,10 +167,15 @@
         let filtrados = [...dadosLocais];
         if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
         if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
-        if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
-        if (termoBusca) filtrados = filtrados.filter(p => p.nome.toLowerCase().includes(termoBusca));
 
-        filtrados.sort((a,b) => a.nome.localeCompare(b.nome));
+        if (termoBusca) {
+            filtrados = filtrados.filter(p => p.nome.toLowerCase().includes(termoBusca));
+        }
+
+        // Ordenação Alfabética
+        filtrados.sort((a,b) => {
+            return ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome);
+        });
 
         filtrados.forEach(p => {
             const val = parseFloat(p.valor) || 0;
@@ -187,12 +184,10 @@
             if (p.pago) {
                 const base = val > 0 ? val : (configGeral.valorPadrao || 0);
                 pg += val + (adiantadas * base);
-            } else {
-                pd += val;
-            }
+            } else { pd += val; }
 
             corpo.innerHTML += `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/50">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-850/60 transition">
                     <td class="px-6 py-4 font-bold dark:text-white">${p.nome}</td>
                     <td class="px-6 py-4 text-center">R$ <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',parseFloat(this.value))" class="editable-input w-24 text-center"></td>
                     <td class="px-6 py-4 text-center"><input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value))" class="editable-input w-16 text-center text-blue-500 font-bold"></td>
@@ -201,15 +196,24 @@
                             ${p.pago ? 'Pago' : 'Pendente'}
                         </button>
                     </td>
-                    <td class="px-6 py-4 text-right"><button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button onclick="enviarZap('${p.id}','${p.nome}','${val}')" class="text-emerald-500 hover:scale-110 transition inline-flex"><i data-lucide="send" class="w-4 h-4"></i></button>
+                        <button onclick="excluir('${p.id}')" class="text-slate-400 hover:text-rose-500 transition inline-flex"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
                 </tr>`;
         });
+
         document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
         document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
         lucide.createIcons();
     }
 
+    function toggleOrdemAlfabetica() { 
+        ordemCrescente = !ordemCrescente; 
+        renderizarTabela(); 
+    }
+    
     function setFiltroStatus(s) { 
         filtroStatus = s; 
         document.querySelectorAll('.filter-btn').forEach(b => {
@@ -218,10 +222,14 @@
         }); 
         renderizarTabela(); 
     }
+
+    function enviarZap(id, n, v) {
+        window.open(`https://wa.me/?text=Olá ${n}, o valor deste mês é R$ ${v}`);
+    }
+
     function editar(id, c, v) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ [c]: v }); }
     function togglePago(id, s) { db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).update({ pago: !s }); }
     function excluir(id) { if(confirm("Apagar?")) db.ref(`${PASTA_BANCO}/${mesAtual}/${id}`).remove(); }
-    function salvarConfig(c, v) { db.ref(PASTA_CONFIG).update({ [c]: v }); }
     function mudarMes(v) { mesAtual = v; carregarDadosAdmin(); }
     function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
     function adicionarPessoa() { const n = prompt("Nome:"); if(n) db.ref(`${PASTA_BANCO}/${mesAtual}/${Date.now()}`).set({ nome: n, valor: configGeral.valorPadrao, adiantadas: 0, pago: false }); }
