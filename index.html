@@ -296,11 +296,11 @@
                 <i data-lucide="user-plus" class="w-10 h-10 text-white"></i>
             </div>
             <h3 class="text-xl font-black mb-2 z-10">Novo Registo</h3>
-            <p class="text-xs font-medium opacity-80 z-10">Preencha os dados básicos para adicionar à grelha de cobranças.</p>
+            <p class="text-xs font-medium opacity-80 z-10">Adicione novos clientes ou importe do seu banco de dados.</p>
         </div>
         
         <!-- Formulário -->
-        <div class="w-full md:w-3/5 p-6 md:p-10">
+        <div class="w-full md:w-3/5 p-6 md:p-10 relative">
             <!-- Título visível só no mobile -->
             <div class="flex justify-between items-center mb-6 md:hidden">
                 <div class="flex items-center gap-3">
@@ -311,36 +311,55 @@
             </div>
 
             <div class="space-y-4">
+                <!-- BUSCA GLOBAL NO BANCO DE DADOS -->
+                <div class="relative z-20">
+                    <label class="text-[10px] font-black uppercase text-brand-500 tracking-widest px-1 italic flex items-center gap-1"><i data-lucide="database" class="w-3 h-3"></i> Importar Cliente Existente</label>
+                    <div class="relative group mt-1">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 transition z-10"></i>
+                        <input type="text" id="buscaCliente" oninput="filtrarClientesGlobais()" placeholder="Digite para buscar..." class="w-full bg-brand-50 dark:bg-brand-900/20 dark:text-white pl-11 pr-4 py-3.5 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-brand-200 dark:border-brand-800 shadow-sm transition">
+                    </div>
+                    <!-- Lista suspensa de sugestões -->
+                    <div id="listaSugestoes" class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto hidden z-50"></div>
+                </div>
+
+                <div class="flex items-center gap-4 py-1">
+                    <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ou preencha manualmente</span>
+                    <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                </div>
+
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
                     <input type="text" id="novoNome" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp (Com DDD)</label>
-                    <div class="relative group">
-                        <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 5511999999999">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
+                        <div class="relative group">
+                            <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                            <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Data de Entrada (Opcional)</label>
-                    <div class="relative group">
-                        <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Data Entrada">Entrada</label>
+                        <div class="relative group">
+                            <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                            <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-9 pr-3 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
+                        </div>
                     </div>
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Opcional)</label>
                     <div class="relative group">
                         <i data-lucide="align-left" class="w-4 h-4 absolute left-4 top-4 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <textarea id="novoObs" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
+                        <textarea id="novoObs" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais..."></textarea>
                     </div>
                 </div>
             </div>
             
-            <div class="flex gap-3 mt-8">
+            <div class="flex gap-3 mt-6">
                 <button onclick="fecharModalNovaPessoa()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
-                <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Cadastrar</button>
+                <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Adicionar</button>
             </div>
         </div>
     </div>
@@ -739,6 +758,10 @@
     let filtroStatus = 'todos';
     let ordemCrescente = true;
     let selecionados = new Set();
+    
+    // Variáveis Globais de Autocomplete
+    let clientesGlobaisCache = [];
+    let idClienteSelecionadoParaNovo = null;
     
     let configGeral = { 
         chavePix: "", 
@@ -1216,13 +1239,85 @@
         });
     }
 
-    function abrirModalNovaPessoa() {
+    async function abrirModalNovaPessoa() {
+        document.getElementById('buscaCliente').value = "";
+        document.getElementById('listaSugestoes').classList.add('hidden');
+        idClienteSelecionadoParaNovo = null;
+
         document.getElementById('novoNome').value = "";
         document.getElementById('novoTel').value = "";
         document.getElementById('novoDataEntrada').value = "";
         document.getElementById('novoObs').value = "";
         document.getElementById('modalNovaPessoa').classList.add('flex');
+        lucide.createIcons();
+
+        // Carrega todos os clientes históricos silenciosamente
+        if (adminId) {
+            try {
+                const snap = await db.ref(`tenants/${adminId}/cobrancas`).once('value');
+                const todosMeses = snap.val() || {};
+                const mapClientes = new Map();
+
+                for (const mes in todosMeses) {
+                    for (const id in todosMeses[mes]) {
+                        mapClientes.set(id, { id: id, ...todosMeses[mes][id] });
+                    }
+                }
+                clientesGlobaisCache = Array.from(mapClientes.values());
+            } catch(e) {
+                console.error("Erro ao carregar cache de clientes", e);
+            }
+        }
     }
+
+    function filtrarClientesGlobais() {
+        const termo = document.getElementById('buscaCliente').value.toLowerCase();
+        const lista = document.getElementById('listaSugestoes');
+
+        if (termo.length < 2) {
+            lista.classList.add('hidden');
+            idClienteSelecionadoParaNovo = null; // Reseta se apagar a busca
+            return;
+        }
+
+        const filtrados = clientesGlobaisCache.filter(c => c.nome.toLowerCase().includes(termo) || (c.tel && c.tel.includes(termo)));
+
+        if (filtrados.length === 0) {
+            lista.innerHTML = '<div class="p-4 text-xs text-slate-500 text-center font-bold">Nenhum cliente encontrado no histórico.</div>';
+            lista.classList.remove('hidden');
+            return;
+        }
+
+        lista.innerHTML = filtrados.map(c => `
+            <div onclick="selecionarClienteAutocompletar('${c.id}')" class="p-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-brand-50 dark:hover:bg-brand-900/20 cursor-pointer transition">
+                <p class="text-sm font-bold dark:text-white">${c.nome}</p>
+                <div class="flex gap-3 text-[10px] text-slate-400 font-bold mt-0.5">
+                    <span><i data-lucide="phone" class="w-3 h-3 inline"></i> ${c.tel || 'Sem tel'}</span>
+                    ${c.dataEntrada ? `<span><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${c.dataEntrada}</span>` : ''}
+                </div>
+            </div>
+        `).join('');
+
+        lucide.createIcons();
+        lista.classList.remove('hidden');
+    }
+
+    function selecionarClienteAutocompletar(id) {
+        const c = clientesGlobaisCache.find(x => x.id === id);
+        if (!c) return;
+
+        idClienteSelecionadoParaNovo = id;
+        document.getElementById('buscaCliente').value = c.nome;
+        document.getElementById('listaSugestoes').classList.add('hidden');
+
+        document.getElementById('novoNome').value = c.nome || "";
+        document.getElementById('novoTel').value = c.tel || "";
+        document.getElementById('novoDataEntrada').value = c.dataEntrada || "";
+        document.getElementById('novoObs').value = c.observacao || "";
+        
+        showToast("Dados do cliente preenchidos!", "success");
+    }
+
     function fecharModalNovaPessoa() { document.getElementById('modalNovaPessoa').classList.remove('flex'); }
 
     function salvarNovaPessoa() {
@@ -1235,23 +1330,34 @@
         if(!n) return showToast("Por favor, digite o nome.", "error");
         
         const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
+        const idFinal = idClienteSelecionadoParaNovo ? idClienteSelecionadoParaNovo : String(Date.now());
 
-        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${Date.now()}`).set({ 
-            nome: n, 
-            tel: t, 
-            valor: configGeral.valorPadrao, 
-            adiantadas: 0, 
-            pago: false, 
-            msgEnviada: false, 
-            comprovante: null,
-            arquivado: false,
-            dataEntrada: d,
-            observacao: obs
-        }).then(() => {
-            fecharModalNovaPessoa();
-            showToast("Cliente cadastrado com sucesso!");
-        }).catch((err) => {
-            showToast("Erro ao cadastrar: " + err.message, "error");
+        // Verifica se o ID já está a ser usado no ciclo alvo para evitar sobreposição cega
+        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).once('value').then(snap => {
+            const existeNoCiclo = snap.val();
+            
+            if (existeNoCiclo && idClienteSelecionadoParaNovo && !existeNoCiclo.arquivado) {
+                showToast("Este cliente já está na lista deste ciclo!", "error");
+                return;
+            }
+
+            db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).update({ 
+                nome: n, 
+                tel: t, 
+                valor: (existeNoCiclo && existeNoCiclo.valor !== undefined) ? existeNoCiclo.valor : configGeral.valorPadrao, 
+                adiantadas: (existeNoCiclo && existeNoCiclo.adiantadas !== undefined) ? existeNoCiclo.adiantadas : 0, 
+                pago: (existeNoCiclo && existeNoCiclo.pago !== undefined) ? existeNoCiclo.pago : false, 
+                msgEnviada: (existeNoCiclo && existeNoCiclo.msgEnviada !== undefined) ? existeNoCiclo.msgEnviada : false, 
+                comprovante: (existeNoCiclo && existeNoCiclo.comprovante !== undefined) ? existeNoCiclo.comprovante : null,
+                arquivado: false,
+                dataEntrada: d,
+                observacao: obs
+            }).then(() => {
+                fecharModalNovaPessoa();
+                showToast("Cliente adicionado ao ciclo com sucesso!");
+            }).catch((err) => {
+                showToast("Erro ao cadastrar: " + err.message, "error");
+            });
         });
     }
 
