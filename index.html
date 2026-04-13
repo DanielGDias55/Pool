@@ -1022,10 +1022,66 @@
                             <button onclick="copiarPix('${configGeral.chavePix}')" class="bg-brand-500 text-white p-2.5 md:p-3 rounded-xl hover:bg-brand-600 transition shadow-lg active:scale-90"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         </div>
                     </div>
-                    ${!p.pago ? `<div class="pt-4 md:pt-6"><label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Já pagou? Envie o comprovativo</label><input type="file" id="compFile" class="hidden" onchange="uploadComp(this)"><label for="compFile" class="w-full py-4 md:py-5 bg-brand-600 text-white rounded-[1.5rem] text-sm md:text-base font-bold flex items-center justify-center gap-3 hover:bg-brand-700 cursor-pointer shadow-xl shadow-brand-500/30 transition-all active:scale-95"><i data-lucide="camera" class="w-5 h-5"></i> Enviar Comprovativo</label></div>` : ''}
+                    ${!p.pago ? `<div class="pt-4 md:pt-6"><label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Já pagou? Envie o comprovativo</label><input type="file" accept="image/*" id="compFile" class="hidden" onchange="uploadComp(this)"><label for="compFile" id="lblCompFile" class="w-full py-4 md:py-5 bg-brand-600 text-white rounded-[1.5rem] text-sm md:text-base font-bold flex items-center justify-center gap-3 hover:bg-brand-700 cursor-pointer shadow-xl shadow-brand-500/30 transition-all active:scale-95"><i data-lucide="image-plus" class="w-5 h-5"></i> Galeria ou Câmera</label></div>` : ''}
                 </div>`;
             lucide.createIcons();
         });
+    }
+
+    function uploadComp(input) {
+        if(!adminId || !idCliente) return;
+        const file = input.files[0]; if (!file) return;
+        
+        // Efeito visual de carregamento
+        const label = document.getElementById('lblCompFile');
+        if(label) {
+            label.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> A enviar...';
+            label.classList.add('opacity-70', 'pointer-events-none');
+            lucide.createIcons();
+        }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            // Compressão da Imagem para evitar sobrecarga no Firebase
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800; // Resolução máxima permitida
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Converte de volta para Base64, mas com qualidade comprimida a 60%
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+
+                db.ref(`tenants/${adminId}/cobrancas/${mesAtual}/${idCliente}`).update({ 
+                    comprovante: dataUrl, 
+                    pago: true 
+                }).then(() => {
+                    // O ecrã vai ser atualizado automaticamente porque está a usar .on('value')
+                }).catch(err => {
+                    alert("Erro ao enviar: O ficheiro pode continuar a ser demasiado grande.");
+                    if(label) {
+                        label.innerHTML = '<i data-lucide="image-plus" class="w-5 h-5"></i> Galeria ou Câmera';
+                        label.classList.remove('opacity-70', 'pointer-events-none');
+                        lucide.createIcons();
+                    }
+                });
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     iniciar();
