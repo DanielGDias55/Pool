@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cobrify - Gestão de Cobranças</title>
+    <title>Pagflow - Gestão de Cobranças</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
@@ -187,7 +187,7 @@
             <div class="w-16 h-16 bg-brand-500 rounded-3xl shadow-glow flex items-center justify-center mb-6">
                 <i data-lucide="layers" class="text-white w-8 h-8"></i>
             </div>
-            <h2 class="text-3xl font-black tracking-tighter dark:text-white uppercase mb-1">Cobrify</h2>
+            <h2 class="text-3xl font-black tracking-tighter dark:text-white uppercase mb-1">Pagflow</h2>
             <p class="text-xs font-bold text-brand-500 uppercase tracking-widest mb-8">Acesso Restrito</p>
 
             <div class="w-full space-y-4">
@@ -197,7 +197,12 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Palavra-passe</label>
-                    <input type="password" id="senhaAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="••••••••">
+                    <div class="relative">
+                        <input type="password" id="senhaAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white pl-5 pr-12 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="••••••••">
+                        <button type="button" onclick="toggleSenha()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition focus:outline-none" tabindex="-1">
+                            <i data-lucide="eye" id="iconToggleSenha" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="pt-4 space-y-3">
@@ -507,7 +512,7 @@
                                 <span class="text-brand-400 not-italic font-bold">[O Seu Texto Entra Aqui]</span><br><br>
                                 Valor: R$ 50,00<br>
                                 Chave PIX: sua@chave<br>
-                                Link: cobrify.com/...
+                                Link: pagflow.com/...
                             </div>
                             <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
                         </div>
@@ -586,7 +591,7 @@
                     <i data-lucide="layers" class="text-white w-6 h-6 md:w-7 md:h-7"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl md:text-2xl font-black tracking-tighter dark:text-white uppercase leading-none mb-1">Cobrify</h1>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tighter dark:text-white uppercase leading-none mb-1">Pagflow</h1>
                     <span class="text-[9px] md:text-[10px] font-bold text-brand-500 uppercase tracking-widest block" id="adminEmailDisplay">Carregando...</span>
                 </div>
             </div>
@@ -802,6 +807,20 @@
         }
     }
 
+    // Função adicionada para exibir/ocultar a senha
+    function toggleSenha() {
+        const input = document.getElementById('senhaAuth');
+        const icon = document.getElementById('iconToggleSenha');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+            input.type = 'password';
+            icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+    }
+
     // --- LÓGICA DE AUTENTICAÇÃO E PAYWALL ---
     function monitorarAutenticacao() {
         auth.onAuthStateChanged(user => {
@@ -845,7 +864,7 @@
     function criarConta() { const e = document.getElementById('emailAuth').value, s = document.getElementById('senhaAuth').value; if(!e || !s) return mostrarErro("Preencha e-mail e senha para criar conta."); auth.createUserWithEmailAndPassword(e, s).catch(er => mostrarErro("Erro: " + er.message)); }
     function fazerLogout() { auth.signOut(); }
     function loginComGoogle() { const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider).catch(e => mostrarErro("Erro Google: " + e.message)); }
-    function falarComSuporte() { const n = "5513974123358", msg = encodeURIComponent("Olá Daniel Garcia Dias! Fiz o meu registo no Cobrify e gostaria de ativar a minha licença vitalícia."); window.open(`https://wa.me/${n}?text=${msg}`); }
+    function falarComSuporte() { const n = "5513974123358", msg = encodeURIComponent("Olá Daniel Garcia Dias! Fiz o meu registo no Pagflow e gostaria de ativar a minha licença vitalícia."); window.open(`https://wa.me/${n}?text=${msg}`); }
 
     // --- CARREGAMENTO DE DADOS E CONFIGURAÇÕES ---
     function carregarConfiguracoesGerais() {
@@ -1571,7 +1590,7 @@
         if (dadosLocais.length === 0) return;
         let csv = "ID;Nome;Telefone;Data de Entrada;Observacoes;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
         dadosLocais.forEach(p => { csv += `${p.id};${p.nome};${p.tel || ''};${p.dataEntrada || ''};${p.observacao || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; });
-        const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })); link.download = `cobrify_relatorio_${mesAtual}.csv`; link.click();
+        const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })); link.download = `pagflow_relatorio_${mesAtual}.csv`; link.click();
     }
     
     function processarCSV() {
