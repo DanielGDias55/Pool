@@ -43,20 +43,24 @@
 
         html.dark { background-color: #020617 !important; }
         
-        .admin-only, .client-only, #loginScreen, #adminApp, #paywallScreen { display: none; }
+        /* ================================================== */
+        /* BLINDAGEM DE TELAS (Evita vazamento de informações)*/
+        /* ================================================== */
+        #loginScreen, #adminApp, #paywallScreen, #portalCliente { display: none !important; }
         
-        body.modo-admin .admin-only { display: block; }
-        body.modo-cliente .client-only { display: block; }
-        body.estado-login #loginScreen { display: flex; }
-        body.estado-logado #adminApp { display: block; }
-        body.estado-bloqueado #paywallScreen { display: flex; }
+        body.modo-cliente #portalCliente { display: block !important; }
+        body.modo-admin.estado-login #loginScreen { display: flex !important; }
+        body.modo-admin.estado-logado #adminApp { display: block !important; }
+        body.modo-admin.estado-bloqueado #paywallScreen { display: flex !important; }
 
+        /* Estilos de Inputs Editáveis da Tabela */
         .editable-input { 
             background: transparent; 
             border: 1px solid transparent; 
             padding: 4px 8px; 
             border-radius: 8px; 
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            width: 100%;
         }
         .editable-input:hover { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); }
         .dark .editable-input:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
@@ -69,6 +73,7 @@
         }
         .dark .editable-input:focus { background: #0f172a; color: white !important; }
 
+        /* Modais */
         .modal-overlay { 
             display: none; 
             align-items: center; 
@@ -79,8 +84,9 @@
             background: rgba(2, 6, 23, 0.6); 
             backdrop-filter: blur(8px); 
         }
-        .modal-overlay.flex { display: flex; }
+        .modal-overlay.flex { display: flex !important; }
 
+        /* Botões de Filtro Ativos */
         .filter-btn.active { 
             background-color: white !important; 
             color: #1e293b !important; 
@@ -93,6 +99,7 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
         }
 
+        /* Cartões de Vidro */
         .glass-card {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
@@ -103,6 +110,7 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* Gaveta (Drawer) */
         #drawerWrapper {
             max-height: 0;
             opacity: 0;
@@ -124,6 +132,7 @@
             background-color: #3b82f6;
             color: white;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            border-color: transparent;
         }
         .dark #btnToggleDrawer.active {
             background-color: #3b82f6;
@@ -138,13 +147,13 @@
         .esconder-status .col-status { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 p-4 md:p-10 relative">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 p-4 md:p-8 relative">
 
 <!-- ========================================== -->
-<!-- TELA DE LOGIN (SaaS)                       -->
+<!-- 1. TELA DE LOGIN (SaaS)                    -->
 <!-- ========================================== -->
-<div id="loginScreen" class="min-h-[80vh] items-center justify-center admin-only">
-    <div class="glass-card w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+<div id="loginScreen" class="min-h-[80vh] items-center justify-center">
+    <div class="glass-card w-full max-w-md p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl"></div>
         <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
         
@@ -196,10 +205,10 @@
 </div>
 
 <!-- ========================================== -->
-<!-- TELA DE PAGAMENTO/BLOQUEIO (Paywall)       -->
+<!-- 2. TELA DE PAGAMENTO/BLOQUEIO (Paywall)    -->
 <!-- ========================================== -->
-<div id="paywallScreen" class="min-h-[80vh] items-center justify-center admin-only">
-    <div class="glass-card w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-center">
+<div id="paywallScreen" class="min-h-[80vh] items-center justify-center">
+    <div class="glass-card w-full max-w-md p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-center">
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
         <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
         
@@ -248,15 +257,16 @@
 </div>
 
 <!-- ========================================== -->
-<!-- MODAIS DA APLICAÇÃO ADMIN                  -->
+<!-- 3. MODAIS DA APLICAÇÃO ADMIN               -->
 <!-- ========================================== -->
+
 <!-- Modal Nova Pessoa -->
 <div id="modalNovaPessoa" class="modal-overlay" onclick="fecharModalNovaPessoa()">
-    <div class="glass-card w-full max-w-2xl p-0 rounded-[2.5rem] shadow-2xl mx-4 transform transition-all flex flex-col md:flex-row overflow-hidden" onclick="event.stopPropagation()">
-        <!-- Lado Ilustrativo -->
-        <div class="md:w-2/5 bg-gradient-to-br from-brand-500 to-brand-700 p-8 flex flex-col justify-center items-center text-center text-white relative overflow-hidden hidden md:flex">
+    <div class="glass-card w-full max-w-2xl p-0 rounded-[2rem] shadow-2xl mx-4 transform transition-all flex flex-col md:flex-row overflow-hidden" onclick="event.stopPropagation()">
+        <!-- Lado Ilustrativo (Some no mobile) -->
+        <div class="md:w-2/5 bg-gradient-to-br from-brand-500 to-brand-700 p-8 flex-col justify-center items-center text-center text-white relative overflow-hidden hidden md:flex">
             <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-30"></div>
-            <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 shadow-glow border border-white/30 z-10">
+            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 shadow-glow border border-white/30 z-10">
                 <i data-lucide="user-plus" class="w-10 h-10 text-white"></i>
             </div>
             <h3 class="text-xl font-black mb-2 z-10">Novo Registo</h3>
@@ -264,16 +274,17 @@
         </div>
         
         <!-- Formulário -->
-        <div class="md:w-3/5 p-8 md:p-10">
-            <div class="flex justify-between items-center mb-8 md:hidden">
+        <div class="w-full md:w-3/5 p-6 md:p-10">
+            <!-- Título visível só no mobile -->
+            <div class="flex justify-between items-center mb-6 md:hidden">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center text-brand-600"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
-                    <h3 class="text-xl font-black dark:text-white">Novo Registo</h3>
+                    <h3 class="text-lg font-black dark:text-white">Novo Registo</h3>
                 </div>
                 <button onclick="fecharModalNovaPessoa()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
 
-            <div class="space-y-5">
+            <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
                     <input type="text" id="novoNome" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
@@ -287,9 +298,9 @@
                 </div>
             </div>
             
-            <div class="flex gap-4 mt-10">
-                <button onclick="fecharModalNovaPessoa()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
-                <button onclick="salvarNovaPessoa()" class="flex-1 py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Adicionar</button>
+            <div class="flex gap-3 mt-8">
+                <button onclick="fecharModalNovaPessoa()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+                <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Adicionar</button>
             </div>
         </div>
     </div>
@@ -297,7 +308,7 @@
 
 <!-- Modal Configurações -->
 <div id="modalConfig" class="modal-overlay" onclick="fecharModalConfig()">
-    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-[2.5rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center gap-4">
                 <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 dark:text-slate-300">
@@ -305,15 +316,14 @@
                 </div>
                 <div>
                     <h3 class="text-xl font-extrabold dark:text-white">Configurações do Sistema</h3>
-                    <p class="text-xs text-slate-500 font-medium">Personalize a sua experiência e mensagens.</p>
                 </div>
             </div>
             <button onclick="fecharModalConfig()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"><i data-lucide="x"></i></button>
         </div>
 
-        <div class="space-y-8">
+        <div class="space-y-6">
             <!-- Financeiro -->
-            <div class="space-y-4">
+            <div class="space-y-3">
                 <h4 class="text-sm font-black dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">1. Dados Financeiros</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -328,7 +338,7 @@
             </div>
 
             <!-- Nomenclaturas -->
-            <div class="space-y-4">
+            <div class="space-y-3">
                 <h4 class="text-sm font-black dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">2. Personalização da Tabela</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -336,34 +346,34 @@
                         <input type="text" id="cfgTermoPart" placeholder="Ex: Cliente, Carro, Aluno" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome para Mensalidade</label>
-                        <input type="text" id="cfgTermoMens" placeholder="Ex: Pagamento, Fatura" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome para Pagamento</label>
+                        <input type="text" id="cfgTermoMens" placeholder="Ex: Mensalidade, Fatura" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition">
                     </div>
                 </div>
-                <div class="flex flex-wrap gap-4 mt-2">
+                <div class="flex flex-col sm:flex-row gap-4 mt-2">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="cfgOcultarAdiantadas" class="check-custom">
-                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar Coluna "Adiantadas"</span>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Adiantadas"</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="cfgOcultarStatus" class="check-custom">
-                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar Coluna "Status"</span>
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Status"</span>
                     </label>
                 </div>
             </div>
 
             <!-- Comunicação -->
-            <div class="space-y-4">
+            <div class="space-y-3">
                 <h4 class="text-sm font-black dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">3. Mensagem do WhatsApp</h4>
-                <p class="text-xs text-slate-500 font-medium">O sistema envia automaticamente a Saudação, Valor, PIX e Link da Fatura. Abaixo, digite apenas o **texto personalizado** que vai no meio:</p>
+                <p class="text-[11px] text-slate-500 font-medium">O sistema já inclui automaticamente Saudação, Valor, PIX e Link da Fatura. Abaixo, digite apenas a frase personalizada que vai no meio:</p>
                 <div>
-                    <textarea id="cfgMsgCustom" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition resize-none" placeholder="A sua fatura já está disponível para pagamento. Por favor, acesse o link para enviar o comprovativo..."></textarea>
+                    <textarea id="cfgMsgCustom" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition resize-none" placeholder="A sua fatura já está disponível para pagamento..."></textarea>
                 </div>
             </div>
 
-            <div class="flex gap-4 pt-4">
-                <button onclick="fecharModalConfig()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
-                <button onclick="salvarConfiguracoes()" class="flex-1 py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Guardar Alterações</button>
+            <div class="flex gap-3 pt-2">
+                <button onclick="fecharModalConfig()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+                <button onclick="salvarConfiguracoes()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Guardar</button>
             </div>
         </div>
     </div>
@@ -371,121 +381,123 @@
 
 <!-- Modal Importação CSV -->
 <div id="modalImport" class="modal-overlay" onclick="fecharModal()">
-    <div class="glass-card w-full max-w-lg p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+    <div class="glass-card w-full max-w-lg p-6 md:p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
         <div class="flex items-center gap-4 mb-6">
             <div class="p-4 bg-emerald-500/10 rounded-2xl text-emerald-600">
                 <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
             </div>
             <div>
                 <h3 class="text-xl font-extrabold dark:text-white">Importar Dados</h3>
-                <p class="text-xs text-slate-500 font-medium">Sincronize a sua grelha de cobranças rapidamente.</p>
+                <p class="text-xs text-slate-500 font-medium">Sincronize a sua grelha rapidamente.</p>
             </div>
         </div>
 
-        <div class="group relative border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center bg-slate-50/50 dark:bg-slate-900/50 hover:border-brand-500 transition-all cursor-pointer">
+        <div class="group relative border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 md:p-10 text-center bg-slate-50/50 dark:bg-slate-900/50 hover:border-brand-500 transition-all cursor-pointer">
             <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
             <label for="arquivoCSV" class="cursor-pointer">
                 <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-3 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:-translate-y-1"></i>
-                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Arraste ou selecione o ficheiro CSV</p>
+                <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecione o ficheiro CSV</p>
                 <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-widest">Colunas: ID, Nome, Tel, Valor, Adiantadas, Status</p>
             </label>
         </div>
 
-        <div class="flex gap-4 mt-8">
-            <button onclick="fecharModal()" class="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Voltar</button>
-            <button onclick="processarCSV()" class="flex-1 py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Importar Agora</button>
+        <div class="flex gap-3 mt-6">
+            <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Voltar</button>
+            <button onclick="processarCSV()" class="flex-1 py-3 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Importar Agora</button>
         </div>
     </div>
 </div>
 
 <!-- ========================================== -->
-<!-- APLICAÇÃO ADMIN                            -->
+<!-- 4. APLICAÇÃO ADMIN                         -->
 <!-- ========================================== -->
-<div id="adminApp" class="max-w-6xl mx-auto space-y-6 admin-only">
+<div id="adminApp" class="max-w-6xl mx-auto space-y-4 md:space-y-6">
     
-    <!-- Barra de Exclusão em Massa -->
-<div id="bulkActionsBar" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-4 rounded-[1.5rem] shadow-2xl z-50 flex items-center gap-4 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
-    <div class="flex items-center gap-3">
-        <div class="bg-brand-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-black shadow-inner" id="bulkCount">0</div>
-        <span class="text-sm font-extrabold tracking-wide hidden sm:block">Selecionados</span>
+    <!-- Barra de Ações em Massa (Fixa no rodapé) -->
+    <div id="bulkActionsBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 md:px-6 py-3 md:py-4 rounded-[1.5rem] shadow-2xl z-50 flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none w-[90%] md:w-auto overflow-x-auto whitespace-nowrap">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="bg-brand-500 text-white w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black shadow-inner" id="bulkCount">0</div>
+            <span class="text-xs md:text-sm font-extrabold tracking-wide">Selecionados</span>
+        </div>
+        <div class="h-6 w-px bg-slate-700 dark:bg-slate-300 mx-1 shrink-0"></div>
+        <button id="btnBulkArchive" onclick="arquivarSelecionados(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-lg shadow-amber-500/30 transition-all active:scale-95 flex items-center gap-2 shrink-0">
+            <i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">Arquivar</span>
+        </button>
+        <button onclick="excluirSelecionados()" class="bg-rose-500 hover:bg-rose-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-lg shadow-rose-500/30 transition-all active:scale-95 flex items-center gap-2 shrink-0">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Excluir</span>
+        </button>
+        <button onclick="clearSelection()" class="text-slate-400 dark:text-slate-500 hover:text-white dark:hover:text-slate-900 px-2 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-colors shrink-0">
+            Cancelar
+        </button>
     </div>
-    <div class="h-6 w-px bg-slate-700 dark:bg-slate-300 mx-1"></div>
-    <button id="btnBulkArchive" onclick="arquivarSelecionados(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-amber-500/30 transition-all active:scale-95 flex items-center gap-2">
-        <i data-lucide="archive" class="w-4 h-4"></i> Arquivar
-    </button>
-    <button onclick="excluirSelecionados()" class="bg-rose-500 hover:bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-rose-500/30 transition-all active:scale-95 flex items-center gap-2">
-        <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir
-    </button>
-    <button onclick="clearSelection()" class="text-slate-400 dark:text-slate-500 hover:text-white dark:hover:text-slate-900 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors">
-        Cancelar
-    </button>
-</div>
 
-<!-- Modal Importação CSV -->
-                <div class="bg-brand-500 p-3 rounded-2xl shadow-glow">
-                    <i data-lucide="layers" class="text-white w-6 h-6"></i>
+    <div>
+        <!-- Header Principal Corrigido -->
+        <header class="glass-card p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-4 shadow-soft relative z-10">
+            <div class="flex flex-row items-center gap-4 text-left w-full md:w-auto">
+                <div class="w-12 h-12 md:w-14 md:h-14 bg-brand-500 rounded-2xl shadow-glow flex items-center justify-center shrink-0">
+                    <i data-lucide="layers" class="text-white w-6 h-6 md:w-7 md:h-7"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black tracking-tighter dark:text-white uppercase leading-none">Cobrify</h1>
-                    <span class="text-[10px] font-bold text-brand-500 uppercase tracking-widest" id="adminEmailDisplay">SaaS Pro v3.5</span>
+                    <h1 class="text-xl md:text-2xl font-black tracking-tighter dark:text-white uppercase leading-none mb-1">Cobrify</h1>
+                    <span class="text-[9px] md:text-[10px] font-bold text-brand-500 uppercase tracking-widest block" id="adminEmailDisplay">Carregando...</span>
                 </div>
             </div>
             
-            <div class="flex items-center gap-2">
-                <button id="btnToggleDrawer" onclick="toggleDrawer()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all duration-300 shadow-sm border border-transparent">
-                    <i data-lucide="filter" class="w-4 h-4"></i> <span class="hidden md:inline">Filtros</span>
+            <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+                <button id="btnToggleDrawer" onclick="toggleDrawer()" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 md:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm">
+                    <i data-lucide="filter" class="w-4 h-4"></i> Filtros
                 </button>
-                <button onclick="abrirModalNovaPessoa()" class="bg-brand-600 text-white p-2.5 md:px-5 md:py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition active:scale-95">
-                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden md:inline">Novo</span>
+                <button onclick="abrirModalNovaPessoa()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-brand-600 text-white px-3 py-2 md:py-2.5 rounded-xl text-xs font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition active:scale-95">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Novo
                 </button>
-                <button onclick="abrirModalConfig()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Configurações">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
+                <button onclick="abrirModalConfig()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Configurações">
+                    <i data-lucide="settings" class="w-4 h-4 md:w-5 md:h-5"></i>
                 </button>
-                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-400 dark:text-yellow-400 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Alternar Tema">
-                    <i data-lucide="moon" class="dark:hidden w-5 h-5"></i><i data-lucide="sun" class="hidden dark:block w-5 h-5"></i>
+                <button onclick="toggleDarkMode()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 dark:text-yellow-400 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Alternar Tema">
+                    <i data-lucide="moon" class="dark:hidden w-4 h-4 md:w-5 md:h-5"></i><i data-lucide="sun" class="hidden dark:block w-4 h-4 md:w-5 md:h-5"></i>
                 </button>
-                <button onclick="fazerLogout()" class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-800/30 shadow-soft transition hover:bg-rose-500 hover:text-white" title="Sair do Sistema">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                <button onclick="fazerLogout()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-800/30 shadow-soft transition hover:bg-rose-500 hover:text-white" title="Sair do Sistema">
+                    <i data-lucide="log-out" class="w-4 h-4 md:w-5 md:h-5"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Gaveta de Filtros Básicos -->
+        <!-- Gaveta de Filtros -->
         <div id="drawerWrapper">
-            <div class="glass-card rounded-[2rem] p-6 shadow-inner border border-slate-200/50 dark:border-slate-800/50 relative z-0">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+            <div class="glass-card rounded-[2rem] p-5 md:p-6 shadow-inner border border-slate-200/50 dark:border-slate-800/50 relative z-0">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 items-end">
                     
-                    <div class="space-y-2">
+                    <div class="space-y-1 md:space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Pesquisar</label>
                         <div class="relative group">
                             <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                            <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Nome ou telefone..." class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+                            <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Nome ou telefone..." class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
                         </div>
                     </div>
 
-                    <div class="space-y-2">
+                    <div class="space-y-1 md:space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Mês Referência</label>
-                        <select id="filtroMes" onchange="mudarMes(this.value)" class="w-full bg-white dark:bg-slate-950 dark:text-white px-4 py-3 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm cursor-pointer transition"></select>
+                        <select id="filtroMes" onchange="mudarMes(this.value)" class="w-full bg-white dark:bg-slate-950 dark:text-white px-4 py-3 rounded-xl md:rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm cursor-pointer transition"></select>
                     </div>
 
-                    <div class="space-y-2 lg:col-span-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Status</label>
-                        <div class="bg-white dark:bg-slate-950 p-1.5 rounded-2xl flex flex-wrap gap-1 shadow-sm border border-slate-100 dark:border-slate-900 transition">
-                            <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active flex-1 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase transition-all opacity-100 text-slate-600 dark:text-slate-100">Todos</button>
-                            <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn flex-1 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-600 dark:text-slate-100">Pendentes</button>
-                            <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn flex-1 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-600 dark:text-slate-100">Pagos</button>
-                            <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn flex-1 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-rose-500 dark:text-rose-100">Não Cobrados</button>
-                            <!-- Novo Filtro: Arquivados -->
-                            <button onclick="setFiltroStatus('arquivado')" id="btn-arquivado" class="filter-btn flex-1 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-400 dark:text-slate-500">Arquivados</button>
+                    <div class="space-y-1 md:space-y-2 lg:col-span-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Status</label>
+                        <div class="bg-white dark:bg-slate-950 p-1.5 rounded-xl md:rounded-2xl flex flex-wrap gap-1 shadow-sm border border-slate-100 dark:border-slate-900 transition">
+                            <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active flex-1 px-2 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase transition-all opacity-100 text-slate-600 dark:text-slate-100">Todos</button>
+                            <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn flex-1 px-2 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-600 dark:text-slate-100">Pendentes</button>
+                            <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn flex-1 px-2 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-600 dark:text-slate-100">Pagos</button>
+                            <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn flex-1 px-2 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-rose-500 dark:text-rose-100">Não Cobrados</button>
+                            <button onclick="setFiltroStatus('arquivado')" id="btn-arquivado" class="filter-btn flex-1 px-2 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-100 hover:opacity-100 transition-all text-slate-400 dark:text-slate-500">Arquivados</button>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-4 flex flex-wrap gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <button onclick="abrirModal()" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500/10 text-emerald-600 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/20 transition">
+                    <div class="lg:col-span-4 flex flex-wrap gap-2 md:gap-3 pt-2 md:pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button onclick="abrirModal()" class="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/20 transition">
                             <i data-lucide="upload" class="w-4 h-4"></i> Importar CSV
                         </button>
-                        <button onclick="exportarExcel()" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-brand-500/10 text-brand-600 font-bold text-[10px] uppercase tracking-widest hover:bg-brand-500/20 transition">
-                            <i data-lucide="download" class="w-4 h-4"></i> Exportar (CSV)
+                        <button onclick="exportarExcel()" class="flex-1 md:flex-none flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500/10 text-brand-600 font-bold text-[10px] uppercase tracking-widest hover:bg-brand-500/20 transition">
+                            <i data-lucide="download" class="w-4 h-4"></i> Exportar
                         </button>
                     </div>
                 </div>
@@ -493,40 +505,42 @@
         </div>
     </div>
 
-    <!-- Stats Cards (Limpos sem bolinhas) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glass-card p-8 rounded-[2rem] shadow-soft relative overflow-hidden">
-            <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-2 italic">Volume Projetado</p>
-            <div class="text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral">0,00</span></div>
+    <!-- Stats Cards Limpos -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-soft">
+            <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1 italic">Volume Projetado</p>
+            <div class="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral">0,00</span></div>
         </div>
         
-        <div class="bg-brand-600 p-8 rounded-[2rem] text-white shadow-xl shadow-brand-500/25 relative overflow-hidden">
-            <p class="opacity-70 text-[10px] font-bold uppercase tracking-widest mb-2 italic text-white">Total Recebido</p>
-            <div class="text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago">0,00</span></div>
+        <div class="bg-brand-600 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-white shadow-xl shadow-brand-500/25">
+            <p class="opacity-70 text-[10px] font-bold uppercase tracking-widest mb-1 italic text-white">Total Recebido</p>
+            <div class="text-3xl md:text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago">0,00</span></div>
         </div>
 
-        <div class="glass-card p-8 rounded-[2rem] border-l-8 border-l-rose-500 shadow-soft relative overflow-hidden">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 italic">Aguardando Pagamento</p>
-            <div class="text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend">0,00</span></div>
+        <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-l-4 md:border-l-8 border-l-rose-500 shadow-soft">
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Aguardando Pagamento</p>
+            <div class="text-3xl md:text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend">0,00</span></div>
         </div>
     </div>
 
-    <!-- Tabela -->
-    <div id="tableContainer" class="glass-card rounded-[2rem] overflow-hidden shadow-soft">
+    <!-- Tabela Responsiva -->
+    <div id="tableContainer" class="glass-card rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-soft">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left min-w-[600px]">
                 <thead class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
                     <tr>
-                        <th class="px-6 py-5 w-12 text-center">
+                        <th class="px-4 md:px-6 py-4 md:py-5 w-10 md:w-12 text-center">
                             <input type="checkbox" id="selectAll" onclick="toggleAll(this)" class="check-custom">
                         </th>
-                        <th class="px-4 py-5 cursor-pointer hover:text-brand-500 transition flex items-center gap-2" onclick="toggleOrdemAlfabetica()">
-                            <span id="labelThParticipante">Participante</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+                        <th class="px-3 md:px-4 py-4 md:py-5 cursor-pointer hover:text-brand-500 transition" onclick="toggleOrdemAlfabetica()">
+                            <div class="flex items-center gap-2">
+                                <span id="labelThParticipante">Participante</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+                            </div>
                         </th>
-                        <th class="px-8 py-5 text-center" id="labelThMensalidade">Mensalidade</th>
-                        <th class="px-8 py-5 text-center col-adiantadas" title="Meses pagos adiantados">Adiantadas</th>
-                        <th class="px-8 py-5 text-center col-status">Status</th>
-                        <th class="px-8 py-5 text-right">Ações</th>
+                        <th class="px-4 md:px-8 py-4 md:py-5 text-center" id="labelThMensalidade">Mensalidade</th>
+                        <th class="px-4 md:px-8 py-4 md:py-5 text-center col-adiantadas" title="Meses pagos adiantados">Adiantadas</th>
+                        <th class="px-4 md:px-8 py-4 md:py-5 text-center col-status">Status</th>
+                        <th class="px-4 md:px-8 py-4 md:py-5 text-right">Ações</th>
                     </tr>
                 </thead>
                 <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800/50"></tbody>
@@ -536,9 +550,9 @@
 </div>
 
 <!-- ========================================== -->
-<!-- CLIENT PORTAL VIEW                         -->
+<!-- 5. CLIENT PORTAL VIEW                      -->
 <!-- ========================================== -->
-<div class="client-only max-w-lg mx-auto py-10" id="portalCliente"></div>
+<div class="client-only max-w-lg mx-auto py-6 md:py-10 px-4" id="portalCliente"></div>
 
 <script>
     const firebaseConfig = {
@@ -566,7 +580,7 @@
     let ordemCrescente = true;
     let selecionados = new Set();
     
-    // Configurações expandidas com os novos recursos
+    // Configurações expandidas
     let configGeral = { 
         chavePix: "", 
         valorPadrao: 50,
@@ -684,12 +698,11 @@
 
         let filtrados = [...dadosLocais];
         
-        // Filtro de Arquivados (Apenas exibe se o filtro for especificamente 'arquivado')
+        // Filtro de Arquivados
         if (filtroStatus === 'arquivado') {
             filtrados = filtrados.filter(p => p.arquivado === true);
         } else {
             filtrados = filtrados.filter(p => !p.arquivado);
-            // Filtros normais
             if (filtroStatus === 'pago') filtrados = filtrados.filter(p => p.pago);
             if (filtroStatus === 'pendente') filtrados = filtrados.filter(p => !p.pago);
             if (filtroStatus === 'nao_enviado') filtrados = filtrados.filter(p => !p.msgEnviada);
@@ -719,41 +732,41 @@
             
             corpo.innerHTML += `
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all group ${selecionados.has(p.id) ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''}">
-                    <td class="px-6 py-5 text-center">
+                    <td class="px-4 md:px-6 py-4 md:py-5 text-center">
                         <input type="checkbox" class="check-custom row-checkbox" value="${p.id}" ${selecionados.has(p.id) ? 'checked' : ''} onchange="toggleRowSelection('${p.id}')">
                     </td>
-                    <td class="px-4 py-5">
+                    <td class="px-3 md:px-4 py-4 md:py-5">
                         <div class="flex flex-col">
                             <div class="flex items-center gap-2">
-                                <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white w-full text-sm">
+                                <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white text-xs md:text-sm">
                                 ${adiantadas > 0 ? `<span class="bg-brand-100 text-brand-600 text-[9px] px-2 py-0.5 rounded-full font-extrabold">+${adiantadas}</span>` : ''}
                             </div>
-                            <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[10px] text-slate-400 font-bold w-full -mt-1">
+                            <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[9px] md:text-[10px] text-slate-400 font-bold -mt-1">
                         </div>
                     </td>
-                    <td class="px-8 py-5 text-center font-bold dark:text-white text-sm">
+                    <td class="px-4 md:px-8 py-4 md:py-5 text-center font-bold dark:text-white text-xs md:text-sm">
                         <div class="flex items-center justify-center gap-1">
                             <span class="text-[10px] text-slate-400">R$</span>
-                            <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-20 text-center font-bold">
+                            <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-16 md:w-20 text-center font-bold">
                         </div>
                     </td>
-                    <td class="px-8 py-5 text-center col-adiantadas">
-                        <input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value || 0))" class="editable-input w-12 text-center font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/10">
+                    <td class="px-4 md:px-8 py-4 md:py-5 text-center col-adiantadas">
+                        <input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value || 0))" class="editable-input w-10 md:w-12 text-center font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/10">
                     </td>
-                    <td class="px-8 py-5 text-center col-status">
-                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-4 py-1.5 rounded-full text-[9px] font-extrabold uppercase transition-all transform active:scale-95 ${p.pago ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'}">
+                    <td class="px-4 md:px-8 py-4 md:py-5 text-center col-status">
+                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-extrabold uppercase transition-all transform active:scale-95 ${p.pago ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/20'}">
                             ${p.pago ? 'Pago' : 'Pendente'}
                         </button>
                     </td>
-                    <td class="px-8 py-5 text-right">
-                        <div class="flex justify-end gap-1 opacity-40 group-hover:opacity-100 transition">
-                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2.5 ${msgEstilo}" title="Cobrar"><i data-lucide="${msgIcone}" class="w-4 h-4"></i></button>
+                    <td class="px-4 md:px-8 py-4 md:py-5 text-right">
+                        <div class="flex justify-end gap-1 opacity-60 md:opacity-40 group-hover:opacity-100 transition">
+                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 md:p-2.5 ${msgEstilo}" title="Cobrar"><i data-lucide="${msgIcone}" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
                             ${p.comprovante ? `
-                                <button onclick="verFoto('${p.comprovante}')" class="p-2.5 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition" title="Ver Comprovativo"><i data-lucide="image" class="w-4 h-4"></i></button>
-                                <button onclick="removerComprovante('${p.id}')" class="p-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="Apagar Comprovativo"><i data-lucide="image-minus" class="w-4 h-4"></i></button>
+                                <button onclick="verFoto('${p.comprovante}')" class="p-2 md:p-2.5 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition" title="Ver Comprovativo"><i data-lucide="image" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
+                                <button onclick="removerComprovante('${p.id}')" class="p-2 md:p-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="Apagar Comprovativo"><i data-lucide="image-minus" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
                             ` : ''}
-                            <button onclick="arquivarPessoa('${p.id}', ${!p.arquivado})" class="p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="${tituloArquivo}"><i data-lucide="${icoArquivo}" class="w-4 h-4"></i></button>
-                            <button onclick="excluir('${p.id}')" class="p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="arquivarPessoa('${p.id}', ${!p.arquivado})" class="p-2 md:p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="${tituloArquivo}"><i data-lucide="${icoArquivo}" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
+                            <button onclick="excluir('${p.id}')" class="p-2 md:p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Excluir"><i data-lucide="trash-2" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -849,20 +862,20 @@
         if (btnArchive) {
             if (filtroStatus === 'arquivado') {
                 btnArchive.setAttribute('onclick', 'arquivarSelecionados(false)');
-                btnArchive.innerHTML = `<i data-lucide="archive-restore" class="w-4 h-4"></i> Desarquivar`;
+                btnArchive.innerHTML = `<i data-lucide="archive-restore" class="w-4 h-4"></i> <span class="hidden sm:inline">Desarquivar</span>`;
             } else {
                 btnArchive.setAttribute('onclick', 'arquivarSelecionados(true)');
-                btnArchive.innerHTML = `<i data-lucide="archive" class="w-4 h-4"></i> Arquivar`;
+                btnArchive.innerHTML = `<i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">Arquivar</span>`;
             }
         }
 
         if (selecionados.size > 0) {
             document.getElementById('bulkCount').innerText = selecionados.size;
-            bar.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
             bar.classList.add('translate-y-0', 'opacity-100');
             lucide.createIcons();
         } else {
-            bar.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
             bar.classList.remove('translate-y-0', 'opacity-100');
         }
     }
@@ -994,22 +1007,22 @@
             const termoMens = configGeral.termoMensalidade || "Mensalidade";
 
             portal.innerHTML = `
-                <div class="glass-card p-10 rounded-[3rem] shadow-2xl text-center space-y-8 border-b-8 border-b-brand-500">
-                    <div class="w-20 h-20 bg-brand-500 text-white rounded-[2rem] flex items-center justify-center mx-auto shadow-glow"><i data-lucide="wallet" class="w-10 h-10"></i></div>
-                    <div><h2 class="text-2xl font-black dark:text-white italic">Olá, ${p.nome}!</h2><p class="text-slate-400 text-sm font-medium mt-1 uppercase tracking-widest">Detalhes da sua ${termoMens}</p></div>
-                    <div class="py-10 bg-slate-50 dark:bg-slate-900/50 rounded-[2.5rem] shadow-inner border border-slate-100 dark:border-slate-800">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Total</p>
-                        <div class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">R$ ${val.toLocaleString('pt-br',{minimumFractionDigits:2})}</div>
-                        ${p.pago ? `<div class="mt-4 inline-flex items-center gap-2 text-emerald-500 font-extrabold uppercase text-[10px] bg-emerald-100 dark:bg-emerald-900/20 px-4 py-1 rounded-full"><i data-lucide="check-circle" class="w-3 h-3"></i> Pagamento Confirmado</div>` : `<div class="mt-4 inline-flex items-center gap-2 text-amber-500 font-extrabold uppercase text-[10px] bg-amber-100 dark:bg-amber-900/20 px-4 py-1 rounded-full">Aguardando Pagamento</div>`}
+                <div class="glass-card p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl text-center space-y-6 md:space-y-8 border-b-8 border-b-brand-500">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-brand-500 text-white rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto shadow-glow"><i data-lucide="wallet" class="w-8 h-8 md:w-10 md:h-10"></i></div>
+                    <div><h2 class="text-xl md:text-2xl font-black dark:text-white italic">Olá, ${p.nome}!</h2><p class="text-slate-400 text-xs md:text-sm font-medium mt-1 uppercase tracking-widest">Detalhes da sua ${termoMens}</p></div>
+                    <div class="py-8 md:py-10 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] md:rounded-[2.5rem] shadow-inner border border-slate-100 dark:border-slate-800">
+                        <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Total</p>
+                        <div class="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tighter">R$ ${val.toLocaleString('pt-br',{minimumFractionDigits:2})}</div>
+                        ${p.pago ? `<div class="mt-4 inline-flex items-center gap-2 text-emerald-500 font-extrabold uppercase text-[9px] md:text-[10px] bg-emerald-100 dark:bg-emerald-900/20 px-4 py-1 rounded-full"><i data-lucide="check-circle" class="w-3 h-3"></i> Pagamento Confirmado</div>` : `<div class="mt-4 inline-flex items-center gap-2 text-amber-500 font-extrabold uppercase text-[9px] md:text-[10px] bg-amber-100 dark:bg-amber-900/20 px-4 py-1 rounded-full">Aguardando Pagamento</div>`}
                     </div>
-                    <div class="space-y-4">
-                        <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Chave PIX para pagamento</p>
-                        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border-2 border-dashed border-brand-200 dark:border-brand-900 flex items-center justify-between">
-                            <span class="font-mono font-bold text-sm truncate pr-4 text-brand-600">${configGeral.chavePix || "Não configurada"}</span>
-                            <button onclick="copiarPix('${configGeral.chavePix}')" class="bg-brand-500 text-white p-3 rounded-xl hover:bg-brand-600 transition shadow-lg active:scale-90"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    <div class="space-y-3 md:space-y-4">
+                        <p class="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest">Chave PIX para pagamento</p>
+                        <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-2xl border-2 border-dashed border-brand-200 dark:border-brand-900 flex items-center justify-between">
+                            <span class="font-mono font-bold text-xs md:text-sm truncate pr-2 md:pr-4 text-brand-600">${configGeral.chavePix || "Não configurada"}</span>
+                            <button onclick="copiarPix('${configGeral.chavePix}')" class="bg-brand-500 text-white p-2.5 md:p-3 rounded-xl hover:bg-brand-600 transition shadow-lg active:scale-90"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         </div>
                     </div>
-                    ${!p.pago ? `<div class="pt-6"><label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Já pagou? Envie o comprovativo</label><input type="file" id="compFile" class="hidden" onchange="uploadComp(this)"><label for="compFile" class="w-full py-5 bg-brand-600 text-white rounded-[1.5rem] font-bold flex items-center justify-center gap-3 hover:bg-brand-700 cursor-pointer shadow-xl shadow-brand-500/30 transition-all active:scale-95"><i data-lucide="camera" class="w-5 h-5"></i> Enviar Comprovativo</label></div>` : ''}
+                    ${!p.pago ? `<div class="pt-4 md:pt-6"><label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Já pagou? Envie o comprovativo</label><input type="file" id="compFile" class="hidden" onchange="uploadComp(this)"><label for="compFile" class="w-full py-4 md:py-5 bg-brand-600 text-white rounded-[1.5rem] text-sm md:text-base font-bold flex items-center justify-center gap-3 hover:bg-brand-700 cursor-pointer shadow-xl shadow-brand-500/30 transition-all active:scale-95"><i data-lucide="camera" class="w-5 h-5"></i> Enviar Comprovativo</label></div>` : ''}
                 </div>`;
             lucide.createIcons();
         });
