@@ -494,26 +494,44 @@
     function monitorarAutenticacao() {
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Usando o e-mail como ID. O Firebase não aceita '.', então trocamos por '_'
-                adminId = user.email.replace(/\./g, '_');
-                document.getElementById('adminEmailDisplay').innerText = user.email;
+                // VOLTAMOS PARA O UID (Evita a tela branca e respeita as regras de segurança do Firebase)
+                adminId = user.uid;
                 
+                // Exibe o email na tela
+                const emailDisplay = document.getElementById('adminEmailDisplay');
+                if (emailDisplay) emailDisplay.innerText = user.email || "Admin";
+                
+                // SOLUÇÃO PARA FACILITAR A SUA VIDA: Salva o e-mail DENTRO da pasta do usuário no banco!
+                // Assim você pode ver facilmente de quem é aquela pasta de cobranças.
+                db.ref(`tenants/${adminId}/perfil`).update({
+                    email_cadastrado: user.email,
+                    ultimo_login: Date.now()
+                });
+                
+                // Escuta o status da assinatura
                 db.ref(`tenants/${adminId}/assinatura/status`).on('value', snap => {
                     const status = snap.val() ? String(snap.val()).toLowerCase() : null;
                     
-                    // Agora o sistema libera se você digitar 'ativo' ou 'pago'
+                    // Libera o sistema se o status for 'ativo' ou 'pago'
                     if (status === 'ativo' || status === 'pago') {
                         document.body.classList.add('estado-logado');
                         document.body.classList.remove('estado-login', 'estado-bloqueado');
                         carregarConfiguracoesGerais();
                         carregarDadosAdmin();
                     } else {
+                        // Se não existe status (conta nova), cria como pendente
                         if (status === null) {
                             db.ref(`tenants/${adminId}/assinatura`).set({ status: 'pendente', criadoEm: Date.now() });
                         }
+                        // Bloqueia a tela
                         document.body.classList.add('estado-bloqueado');
                         document.body.classList.remove('estado-login', 'estado-logado');
                     }
+                }, error => {
+                    // PREVINE A TELA BRANCA: Se der erro de permissão no Firebase, desloga e avisa.
+                    console.error(error);
+                    alert("Erro de segurança no Firebase. Verifique as regras do Realtime Database.");
+                    fazerLogout();
                 });
 
             } else {
