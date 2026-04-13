@@ -329,6 +329,13 @@
                         <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
                     </div>
                 </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Opcional)</label>
+                    <div class="relative group">
+                        <i data-lucide="align-left" class="w-4 h-4 absolute left-4 top-4 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                        <textarea id="novoObs" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
+                    </div>
+                </div>
             </div>
             
             <div class="flex gap-3 mt-8">
@@ -371,13 +378,19 @@
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Data de Entrada</label>
                     <input type="date" id="detalhesDataEntrada" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
                 </div>
+                <!-- NOVO CAMPO: Observações -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações</label>
+                    <textarea id="detalhesObs" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
+                </div>
+                <!-- FIM CAMPO OBSERVAÇÕES -->
                 <button id="btnSalvarDetalhes" class="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 mt-2 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Salvar Alterações</button>
             </div>
             
             <!-- Histórico -->
             <div class="space-y-4">
                 <h4 class="text-sm font-black dark:text-white flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-slate-400"></i> Histórico de Pagamentos</h4>
-                <div id="listaHistorico" class="bg-slate-50 dark:bg-slate-900/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 h-[280px] overflow-y-auto shadow-inner">
+                <div id="listaHistorico" class="bg-slate-50 dark:bg-slate-900/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 h-[280px] md:h-full overflow-y-auto shadow-inner">
                     <!-- Preenchido via JS -->
                 </div>
             </div>
@@ -512,7 +525,7 @@
             <label for="arquivoCSV" class="cursor-pointer">
                 <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-3 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:-translate-y-1"></i>
                 <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecione o ficheiro CSV</p>
-                <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-widest">Colunas: ID, Nome, Tel, Valor, Adiantadas, Status</p>
+                <p class="text-[9px] text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">Colunas: ID, Nome, Tel, Data Entrada, Observacoes, Valor, Adiantadas, Status, Arquivado</p>
             </label>
         </div>
 
@@ -940,8 +953,8 @@
             const icoArquivo = p.arquivado ? 'archive-restore' : 'archive';
             const tituloArquivo = p.arquivado ? 'Desarquivar' : 'Arquivar Ocultar';
             
-            // Etiqueta visual indicando o mês de origem
-            const badgeMes = mesAtual === 'todos' ? `<span class="bg-slate-100 text-slate-500 text-[8px] px-1.5 py-0.5 rounded font-bold ml-2 border border-slate-200 shadow-sm">${p.sourceMes}</span>` : '';
+            // Etiqueta visual indicando o mês de origem adaptada (Sem esmagar)
+            const badgeMes = mesAtual === 'todos' ? `<span class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] px-2 py-1 rounded-md font-extrabold ml-2 border border-indigo-200/50 dark:border-indigo-500/20 shadow-sm whitespace-nowrap shrink-0 flex items-center gap-1" title="Mês de origem"><i data-lucide="calendar-days" class="w-3 h-3"></i> ${p.sourceMes}</span>` : '';
 
             corpo.innerHTML += `
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all group ${selecionados.has(p.id) ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''}">
@@ -950,10 +963,10 @@
                     </td>
                     <td class="px-3 md:px-4 py-4 md:py-5">
                         <div class="flex flex-col">
-                            <div class="flex items-center gap-2 mb-1">
-                                <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white text-xs md:text-sm">
+                            <div class="flex items-center gap-2 mb-1 w-full overflow-hidden">
+                                <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white text-xs md:text-sm truncate min-w-[100px]">
                                 ${badgeMes}
-                                ${adiantadas > 0 ? `<span class="bg-brand-100 text-brand-600 text-[9px] px-2 py-0.5 rounded-full font-extrabold">+${adiantadas}</span>` : ''}
+                                ${adiantadas > 0 ? `<span class="bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 text-[9px] px-2 py-0.5 rounded-full font-extrabold shrink-0">+${adiantadas}</span>` : ''}
                             </div>
                             <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[9px] md:text-[10px] text-slate-400 font-bold -mt-1">
                         </div>
@@ -1207,6 +1220,7 @@
         document.getElementById('novoNome').value = "";
         document.getElementById('novoTel').value = "";
         document.getElementById('novoDataEntrada').value = "";
+        document.getElementById('novoObs').value = "";
         document.getElementById('modalNovaPessoa').classList.add('flex');
     }
     function fecharModalNovaPessoa() { document.getElementById('modalNovaPessoa').classList.remove('flex'); }
@@ -1216,6 +1230,7 @@
         const n = document.getElementById('novoNome').value.trim();
         const t = document.getElementById('novoTel').value.trim();
         const d = document.getElementById('novoDataEntrada').value;
+        const obs = document.getElementById('novoObs').value.trim();
         
         if(!n) return showToast("Por favor, digite o nome.", "error");
         
@@ -1230,7 +1245,8 @@
             msgEnviada: false, 
             comprovante: null,
             arquivado: false,
-            dataEntrada: d
+            dataEntrada: d,
+            observacao: obs
         }).then(() => {
             fecharModalNovaPessoa();
             showToast("Cliente cadastrado com sucesso!");
@@ -1303,11 +1319,11 @@
         for (let i = 1; i <= qtdMeses; i++) {
             mes++; if (mes > 12) { mes = 1; ano++; }
             let futuroMes = `${String(mes).padStart(2, '0')}-${ano}`;
-            updates[`tenants/${adminId}/cobrancas/${futuroMes}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: 0, adiantadas: qtdMeses - i, pago: true, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "" };
+            updates[`tenants/${adminId}/cobrancas/${futuroMes}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: 0, adiantadas: qtdMeses - i, pago: true, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", observacao: user.observacao || "" };
         }
         mes++; if (mes > 12) { mes = 1; ano++; }
         let mesRetorno = `${String(mes).padStart(2, '0')}-${ano}`;
-        updates[`tenants/${adminId}/cobrancas/${mesRetorno}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "" };
+        updates[`tenants/${adminId}/cobrancas/${mesRetorno}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", observacao: user.observacao || "" };
         db.ref().update(updates);
     }
 
@@ -1321,6 +1337,7 @@
         document.getElementById('detalhesNome').value = cliente.nome || "";
         document.getElementById('detalhesTel').value = cliente.tel || "";
         document.getElementById('detalhesDataEntrada').value = cliente.dataEntrada || "";
+        document.getElementById('detalhesObs').value = cliente.observacao || "";
         
         document.getElementById('btnSalvarDetalhes').onclick = () => salvarDetalhes(id);
         document.getElementById('modalDetalhesCliente').classList.add('flex');
@@ -1386,6 +1403,7 @@
         const n = document.getElementById('detalhesNome').value.trim();
         const t = document.getElementById('detalhesTel').value.trim();
         const d = document.getElementById('detalhesDataEntrada').value;
+        const obs = document.getElementById('detalhesObs').value.trim();
         
         if(!n) return showToast("Por favor, digite o nome.", "error");
 
@@ -1396,7 +1414,7 @@
         lucide.createIcons();
 
         db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({
-            nome: n, tel: t, dataEntrada: d
+            nome: n, tel: t, dataEntrada: d, observacao: obs
         }).then(() => {
             btn.innerHTML = txtOriginal; 
             btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -1445,8 +1463,8 @@
     
     function exportarExcel() {
         if (dadosLocais.length === 0) return;
-        let csv = "ID;Nome;Telefone;Data de Entrada;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
-        dadosLocais.forEach(p => { csv += `${p.id};${p.nome};${p.tel || ''};${p.dataEntrada || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; });
+        let csv = "ID;Nome;Telefone;Data de Entrada;Observacoes;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
+        dadosLocais.forEach(p => { csv += `${p.id};${p.nome};${p.tel || ''};${p.dataEntrada || ''};${p.observacao || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; });
         const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })); link.download = `cobrify_relatorio_${mesAtual}.csv`; link.click();
     }
     
@@ -1460,22 +1478,28 @@
             const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
 
             linhas.forEach((linha, i) => {
-                if (i === 0 || !linha.trim()) return;
+                if (i === 0 || !linha.trim()) return; // Ignora o cabeçalho e linhas vazias
+                
                 let cols = linha.split(/[;,]/);
                 let id = (cols[0] && cols[0].trim() !== "") ? cols[0].trim() : String(Date.now() + i); 
                 let ext = dadosLocais.find(d => String(d.id) === id) || {};
+                
+                // Mapeamento correto de acordo com a ordem de Exportação:
+                // 0:ID, 1:Nome, 2:Tel, 3:Data, 4:Obs, 5:Valor, 6:Adiantadas, 7:Status, 8:Arquivado
                 updates[id] = { 
                     nome: cols[1]?.trim() || ext.nome || "Sem Nome", 
                     tel: cols[2]?.trim() || ext.tel || "", 
-                    valor: cols[3] ? parseFloat(cols[3].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
-                    adiantadas: cols[4] ? parseInt(cols[4]) : (ext.adiantadas || 0), 
-                    pago: cols[5] ? cols[5].trim().toLowerCase() === "pago" : (ext.pago || false), 
+                    dataEntrada: cols[3]?.trim() || ext.dataEntrada || "",
+                    observacao: cols[4]?.trim() || ext.observacao || "",
+                    valor: cols[5] ? parseFloat(cols[5].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
+                    adiantadas: cols[6] ? parseInt(cols[6]) : (ext.adiantadas || 0), 
+                    pago: cols[7] ? cols[7].trim().toLowerCase() === "pago" : (ext.pago || false), 
+                    arquivado: cols[8] ? cols[8].trim().toLowerCase() === "sim" : (ext.arquivado || false),
                     msgEnviada: ext.msgEnviada || false, 
-                    comprovante: ext.comprovante || null,
-                    arquivado: ext.arquivado || false,
-                    dataEntrada: ext.dataEntrada || ""
+                    comprovante: ext.comprovante || null
                 };
             });
+            
             db.ref(`tenants/${adminId}/cobrancas/${targetMes}`).update(updates).then(() => { 
                 fecharModal(); 
                 showToast("Dados importados com sucesso!"); 
@@ -1551,7 +1575,7 @@
                             <i data-lucide="image-plus" class="w-5 h-5"></i> Galeria ou Câmera
                         </label>
                         <div class="mt-4 text-center">
-                            <a href="https://www.youtube.com/watch?v=I5Rzb712iEI" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors">
+                            <a href="COLOQUE_SEU_LINK_AQUI" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors">
                                 <i data-lucide="play-circle" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Em caso de dúvida, veja como enviar
                             </a>
                         </div>
