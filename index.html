@@ -6,7 +6,7 @@
     <title>Cobrify - Gestão de Cobranças</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -193,11 +193,11 @@
             <div class="w-full space-y-4">
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">E-mail</label>
-                    <input type="email" id="emailAuth" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="seu@email.com">
+                    <input type="email" id="emailAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="seu@email.com">
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Palavra-passe</label>
-                    <input type="password" id="senhaAuth" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="••••••••">
+                    <input type="password" id="senhaAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="••••••••">
                 </div>
 
                 <div class="pt-4 space-y-3">
@@ -313,27 +313,27 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
-                    <input type="text" id="novoNome" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
+                    <input type="text" id="novoNome" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp (Com DDD)</label>
                     <div class="relative group">
                         <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <input type="tel" id="novoTel" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 5511999999999">
+                        <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 5511999999999">
                     </div>
                 </div>
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Data de Entrada (Opcional)</label>
                     <div class="relative group">
                         <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <input type="date" id="novoDataEntrada" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
+                        <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
                     </div>
                 </div>
             </div>
             
             <div class="flex gap-3 mt-8">
                 <button onclick="fecharModalNovaPessoa()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
-                <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Adicionar</button>
+                <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Cadastrar</button>
             </div>
         </div>
     </div>
@@ -742,6 +742,11 @@
     const idCliente = urlParams.get('p');
     const idAdminUrl = urlParams.get('a');
     const urlMes = urlParams.get('m');
+
+    // Previne o erro "lucide is not defined" caso a biblioteca falhe no carregamento
+    if (typeof window.lucide === 'undefined') {
+        window.lucide = { createIcons: () => console.warn("Ícones não carregados.") };
+    }
 
     function iniciar() {
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -1206,6 +1211,34 @@
     }
     function fecharModalNovaPessoa() { document.getElementById('modalNovaPessoa').classList.remove('flex'); }
 
+    function salvarNovaPessoa() {
+        if(!adminId) return;
+        const n = document.getElementById('novoNome').value.trim();
+        const t = document.getElementById('novoTel').value.trim();
+        const d = document.getElementById('novoDataEntrada').value;
+        
+        if(!n) return showToast("Por favor, digite o nome.", "error");
+        
+        const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
+
+        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${Date.now()}`).set({ 
+            nome: n, 
+            tel: t, 
+            valor: configGeral.valorPadrao, 
+            adiantadas: 0, 
+            pago: false, 
+            msgEnviada: false, 
+            comprovante: null,
+            arquivado: false,
+            dataEntrada: d
+        }).then(() => {
+            fecharModalNovaPessoa();
+            showToast("Cliente cadastrado com sucesso!");
+        }).catch((err) => {
+            showToast("Erro ao cadastrar: " + err.message, "error");
+        });
+    }
+
     function toggleDrawer() {
         const wrapper = document.getElementById('drawerWrapper');
         const btn = document.getElementById('btnToggleDrawer');
@@ -1518,7 +1551,7 @@
                             <i data-lucide="image-plus" class="w-5 h-5"></i> Galeria ou Câmera
                         </label>
                         <div class="mt-4 text-center">
-                            <a href="COLOQUE_SEU_LINK_AQUI" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors">
+                            <a href="https://www.youtube.com/watch?v=I5Rzb712iEI" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors">
                                 <i data-lucide="play-circle" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Em caso de dúvida, veja como enviar
                             </a>
                         </div>
@@ -1593,7 +1626,10 @@
         showToast("Chave PIX copiada!");
     }
 
-    iniciar();
+    // Garante que o código só corre depois de todos os scripts (como os ícones) estarem carregados
+    window.onload = function() {
+        iniciar();
+    };
 </script>
 </body>
 </html>
