@@ -304,6 +304,15 @@
                     <i data-lucide="log-out" class="w-4 h-4"></i> Sair da Conta
                 </button>
             </div>
+
+            <!-- NOVA ÁREA: Teste Grátis -->
+            <div id="areaTesteGratis" class="w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 hidden">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ainda não tem certeza?</p>
+                <button onclick="ativarTeste7Dias()" class="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 py-4 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 transition-all active:scale-95 flex justify-center items-center gap-2 shadow-sm">
+                    <i data-lucide="unlock" class="w-5 h-5"></i> Iniciar Teste de 7 Dias
+                </button>
+            </div>
+            
         </div>
     </div>
 </div>
@@ -642,6 +651,7 @@
                 <div>
                     <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-slate-900 dark:text-white leading-none mb-1 flex items-center">
                         Pag<span class="text-brand-500 font-bold">Flow</span>
+                        <span id="badgeTesteStatus"></span>
                     </h1>
                     <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest block" id="adminEmailDisplay">Carregando...</span>
                 </div>
@@ -885,14 +895,52 @@
                 
                 db.ref(`tenants/${adminId}/perfil`).update({ email_cadastrado: user.email, ultimo_login: Date.now() });
                 
-                db.ref(`tenants/${adminId}/assinatura/status`).on('value', snap => {
-                    const status = snap.val() ? String(snap.val()).toLowerCase() : null;
+                db.ref(`tenants/${adminId}/assinatura`).on('value', snap => {
+                    const assinatura = snap.val() || {};
+                    const status = assinatura.status ? String(assinatura.status).toLowerCase() : null;
+                    const testeExpiraEm = assinatura.testeExpiraEm || 0;
+                    const agora = Date.now();
+
+                    let temAcesso = false;
+
+                    // Verifica se o acesso está liberado
                     if (status === 'ativo' || status === 'pago') {
+                        temAcesso = true;
+                    } else if (status === 'teste') {
+                        if (agora < testeExpiraEm) {
+                            temAcesso = true;
+                        } else {
+                            // Teste expirou, volta para pendente e bloqueia
+                            db.ref(`tenants/${adminId}/assinatura/status`).set('pendente');
+                            temAcesso = false;
+                        }
+                    }
+
+                    // Atualiza a Badge de Teste no Topo
+                    const badgeTeste = document.getElementById('badgeTesteStatus');
+                    if (temAcesso && status === 'teste') {
+                        const diasRestantes = Math.ceil((testeExpiraEm - agora) / (1000 * 60 * 60 * 24));
+                        if (badgeTeste) badgeTeste.innerHTML = `<span class="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2 border border-indigo-200 dark:border-indigo-800">Teste: ${diasRestantes} dia(s)</span>`;
+                    } else {
+                        if (badgeTeste) badgeTeste.innerHTML = '';
+                    }
+
+                    if (temAcesso) {
                         document.body.classList.add('estado-logado');
                         document.body.classList.remove('estado-login', 'estado-bloqueado');
                         carregarConfiguracoesGerais();
                     } else {
-                        if (status === null) db.ref(`tenants/${adminId}/assinatura`).set({ status: 'pendente', criadoEm: Date.now() });
+                        if (status === null) {
+                            db.ref(`tenants/${adminId}/assinatura`).set({ status: 'pendente', criadoEm: agora, testeUsado: false });
+                        }
+                        
+                        // Controla a visibilidade do botão de Iniciar Teste (só aparece se nunca usou)
+                        const areaTeste = document.getElementById('areaTesteGratis');
+                        if (areaTeste) {
+                            if (assinatura.testeUsado) areaTeste.classList.add('hidden');
+                            else areaTeste.classList.remove('hidden');
+                        }
+
                         document.body.classList.add('estado-bloqueado');
                         document.body.classList.remove('estado-login', 'estado-logado');
                     }
@@ -907,6 +955,27 @@
                 document.body.classList.remove('estado-logado', 'estado-bloqueado');
             }
         });
+    }
+
+    function ativarTeste7Dias() {
+        if (!adminId) return;
+        showConfirm(
+            "Liberar Teste de 7 Dias",
+            "O sistema será desbloqueado por 7 dias corridos. Após esse período, ele será bloqueado novamente até a ativação da licença.\n\n⚠️ Você só pode usar este teste 1 vez.",
+            "Iniciar Teste", "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30", "unlock", "bg-indigo-600",
+            () => {
+                const expiraEm = Date.now() + (7 * 24 * 60 * 60 * 1000); // Hoje + 7 dias em ms
+                db.ref(`tenants/${adminId}/assinatura`).update({
+                    status: 'teste',
+                    testeUsado: true,
+                    testeExpiraEm: expiraEm
+                }).then(() => {
+                    showToast("Teste de 7 dias ativado!", "success");
+                }).catch(err => {
+                    showToast("Erro ao ativar teste.", "error");
+                });
+            }
+        );
     }
 
     function mostrarErro(msg) {
