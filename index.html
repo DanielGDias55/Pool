@@ -436,6 +436,39 @@
     </div>
 </div>
 
+<!-- Modal Caixa de Ideias (NOVO) -->
+<div id="modalIdeia" class="modal-overlay" onclick="fecharModalIdeia()">
+    <div class="glass-card w-full max-w-md p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 relative" onclick="event.stopPropagation()">
+        <div class="flex items-center gap-4 mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600 flex items-center justify-center shadow-inner">
+                <i data-lucide="lightbulb" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-extrabold dark:text-white">Caixa de Ideias</h3>
+                <p class="text-xs text-slate-500 font-medium">Ajude a melhorar o PagFlow</p>
+            </div>
+            <button onclick="fecharModalIdeia()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition ml-auto"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="space-y-4">
+            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                Sentiu falta de alguma funcionalidade? Tem uma sugestão de melhoria? Envie diretamente para a nossa equipa de desenvolvimento!
+            </p>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Sua Ideia / Sugestão</label>
+                <textarea id="textoIdeia" rows="4" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none mt-1" placeholder="Descreva a sua ideia com detalhes..."></textarea>
+            </div>
+        </div>
+        
+        <div class="flex gap-3 mt-6">
+            <button onclick="fecharModalIdeia()" class="flex-1 py-3.5 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+            <button onclick="enviarIdeia()" id="btnEnviarIdeia" class="flex-1 py-3.5 bg-amber-500 text-white rounded-2xl font-bold hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all active:scale-95 flex justify-center items-center gap-2">
+                <i data-lucide="send" class="w-4 h-4"></i> Enviar
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Visualizar Etiquetas -->
 <div id="modalVisualizarTags" class="modal-overlay" onclick="fecharModalTags()">
     <div class="glass-card w-full max-w-xs p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
@@ -455,7 +488,7 @@
     </div>
 </div>
 
-<!-- Modal Visualizar Observação (NOVO) -->
+<!-- Modal Visualizar Observação -->
 <div id="modalVisualizarObs" class="modal-overlay" onclick="fecharModalObs()">
     <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
         <div class="w-14 h-14 bg-amber-500 text-white rounded-[1.25rem] flex items-center justify-center mx-auto mb-4 shadow-glow">
@@ -880,6 +913,10 @@
             </div>
             
             <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+                <!-- Botão Caixa de Ideias -->
+                <button onclick="abrirModalIdeia()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/30 shadow-soft transition hover:bg-amber-500 hover:text-white" title="Enviar Ideia ou Sugestão">
+                    <i data-lucide="lightbulb" class="w-4 h-4 md:w-5 md:h-5"></i>
+                </button>
                 <!-- Botão Central de Ajuda -->
                 <button onclick="abrirModalAjuda()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30 shadow-soft transition hover:bg-blue-500 hover:text-white" title="Central de Ajuda">
                     <i data-lucide="help-circle" class="w-4 h-4 md:w-5 md:h-5"></i>
@@ -1534,6 +1571,60 @@
         document.getElementById('modalVisualizarObs').classList.remove('flex');
     }
 
+    // --- LÓGICA DA CAIXA DE IDEIAS ---
+    function abrirModalIdeia() {
+        document.getElementById('textoIdeia').value = '';
+        document.getElementById('modalIdeia').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function fecharModalIdeia() {
+        document.getElementById('modalIdeia').classList.remove('flex');
+    }
+
+    function enviarIdeia() {
+        const texto = document.getElementById('textoIdeia').value.trim();
+        if (!texto) {
+            showToast("Por favor, escreva a sua ideia antes de enviar.", "error");
+            return;
+        }
+
+        if (!adminId) return;
+
+        const btn = document.getElementById('btnEnviarIdeia');
+        const txtOriginal = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        lucide.createIcons();
+
+        const ideiaData = {
+            adminId: adminId,
+            email: auth.currentUser ? auth.currentUser.email : 'Desconhecido',
+            texto: texto,
+            data: Date.now(),
+            status: 'nova'
+        };
+
+        db.ref('ideias_sistema').push(ideiaData).then(() => {
+            finalizarEnvioIdeia(btn, txtOriginal);
+        }).catch(err => {
+            db.ref(`tenants/${adminId}/ideias_enviadas`).push(ideiaData).then(() => {
+                finalizarEnvioIdeia(btn, txtOriginal);
+            }).catch(errFallback => {
+                btn.innerHTML = txtOriginal;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                showToast("Erro ao enviar ideia. Verifique a sua ligação.", "error");
+            });
+        });
+    }
+
+    function finalizarEnvioIdeia(btn, txtOriginal) {
+        btn.innerHTML = txtOriginal;
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        fecharModalIdeia();
+        showToast("Ideia enviada! Muito obrigado pelo seu feedback.", "success");
+    }
+
     // --- RENDERIZAÇÃO E LÓGICA DA TABELA ---
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
@@ -1823,6 +1914,60 @@
 
     function fecharModalObs() {
         document.getElementById('modalVisualizarObs').classList.remove('flex');
+    }
+
+    // --- LÓGICA DA CAIXA DE IDEIAS ---
+    function abrirModalIdeia() {
+        document.getElementById('textoIdeia').value = '';
+        document.getElementById('modalIdeia').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function fecharModalIdeia() {
+        document.getElementById('modalIdeia').classList.remove('flex');
+    }
+
+    function enviarIdeia() {
+        const texto = document.getElementById('textoIdeia').value.trim();
+        if (!texto) {
+            showToast("Por favor, escreva a sua ideia antes de enviar.", "error");
+            return;
+        }
+
+        if (!adminId) return;
+
+        const btn = document.getElementById('btnEnviarIdeia');
+        const txtOriginal = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...';
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        lucide.createIcons();
+
+        const ideiaData = {
+            adminId: adminId,
+            email: auth.currentUser ? auth.currentUser.email : 'Desconhecido',
+            texto: texto,
+            data: Date.now(),
+            status: 'nova'
+        };
+
+        db.ref('ideias_sistema').push(ideiaData).then(() => {
+            finalizarEnvioIdeia(btn, txtOriginal);
+        }).catch(err => {
+            db.ref(`tenants/${adminId}/ideias_enviadas`).push(ideiaData).then(() => {
+                finalizarEnvioIdeia(btn, txtOriginal);
+            }).catch(errFallback => {
+                btn.innerHTML = txtOriginal;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                showToast("Erro ao enviar ideia. Verifique a sua ligação.", "error");
+            });
+        });
+    }
+
+    function finalizarEnvioIdeia(btn, txtOriginal) {
+        btn.innerHTML = txtOriginal;
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        fecharModalIdeia();
+        showToast("Ideia enviada! Muito obrigado pelo seu feedback.", "success");
     }
 
     // --- LÓGICA DE FILA DE ENVIO (WHATSAPP EM MASSA) ---
