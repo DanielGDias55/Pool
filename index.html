@@ -324,7 +324,119 @@
 <!-- 3. MODAIS DA APLICAÇÃO ADMIN               -->
 <!-- ========================================== -->
 
-<!-- Modal Visualizar Etiquetas (NOVO) -->
+<!-- Modal de Ajuda / FAQ -->
+<div id="modalAjuda" class="modal-overlay" onclick="fecharModalAjuda()">
+    <div class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600 flex items-center justify-center">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-extrabold dark:text-white">Central de Ajuda</h3>
+                    <p class="text-xs text-slate-500 font-medium">Guia rápido do PagFlow</p>
+                </div>
+            </div>
+            <button onclick="fecharModalAjuda()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="space-y-4">
+            
+            <!-- Pergunta 1 -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+                <button onclick="toggleAjuda('ajuda1')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="tags" class="w-5 h-5 text-brand-500 shrink-0"></i>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Como funciona o sistema de Múltiplas Etiquetas?</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="icon-ajuda1" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+                </button>
+                <div id="ajuda1" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+                    As etiquetas (Tags) servem para organizar os seus clientes por categorias (ex: Plano VIP, Mensal, Manutenção). 
+                    <br><br>
+                    Para adicionar uma etiqueta durante o registo ou na edição do cliente, basta <strong>escrever o nome da etiqueta e clicar na tecla "Enter", inserir uma vírgula, ou clicar no botão azul (+)</strong> ao lado do campo.
+                    Pode adicionar quantas etiquetas quiser! Elas aparecerão na tabela debaixo do número de telefone e podem ser usadas na gaveta de Filtros para encontrar grupos específicos rapidamente.
+                </div>
+            </div>
+
+            <!-- Pergunta 2 -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+                <button onclick="toggleAjuda('ajuda2')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="calendar-clock" class="w-5 h-5 text-brand-500 shrink-0"></i>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-200">O que significa cada Status na tabela?</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="icon-ajuda2" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+                </button>
+                <div id="ajuda2" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+                    O sistema atualiza a cor do status automaticamente com base nas ações:
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        <li><strong class="text-emerald-500">Pago (Verde):</strong> O pagamento foi confirmado por si.</li>
+                        <li><strong class="text-amber-500">Pendente (Amarelo):</strong> A aguardar pagamento, mas ainda não passou da data de vencimento.</li>
+                        <li><strong class="text-rose-500">Atrasado (Vermelho):</strong> O dia de hoje já ultrapassou o "Dia Venc." registado para este cliente e ele ainda não pagou.</li>
+                        <li><strong class="text-violet-500">Em Análise (Roxo):</strong> O cliente enviou o comprovativo de pagamento através do Portal do Cliente. Clique no ícone de imagem piscando para validar o comprovativo e marcar como "Pago".</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pergunta 3 -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+                <button onclick="toggleAjuda('ajuda3')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="send" class="w-5 h-5 text-brand-500 shrink-0"></i>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Como funciona a Fila de Envio (Cobrança em Massa)?</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="icon-ajuda3" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+                </button>
+                <div id="ajuda3" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+                    Pode cobrar vários clientes consecutivamente sem perder o rasto.
+                    <br><br>
+                    <strong>1.</strong> Selecione os clientes que deseja cobrar usando as caixas de verificação (checkboxes) no lado esquerdo da tabela.<br>
+                    <strong>2.</strong> Na barra preta que aparece no rodapé, clique em <strong>"Cobrar Todos"</strong>.<br>
+                    <strong>3.</strong> Uma janela de "Fila" irá abrir-se. Ao clicar em <em>"Abrir WhatsApp e Avançar"</em>, a janela do WhatsApp Web abrir-se-á com a mensagem pronta para o primeiro cliente, marcando-o automaticamente com o ícone azul de "enviado".<br>
+                    <strong>4.</strong> Ao voltar ao sistema, o próximo cliente já estará pronto para envio na fila.
+                </div>
+            </div>
+
+            <!-- Pergunta 4 -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+                <button onclick="toggleAjuda('ajuda4')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="history" class="w-5 h-5 text-brand-500 shrink-0"></i>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-200">A Virada do Ciclo e o botão "Copiar Anterior"</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="icon-ajuda4" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+                </button>
+                <div id="ajuda4" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+                    O PagFlow trabalha por "Ciclos Mensais", garantindo que tem um histórico limpo e organizado mês a mês.
+                    <br><br>
+                    Quando um novo mês começa (ou no dia configurado na "Virada do Ciclo" em Configurações), a tabela aparecerá vazia. Para não ter que registar os seus clientes recorrentes todos de novo, abra a gaveta de Filtros e clique no botão roxo <strong>"Copiar Anterior"</strong>.
+                    <br><br>
+                    Isto fará com que todos os clientes do mês passado que <em>não estavam arquivados</em> sejam transportados para o mês atual com o status reiniciado para "Pendente".
+                </div>
+            </div>
+
+            <!-- Pergunta 5 -->
+            <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+                <button onclick="toggleAjuda('ajuda5')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="message-square-warning" class="w-5 h-5 text-brand-500 shrink-0"></i>
+                        <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Alertas de Observações</span>
+                    </div>
+                    <i data-lucide="chevron-down" id="icon-ajuda5" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+                </button>
+                <div id="ajuda5" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+                    Se preencher o campo "Observações" durante o registo ou no perfil do cliente, um pequeno <strong>ícone de alerta amarelo</strong> aparecerá ao lado do nome do cliente na tabela principal.
+                    <br><br>
+                    Clique neste ícone para ler rapidamente a observação sem precisar de abrir o perfil completo do cliente. É ideal para lembretes como "Paga sempre no dia 15" ou "Pediu desconto este mês". O tamanho máximo para uma observação é de 300 caracteres.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Visualizar Etiquetas -->
 <div id="modalVisualizarTags" class="modal-overlay" onclick="fecharModalTags()">
     <div class="glass-card w-full max-w-xs p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
         <div class="w-14 h-14 bg-brand-500 text-white rounded-[1.25rem] flex items-center justify-center mx-auto mb-4 shadow-glow">
@@ -338,6 +450,25 @@
         </div>
 
         <button onclick="fecharModalTags()" class="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all active:scale-95">
+            Fechar
+        </button>
+    </div>
+</div>
+
+<!-- Modal Visualizar Observação (NOVO) -->
+<div id="modalVisualizarObs" class="modal-overlay" onclick="fecharModalObs()">
+    <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
+        <div class="w-14 h-14 bg-amber-500 text-white rounded-[1.25rem] flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <i data-lucide="message-square-text" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-lg font-black dark:text-white mb-1">Observações</h3>
+        <p id="modalObsTitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 truncate"></p>
+        
+        <div id="modalObsContent" class="text-sm text-slate-600 dark:text-slate-300 mb-6 max-h-48 overflow-y-auto p-1 text-left whitespace-pre-wrap leading-relaxed break-words">
+            <!-- Preenchido via JS -->
+        </div>
+
+        <button onclick="fecharModalObs()" class="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all active:scale-95">
             Fechar
         </button>
     </div>
@@ -418,24 +549,26 @@
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
                     <input type="text" id="novoNome" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
-                    <div class="relative group">
-                        <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
+                        <div class="relative group">
+                            <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                            <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
+                        </div>
                     </div>
-                </div>
-                <!-- SISTEMA DE MULTIPLAS ETIQUETAS -->
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Categorias ou Planos">Etiquetas</label>
-                    <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
-                        <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
-                        <!-- Etiquetas visuais aparecem aqui via JS -->
-                        <div id="tagInputWrapper_novo" class="flex-1 flex items-center min-w-[120px]">
-                            <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Ex: VIP (Enter ou +)">
-                            <button type="button" onclick="adicionarTagManual('novo')" class="p-1.5 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
-                            </button>
+                    <!-- SISTEMA DE MULTIPLAS ETIQUETAS -->
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Categorias ou Planos">Etiquetas</label>
+                        <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
+                            <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+                            <!-- Etiquetas visuais aparecem aqui via JS -->
+                            <div id="tagInputWrapper_novo" class="flex-1 flex items-center min-w-[120px]">
+                                <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Ex: VIP (Enter ou +)">
+                                <button type="button" onclick="adicionarTagManual('novo')" class="p-1.5 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -457,10 +590,10 @@
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Opcional)</label>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Máx: 300 caracteres)</label>
                     <div class="relative group">
                         <i data-lucide="align-left" class="w-4 h-4 absolute left-4 top-4 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                        <textarea id="novoObs" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais..."></textarea>
+                        <textarea id="novoObs" rows="2" maxlength="300" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais..."></textarea>
                     </div>
                 </div>
             </div>
@@ -528,8 +661,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações</label>
-                    <textarea id="detalhesObs" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Máx: 300 caracteres)</label>
+                    <textarea id="detalhesObs" rows="3" maxlength="300" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
                 </div>
                 <button id="btnSalvarDetalhes" class="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 mt-2 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Salvar Alterações</button>
             </div>
@@ -619,6 +752,12 @@
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="cfgOcultarDiaCobranca" class="check-custom">
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Dia Venc."</span>
+                    </label>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="cfgDesativarEmAnalise" class="check-custom">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Desativar Status "Em Análise" (Aprova o pagamento direto pelo portal)</span>
                     </label>
                 </div>
             </div>
@@ -741,6 +880,11 @@
             </div>
             
             <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+                <!-- Botão Central de Ajuda -->
+                <button onclick="abrirModalAjuda()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30 shadow-soft transition hover:bg-blue-500 hover:text-white" title="Central de Ajuda">
+                    <i data-lucide="help-circle" class="w-4 h-4 md:w-5 md:h-5"></i>
+                </button>
+                <div class="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
                 <button id="btnToggleDrawer" onclick="toggleDrawer()" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 md:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm">
                     <i data-lucide="filter" class="w-4 h-4"></i> Filtros
                 </button>
@@ -951,6 +1095,7 @@
         ocultarAdiantadas: false,
         ocultarStatus: false,
         ocultarDiaCobranca: false,
+        desativarEmAnalise: false,
         msgZapCustom: "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo."
     };
 
@@ -1146,6 +1291,11 @@
                 container.classList.toggle('esconder-dia-cobranca', configGeral.ocultarDiaCobranca);
             }
             
+            const btnEmAnalise = document.getElementById('btn-em_analise');
+            if (btnEmAnalise) {
+                btnEmAnalise.style.display = configGeral.desativarEmAnalise ? 'none' : 'block';
+            }
+
             const btnCopiar = document.getElementById('btnCopiarCiclo');
             if (btnCopiar) btnCopiar.style.display = mesAtual === 'todos' ? 'none' : 'flex';
             
@@ -1368,6 +1518,22 @@
         lucide.createIcons();
     }
 
+    // --- LÓGICA DE VISUALIZAÇÃO DE OBSERVAÇÕES (MOBILE E DESKTOP) ---
+    function abrirModalObs(encodedName, encodedObs) {
+        const nome = decodeURIComponent(encodedName);
+        const obs = decodeURIComponent(encodedObs);
+        
+        document.getElementById('modalObsTitle').innerText = nome;
+        document.getElementById('modalObsContent').innerText = obs;
+        
+        document.getElementById('modalVisualizarObs').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function fecharModalObs() {
+        document.getElementById('modalVisualizarObs').classList.remove('flex');
+    }
+
     // --- RENDERIZAÇÃO E LÓGICA DA TABELA ---
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
@@ -1445,14 +1611,12 @@
             
             const badgeMes = mesAtual === 'todos' ? `<span class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] px-2 py-1 rounded-md font-extrabold ml-2 border border-indigo-200/50 dark:border-indigo-500/20 shadow-sm whitespace-nowrap shrink-0 flex items-center gap-1" title="Mês de origem"><i data-lucide="calendar-days" class="w-3 h-3"></i> ${p.sourceMes}</span>` : '';
 
+            let safeObs = encodeURIComponent(p.observacao || '');
+            let safeNameObs = encodeURIComponent(p.nome || '');
             const obsIcon = (p.observacao && p.observacao.trim() !== '') 
-                ? `<div class="group/obs relative flex items-center justify-center shrink-0">
-                     <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-500 cursor-help"></i>
-                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-slate-800 text-white text-[10px] p-2.5 rounded-xl shadow-xl opacity-0 invisible group-hover/obs:opacity-100 group-hover/obs:visible transition-all z-50 pointer-events-none whitespace-normal text-center leading-tight">
-                        ${p.observacao}
-                        <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                     </div>
-                   </div>` 
+                ? `<button onclick="abrirModalObs('${safeNameObs}', '${safeObs}')" class="flex items-center justify-center shrink-0 transition-transform active:scale-90" title="Ver observações">
+                     <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-500 hover:text-amber-600 transition-colors"></i>
+                   </button>` 
                 : '';
 
             // Construção da Tag Múltipla Inteligente
@@ -1480,7 +1644,7 @@
                 `;
             }
 
-            const estaEmAnalise = !p.pago && p.comprovante;
+            const estaEmAnalise = !configGeral.desativarEmAnalise && !p.pago && p.comprovante;
             const estaAtrasado = verificarAtraso(p, p.sourceMes || mesAtual);
 
             let btnStatusClass = '';
@@ -1601,7 +1765,30 @@
     function fecharConfirm() { document.getElementById('modalConfirm').classList.remove('flex'); confirmActionCallback = null; }
     function executarConfirm() { if (confirmActionCallback) confirmActionCallback(); fecharConfirm(); }
 
-    // --- LÓGICA DE VISUALIZAÇÃO DE TAGS (MOBILE) ---
+    // --- LÓGICA DA CENTRAL DE AJUDA ---
+    function abrirModalAjuda() {
+        document.getElementById('modalAjuda').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function fecharModalAjuda() {
+        document.getElementById('modalAjuda').classList.remove('flex');
+    }
+
+    function toggleAjuda(id) {
+        const conteudo = document.getElementById(id);
+        const icone = document.getElementById('icon-' + id);
+        
+        if (conteudo.classList.contains('hidden')) {
+            conteudo.classList.remove('hidden');
+            icone.classList.add('rotate-180');
+        } else {
+            conteudo.classList.add('hidden');
+            icone.classList.remove('rotate-180');
+        }
+    }
+
+    // --- LÓGICA DE VISUALIZAÇÃO DE TAGS E OBSERVAÇÕES (MOBILE) ---
     function abrirModalTags(encodedName, encodedTags) {
         const nome = decodeURIComponent(encodedName);
         const tags = JSON.parse(decodeURIComponent(encodedTags));
@@ -1623,16 +1810,31 @@
         document.getElementById('modalVisualizarTags').classList.remove('flex');
     }
 
+    function abrirModalObs(encodedName, encodedObs) {
+        const nome = decodeURIComponent(encodedName);
+        const obs = decodeURIComponent(encodedObs);
+        
+        document.getElementById('modalObsTitle').innerText = nome;
+        document.getElementById('modalObsContent').innerText = obs;
+        
+        document.getElementById('modalVisualizarObs').classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function fecharModalObs() {
+        document.getElementById('modalVisualizarObs').classList.remove('flex');
+    }
+
     // --- LÓGICA DE FILA DE ENVIO (WHATSAPP EM MASSA) ---
     function iniciarFilaWhatsApp() {
         if(selecionados.size === 0) return;
         
         filaEnvio = Array.from(selecionados)
             .map(id => dadosLocais.find(c => c.id === id))
-            .filter(c => c && c.tel); 
+            .filter(c => c && c.tel && !c.pago); // Remove quem não tem telefone ou JÁ PAGOU
         
         if (filaEnvio.length === 0) {
-            showToast("Nenhum dos selecionados possui telefone cadastrado.", "error");
+            showToast("Nenhum cliente válido na seleção. (Clientes pagos ou sem telefone foram ignorados)", "error");
             return;
         }
 
@@ -1824,6 +2026,7 @@
         document.getElementById('cfgOcultarAdiantadas').checked = configGeral.ocultarAdiantadas || false;
         document.getElementById('cfgOcultarStatus').checked = configGeral.ocultarStatus || false;
         document.getElementById('cfgOcultarDiaCobranca').checked = configGeral.ocultarDiaCobranca || false;
+        document.getElementById('cfgDesativarEmAnalise').checked = configGeral.desativarEmAnalise || false;
         document.getElementById('cfgMsgCustom').value = configGeral.msgZapCustom || "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo.";
         document.getElementById('modalConfig').classList.add('flex');
     }
@@ -1842,6 +2045,7 @@
             ocultarAdiantadas: document.getElementById('cfgOcultarAdiantadas').checked,
             ocultarStatus: document.getElementById('cfgOcultarStatus').checked,
             ocultarDiaCobranca: document.getElementById('cfgOcultarDiaCobranca').checked,
+            desativarEmAnalise: document.getElementById('cfgDesativarEmAnalise').checked,
             msgZapCustom: document.getElementById('cfgMsgCustom').value
         };
 
@@ -1858,6 +2062,7 @@
 
         document.getElementById('novoNome').value = "";
         document.getElementById('novoTel').value = "";
+        document.getElementById('novoTag').value = "";
         document.getElementById('novoDataEntrada').value = "";
         document.getElementById('novoDiaCobranca').value = "";
         document.getElementById('novoObs').value = "";
@@ -1929,6 +2134,7 @@
 
         document.getElementById('novoNome').value = c.nome || "";
         document.getElementById('novoTel').value = c.tel || "";
+        document.getElementById('novoTag').value = c.tag || "";
         document.getElementById('novoDataEntrada').value = c.dataEntrada || "";
         document.getElementById('novoDiaCobranca').value = c.diaCobranca || "";
         document.getElementById('novoObs').value = c.observacao || "";
@@ -1960,6 +2166,7 @@
         const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
         const idFinal = idClienteSelecionadoParaNovo ? idClienteSelecionadoParaNovo : String(Date.now());
 
+        // Verifica se o ID já está a ser usado no ciclo alvo para evitar sobreposição cega
         db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).once('value').then(snap => {
             const existeNoCiclo = snap.val();
             
@@ -2307,7 +2514,7 @@
                     tag: null, // Limpa legado
                     dataEntrada: cols[4]?.trim() || ext.dataEntrada || "",
                     diaCobranca: diaLido,
-                    observacao: cols[6]?.trim() || ext.observacao || "",
+                    observacao: (cols[6]?.trim() || ext.observacao || "").substring(0, 300),
                     valor: cols[7] ? parseFloat(cols[7].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
                     adiantadas: cols[8] ? parseInt(cols[8]) : (ext.adiantadas || 0), 
                     pago: cols[9] ? cols[9].trim().toLowerCase() === "pago" : (ext.pago || false), 
@@ -2374,7 +2581,7 @@
 
             if (p.pago) {
                 statusTag = `<div class="mt-4 inline-flex items-center gap-2 text-emerald-500 font-extrabold uppercase text-[9px] md:text-[10px] bg-emerald-100 dark:bg-emerald-900/20 px-4 py-1 rounded-full"><i data-lucide="check-circle" class="w-3 h-3"></i> Pagamento Confirmado</div>`;
-            } else if (p.comprovante) {
+            } else if (!configGeral.desativarEmAnalise && p.comprovante) {
                 statusTag = `<div class="mt-4 inline-flex items-center gap-2 text-violet-500 font-extrabold uppercase text-[9px] md:text-[10px] bg-violet-100 dark:bg-violet-900/20 px-4 py-1 rounded-full"><i data-lucide="clock" class="w-3 h-3"></i> Comprovativo em Análise</div>`;
             } else {
                 statusTag = `<div class="mt-4 inline-flex items-center gap-2 text-rose-500 font-extrabold uppercase text-[9px] md:text-[10px] bg-rose-100 dark:bg-rose-900/20 px-4 py-1 rounded-full">Aguardando Pagamento</div>`;
@@ -2401,7 +2608,7 @@
                         <label class="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 md:mb-4">Já pagou? Envie o comprovativo</label>
                         <input type="file" accept="image/*" id="compFile" class="hidden" onchange="uploadComp(this)">
                         <label for="compFile" id="lblCompFile" class="w-full py-4 md:py-5 bg-brand-600 text-white rounded-[1.5rem] text-sm md:text-base font-bold flex items-center justify-center gap-3 hover:bg-brand-700 cursor-pointer shadow-xl shadow-brand-500/30 transition-all active:scale-95">
-                            <i data-lucide="image-plus" class="w-5 h-5"></i> Comrovante aqui
+                            <i data-lucide="image-plus" class="w-5 h-5"></i> Galeria ou Câmera
                         </label>
                         <div class="mt-4 text-center">
                             <a href="COLOQUE_SEU_LINK_AQUI" target="_blank" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-slate-400 hover:text-brand-500 transition-colors">
@@ -2448,11 +2655,18 @@
 
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
-                db.ref(`tenants/${adminId}/cobrancas/${mesAtual}/${idCliente}`).update({ 
-                    comprovante: dataUrl 
-                    // Removido "pago: true" para que fique no status "Em Análise"
-                }).then(() => {
-                    showToast("Comprovativo enviado para análise!");
+                const dbUpdates = { comprovante: dataUrl };
+                // Se a análise estiver desativada, já marca como pago automaticamente
+                if (configGeral.desativarEmAnalise) {
+                    dbUpdates.pago = true;
+                }
+
+                db.ref(`tenants/${adminId}/cobrancas/${mesAtual}/${idCliente}`).update(dbUpdates).then(() => {
+                    if (configGeral.desativarEmAnalise) {
+                        showToast("Comprovativo enviado e pagamento confirmado!");
+                    } else {
+                        showToast("Comprovativo enviado para análise!");
+                    }
                 }).catch(err => {
                     showToast("Erro ao enviar: O ficheiro é grande demais.", "error");
                     if(label) {
