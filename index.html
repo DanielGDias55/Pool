@@ -324,7 +324,7 @@
 <!-- 3. MODAIS DA APLICAÇÃO ADMIN               -->
 <!-- ========================================== -->
 
-<!-- Modal Fila de Envio (NOVO) -->
+<!-- Modal Fila de Envio -->
 <div id="modalFilaEnvio" class="modal-overlay" onclick="event.stopPropagation()">
     <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative">
         <div class="w-16 h-16 bg-blue-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-glow">
@@ -406,6 +406,16 @@
                         <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
                     </div>
                 </div>
+                <!-- SISTEMA DE MULTIPLAS ETIQUETAS -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Categorias ou Planos">Etiquetas</label>
+                    <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
+                        <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+                        <!-- Etiquetas visuais aparecem aqui via JS -->
+                        <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none flex-1 text-sm font-semibold dark:text-white min-w-[120px] ml-1" placeholder="Ex: Mensal, VIP (Aperte Enter)">
+                    </div>
+                </div>
+                <!-- FIM SISTEMA ETIQUETAS -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Data Entrada">Entrada</label>
@@ -467,6 +477,15 @@
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
                     <input type="text" id="detalhesTel" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
                 </div>
+                <!-- SISTEMA DE MULTIPLAS ETIQUETAS NO DETALHE -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Etiquetas</label>
+                    <div id="tagsContainer_detalhe" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('detalhesTag').focus()">
+                        <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+                        <!-- Etiquetas visuais aparecem aqui via JS -->
+                        <input type="text" id="detalhesTag" onkeydown="handleTagInput(event, 'detalhe')" class="bg-transparent outline-none flex-1 text-sm font-semibold dark:text-white min-w-[120px] ml-1" placeholder="Adicionar...">
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Data de Entrada</label>
@@ -477,12 +496,10 @@
                         <input type="number" min="0" max="31" id="detalhesDiaCobranca" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" placeholder="Ex: 10" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
                     </div>
                 </div>
-                <!-- NOVO CAMPO: Observações -->
                 <div>
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações</label>
                     <textarea id="detalhesObs" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
                 </div>
-                <!-- FIM CAMPO OBSERVAÇÕES -->
                 <button id="btnSalvarDetalhes" class="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 mt-2 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Salvar Alterações</button>
             </div>
             
@@ -628,7 +645,7 @@
             <label for="arquivoCSV" class="cursor-pointer">
                 <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-3 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:-translate-y-1"></i>
                 <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecione o ficheiro CSV</p>
-                <p class="text-[9px] text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">Colunas: ID, Nome, Tel, Data Entrada, Dia Cobrança, Observacoes, Valor, Adiantadas, Status, Arquivado</p>
+                <p class="text-[9px] text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">Colunas: ID, Nome, Tel, Etiquetas (sep por vírgula), Data Entrada, Dia Cobrança, Observacoes, Valor, Adiantadas, Status, Arquivado</p>
             </label>
         </div>
 
@@ -714,13 +731,23 @@
         <!-- Gaveta de Filtros Avançados -->
         <div id="drawerWrapper">
             <div class="glass-card rounded-[2rem] p-5 md:p-6 shadow-inner border border-slate-200/50 dark:border-slate-800/50 relative z-0">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 items-end">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6 items-end">
                     
                     <div class="space-y-1 md:space-y-2 lg:col-span-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Pesquisar</label>
                         <div class="relative group">
                             <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
                             <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Nome ou telefone..." class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1 md:space-y-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Tag</label>
+                        <div class="relative group">
+                            <i data-lucide="tag" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+                            <select id="filtroTagDropdown" onchange="renderizarTabela()" class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition appearance-none cursor-pointer">
+                                <option value="">Todas as Tags</option>
+                            </select>
                         </div>
                     </div>
 
@@ -756,7 +783,7 @@
                         </div>
                     </div>
 
-                    <div class="space-y-1 md:space-y-2 sm:col-span-2 lg:col-span-5">
+                    <div class="space-y-1 md:space-y-2 sm:col-span-2 lg:col-span-6">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Status (Múltiplos)</label>
                         <div class="bg-white dark:bg-slate-950 p-1.5 rounded-xl md:rounded-2xl flex flex-wrap gap-1 shadow-sm border border-slate-100 dark:border-slate-900 transition">
                             <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase transition-all opacity-100 text-slate-600 dark:text-slate-100">Todos</button>
@@ -770,7 +797,7 @@
                         </div>
                     </div>
 
-                    <div class="sm:col-span-2 lg:col-span-5 flex flex-wrap gap-2 md:gap-3">
+                    <div class="sm:col-span-2 lg:col-span-6 flex flex-wrap gap-2 md:gap-3">
                         <button id="btnCopiarCiclo" onclick="copiarCicloAnterior()" class="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-violet-500/10 text-violet-600 font-bold text-[10px] uppercase tracking-widest hover:bg-violet-500/20 transition" title="Copiar os clientes ativos do mês passado para o atual">
                             <i data-lucide="copy" class="w-4 h-4"></i> Copiar Anterior
                         </button>
@@ -880,6 +907,10 @@
     let chartInstance = null;
     let dadosGraficoCache = null;
     
+    // Arrays para o sistema Multi-Tags
+    let tagsNovo = [];
+    let tagsDetalhe = [];
+
     let configGeral = { 
         chavePix: "", 
         valorPadrao: 50,
@@ -1091,6 +1122,29 @@
         });
     }
 
+    function atualizarDropdownTags() {
+        const dropdown = document.getElementById('filtroTagDropdown');
+        if (!dropdown) return;
+        const valorAtual = dropdown.value;
+        const tagsUnicas = new Set();
+        
+        dadosLocais.forEach(p => {
+            let tArr = p.tags || [];
+            if (typeof p.tag === 'string' && p.tag.trim() !== '') tArr = [p.tag.trim()];
+            tArr.forEach(t => {
+                if(t.trim() !== '') tagsUnicas.add(t.trim().toUpperCase());
+            });
+        });
+        
+        let html = '<option value="">Todas as Tags</option>';
+        Array.from(tagsUnicas).sort().forEach(tag => {
+            html += `<option value="${tag}">${tag}</option>`;
+        });
+        
+        dropdown.innerHTML = html;
+        if (tagsUnicas.has(valorAtual)) dropdown.value = valorAtual;
+    }
+
     function carregarDadosAdmin() {
         if(!adminId) return;
         if (mesAtual === 'todos') {
@@ -1111,6 +1165,7 @@
                 });
                 
                 dadosLocais = Array.from(clientesMap.values());
+                atualizarDropdownTags();
                 selecionados.forEach(id => { if(!clientesMap.has(id)) selecionados.delete(id); });
                 renderizarTabela();
             });
@@ -1118,6 +1173,7 @@
             db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).on('value', s => {
                 const dados = s.val() || {};
                 dadosLocais = Object.keys(dados).map(id => ({ id, sourceMes: mesAtual, ...dados[id] }));
+                atualizarDropdownTags();
                 selecionados.forEach(id => { if(!dados[id]) selecionados.delete(id); });
                 renderizarTabela();
             });
@@ -1133,12 +1189,10 @@
             const dadosValores = [];
 
             let d = new Date();
-            // Itera de 5 meses atrás até o mês atual
             for(let i = 5; i >= 0; i--) {
                 let tempDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
                 let mesStr = `${String(tempDate.getMonth() + 1).padStart(2, '0')}-${tempDate.getFullYear()}`;
                 
-                // Formata o nome do mês (ex: "Out/25")
                 let labelStr = tempDate.toLocaleDateString('pt-br', {month: 'short', year: '2-digit'}).replace('. de ', '/').replace('.', '');
                 labelStr = labelStr.charAt(0).toUpperCase() + labelStr.slice(1);
 
@@ -1167,8 +1221,8 @@
         if(chartInstance) chartInstance.destroy();
 
         const isDark = document.documentElement.classList.contains('dark');
-        const textColor = isDark ? '#94a3b8' : '#64748b'; // slate-400 : slate-500
-        const gridColor = isDark ? '#1e293b' : '#f1f5f9'; // slate-800 : slate-100
+        const textColor = isDark ? '#94a3b8' : '#64748b'; 
+        const gridColor = isDark ? '#1e293b' : '#f1f5f9'; 
 
         chartInstance = new Chart(ctx, {
             type: 'bar',
@@ -1177,7 +1231,7 @@
                 datasets: [{
                     label: 'Receita Confirmada (R$)',
                     data: dados,
-                    backgroundColor: '#3b82f6', // brand-500
+                    backgroundColor: '#3b82f6', 
                     borderRadius: 6,
                 }]
             },
@@ -1230,6 +1284,51 @@
         return parseInt(p.diaCobranca) < diaAtual;
     }
 
+    // --- LÓGICA DE ETIQUETAS (TAGS) ---
+    function handleTagInput(e, arrayType) {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
+            let val = e.target.value.trim().replace(',', '').toUpperCase();
+            if (val && !arr.includes(val)) {
+                arr.push(val);
+                renderTagsUI(arrayType);
+            }
+            e.target.value = '';
+        } else if (e.key === 'Backspace' && e.target.value === '') {
+            let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
+            if (arr.length > 0) {
+                arr.pop();
+                renderTagsUI(arrayType);
+            }
+        }
+    }
+
+    function removerTag(index, arrayType) {
+        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
+        arr.splice(index, 1);
+        renderTagsUI(arrayType);
+    }
+
+    function renderTagsUI(arrayType) {
+        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
+        let containerId = arrayType === 'novo' ? 'tagsContainer_novo' : 'tagsContainer_detalhe';
+        let inputId = arrayType === 'novo' ? 'novoTag' : 'detalhesTag';
+        
+        let container = document.getElementById(containerId);
+        let input = document.getElementById(inputId);
+        
+        container.querySelectorAll('.ui-tag').forEach(e => e.remove());
+        
+        arr.forEach((tag, idx) => {
+            let span = document.createElement('span');
+            span.className = 'ui-tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] px-2 py-1 rounded font-bold flex items-center gap-1 uppercase tracking-widest';
+            span.innerHTML = `${tag} <i data-lucide="x" class="w-3 h-3 cursor-pointer hover:text-rose-500" onclick="removerTag(${idx}, '${arrayType}')"></i>`;
+            container.insertBefore(span, input);
+        });
+        lucide.createIcons();
+    }
+
     // --- RENDERIZAÇÃO E LÓGICA DA TABELA ---
     function renderizarTabela() {
         const corpo = document.getElementById('corpoTabela');
@@ -1237,10 +1336,19 @@
         
         const dtInicio = document.getElementById('filtroDataInicio')?.value;
         const dtFim = document.getElementById('filtroDataFim')?.value;
+        const filtroTagSelecionada = document.getElementById('filtroTagDropdown')?.value;
 
         if(!corpo) return;
 
         let filtrados = [...dadosLocais];
+        
+        if (filtroTagSelecionada && filtroTagSelecionada !== '') {
+            filtrados = filtrados.filter(p => {
+                let tArr = p.tags || [];
+                if (typeof p.tag === 'string' && p.tag.trim() !== '') tArr = [p.tag.trim()];
+                return tArr.some(t => t.toUpperCase() === filtroTagSelecionada.toUpperCase());
+            });
+        }
         
         if (dtInicio) filtrados = filtrados.filter(p => p.dataEntrada && p.dataEntrada >= dtInicio);
         if (dtFim) filtrados = filtrados.filter(p => p.dataEntrada && p.dataEntrada <= dtFim);
@@ -1308,6 +1416,27 @@
                    </div>` 
                 : '';
 
+            // Construção da Tag Múltipla Inteligente
+            let tagsArray = p.tags || [];
+            if (typeof p.tag === 'string' && p.tag.trim() !== '') {
+                tagsArray = [p.tag.trim().toUpperCase()];
+            }
+
+            let badgeTag = '';
+            if (tagsArray.length > 0) {
+                let firstTag = tagsArray[0];
+                let moreTags = tagsArray.length > 1 
+                    ? `<span class="bg-brand-500 text-white text-[8px] px-1.5 py-0.5 rounded-full shrink-0 cursor-help" title="${tagsArray.slice(1).join(', ')}">+${tagsArray.length - 1}</span>` 
+                    : '';
+                
+                badgeTag = `
+                    <div class="flex items-center gap-1">
+                        <span class="bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[8px] px-2 py-0.5 rounded border border-slate-300/50 dark:border-slate-700 font-bold uppercase tracking-widest whitespace-nowrap truncate max-w-[80px]" title="${firstTag}">${firstTag}</span>
+                        ${moreTags}
+                    </div>
+                `;
+            }
+
             const estaEmAnalise = !p.pago && p.comprovante;
             const estaAtrasado = verificarAtraso(p, p.sourceMes || mesAtual);
 
@@ -1341,7 +1470,10 @@
                                 ${badgeMes}
                                 ${adiantadas > 0 ? `<span class="bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 text-[9px] px-2 py-0.5 rounded-full font-extrabold shrink-0">+${adiantadas}</span>` : ''}
                             </div>
-                            <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[9px] md:text-[10px] text-slate-400 font-bold -mt-1">
+                            <div class="flex items-center gap-2 -mt-1 pl-2">
+                                <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[9px] md:text-[10px] text-slate-400 font-bold max-w-[100px] p-0" placeholder="Sem telefone">
+                                ${badgeTag}
+                            </div>
                         </div>
                     </td>
                     <td class="px-2 md:px-4 py-4 md:py-5 text-center col-dia-cobranca">
@@ -1430,10 +1562,9 @@
     function iniciarFilaWhatsApp() {
         if(selecionados.size === 0) return;
         
-        // Pega todos os clientes selecionados e os coloca na fila
         filaEnvio = Array.from(selecionados)
             .map(id => dadosLocais.find(c => c.id === id))
-            .filter(c => c && c.tel); // Garante que o cliente existe e tem telefone
+            .filter(c => c && c.tel); 
         
         if (filaEnvio.length === 0) {
             showToast("Nenhum dos selecionados possui telefone cadastrado.", "error");
@@ -1464,19 +1595,17 @@
 
     function proximoFilaWhatsApp() {
         if (filaEnvio.length === 0) return;
-        const cliente = filaEnvio.shift(); // Remove o primeiro da fila
+        const cliente = filaEnvio.shift(); 
         
-        // Envia o zap (reusa a função enviarZap)
         const val = parseFloat(cliente.valor) || 0;
         enviarZap(cliente.id, cliente.nome, cliente.tel, val);
         
-        // Avança a fila na tela
         atualizarUIFila();
     }
 
     function pularFilaWhatsApp() {
         if (filaEnvio.length === 0) return;
-        filaEnvio.shift(); // Remove o primeiro sem enviar
+        filaEnvio.shift(); 
         atualizarUIFila();
     }
 
@@ -1667,6 +1796,10 @@
         document.getElementById('novoDataEntrada').value = "";
         document.getElementById('novoDiaCobranca').value = "";
         document.getElementById('novoObs').value = "";
+        
+        tagsNovo = [];
+        renderTagsUI('novo');
+        
         document.getElementById('modalNovaPessoa').classList.add('flex');
         lucide.createIcons();
 
@@ -1695,7 +1828,7 @@
 
         if (termo.length < 2) {
             lista.classList.add('hidden');
-            idClienteSelecionadoParaNovo = null; // Reseta se apagar a busca
+            idClienteSelecionadoParaNovo = null; 
             return;
         }
 
@@ -1735,6 +1868,11 @@
         document.getElementById('novoDiaCobranca').value = c.diaCobranca || "";
         document.getElementById('novoObs').value = c.observacao || "";
         
+        // Puxando Tags Antigas e Novas
+        tagsNovo = c.tags || [];
+        if (typeof c.tag === 'string' && c.tag.trim() !== '') tagsNovo = [c.tag.trim().toUpperCase()];
+        renderTagsUI('novo');
+        
         showToast("Dados do cliente preenchidos!", "success");
     }
 
@@ -1748,12 +1886,15 @@
         const diaC = document.getElementById('novoDiaCobranca').value;
         const obs = document.getElementById('novoObs').value.trim();
         
+        // Pega alguma tag que ficou digitada no input mas não apertou Enter
+        const inputTag = document.getElementById('novoTag').value.trim().replace(',', '').toUpperCase();
+        if (inputTag && !tagsNovo.includes(inputTag)) tagsNovo.push(inputTag);
+        
         if(!n) return showToast("Por favor, digite o nome.", "error");
         
         const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
         const idFinal = idClienteSelecionadoParaNovo ? idClienteSelecionadoParaNovo : String(Date.now());
 
-        // Verifica se o ID já está a ser usado no ciclo alvo para evitar sobreposição cega
         db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).once('value').then(snap => {
             const existeNoCiclo = snap.val();
             
@@ -1765,6 +1906,8 @@
             db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).update({ 
                 nome: n, 
                 tel: t, 
+                tags: tagsNovo,
+                tag: null, // Limpa o formato antigo para não sujar o BD
                 valor: (existeNoCiclo && existeNoCiclo.valor !== undefined) ? existeNoCiclo.valor : configGeral.valorPadrao, 
                 adiantadas: (existeNoCiclo && existeNoCiclo.adiantadas !== undefined) ? existeNoCiclo.adiantadas : 0, 
                 pago: (existeNoCiclo && existeNoCiclo.pago !== undefined) ? existeNoCiclo.pago : false, 
@@ -1844,14 +1987,18 @@
         if (!user) return;
         let [mesStr, anoStr] = baseMes.split('-'); let mes = parseInt(mesStr); let ano = parseInt(anoStr);
         const updates = {};
+        
+        let tagsArray = user.tags || [];
+        if (typeof user.tag === 'string' && user.tag.trim() !== '') tagsArray = [user.tag.trim().toUpperCase()];
+
         for (let i = 1; i <= qtdMeses; i++) {
             mes++; if (mes > 12) { mes = 1; ano++; }
             let futuroMes = `${String(mes).padStart(2, '0')}-${ano}`;
-            updates[`tenants/${adminId}/cobrancas/${futuroMes}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: 0, adiantadas: qtdMeses - i, pago: true, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
+            updates[`tenants/${adminId}/cobrancas/${futuroMes}/${id}`] = { nome: user.nome, tel: user.tel || "", tags: tagsArray, valor: 0, adiantadas: qtdMeses - i, pago: true, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
         }
         mes++; if (mes > 12) { mes = 1; ano++; }
         let mesRetorno = `${String(mes).padStart(2, '0')}-${ano}`;
-        updates[`tenants/${adminId}/cobrancas/${mesRetorno}/${id}`] = { nome: user.nome, tel: user.tel || "", valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
+        updates[`tenants/${adminId}/cobrancas/${mesRetorno}/${id}`] = { nome: user.nome, tel: user.tel || "", tags: tagsArray, valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
         db.ref().update(updates);
     }
 
@@ -1868,6 +2015,12 @@
         document.getElementById('detalhesDiaCobranca').value = cliente.diaCobranca || "";
         document.getElementById('detalhesObs').value = cliente.observacao || "";
         
+        tagsDetalhe = cliente.tags || [];
+        if (typeof cliente.tag === 'string' && cliente.tag.trim() !== '') {
+            tagsDetalhe = [cliente.tag.trim().toUpperCase()];
+        }
+        renderTagsUI('detalhe');
+
         document.getElementById('btnSalvarDetalhes').onclick = () => salvarDetalhes(id);
         document.getElementById('modalDetalhesCliente').classList.add('flex');
 
@@ -1935,6 +2088,9 @@
         const diaC = document.getElementById('detalhesDiaCobranca').value;
         const obs = document.getElementById('detalhesObs').value.trim();
         
+        const inputTag = document.getElementById('detalhesTag').value.trim().replace(',', '').toUpperCase();
+        if (inputTag && !tagsDetalhe.includes(inputTag)) tagsDetalhe.push(inputTag);
+
         if(!n) return showToast("Por favor, digite o nome.", "error");
 
         const btn = document.getElementById('btnSalvarDetalhes');
@@ -1944,7 +2100,7 @@
         lucide.createIcons();
 
         db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({
-            nome: n, tel: t, dataEntrada: d, diaCobranca: diaC, observacao: obs
+            nome: n, tel: t, tags: tagsDetalhe, tag: null, dataEntrada: d, diaCobranca: diaC, observacao: obs
         }).then(() => {
             btn.innerHTML = txtOriginal; 
             btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -2021,14 +2177,13 @@
         document.documentElement.classList.toggle('dark'); 
         localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; 
         
-        // Se o gráfico existir, atualiza as cores dele
         if(dadosGraficoCache) atualizarGrafico(dadosGraficoCache.labels, dadosGraficoCache.dados);
     }
     
     function baixarModeloCSV() {
-        const cabecalho = "ID;Nome;Telefone;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado\n";
-        const exemplo1 = ";Joao Silva;5511999999999;2023-10-01;10;Cliente VIP;50.00;0;Pendente;Nao\n";
-        const exemplo2 = ";Maria Souza;5511888888888;2023-10-15;05;;100.00;1;Pago;Nao\n";
+        const cabecalho = "ID;Nome;Telefone;Etiquetas;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado\n";
+        const exemplo1 = ";Joao Silva;5511999999999;PREMIUM, VIP;2023-10-01;10;Cliente top;50.00;0;Pendente;Nao\n";
+        const exemplo2 = ";Maria Souza;5511888888888;BASICO;2023-10-15;05;;100.00;1;Pago;Nao\n";
         const csvContent = cabecalho + exemplo1 + exemplo2;
         
         const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2040,8 +2195,13 @@
 
     function exportarExcel() {
         if (dadosLocais.length === 0) return;
-        let csv = "ID;Nome;Telefone;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
-        dadosLocais.forEach(p => { csv += `${p.id};${p.nome};${p.tel || ''};${p.dataEntrada || ''};${p.diaCobranca || ''};${p.observacao || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; });
+        let csv = "ID;Nome;Telefone;Etiquetas;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
+        dadosLocais.forEach(p => { 
+            let tagsStr = (p.tags || []).join(', ');
+            if(!p.tags && p.tag) tagsStr = p.tag;
+            
+            csv += `${p.id};${p.nome};${p.tel || ''};${tagsStr};${p.dataEntrada || ''};${p.diaCobranca || ''};${p.observacao || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; 
+        });
         const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })); link.download = `pagflow_relatorio_${mesAtual}.csv`; link.click();
     }
     
@@ -2055,14 +2215,13 @@
             const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
 
             linhas.forEach((linha, i) => {
-                if (i === 0 || !linha.trim()) return; // Ignora o cabeçalho e linhas vazias
+                if (i === 0 || !linha.trim()) return;
                 
                 let cols = linha.split(/[;,]/);
                 let id = (cols[0] && cols[0].trim() !== "") ? cols[0].trim() : String(Date.now() + i); 
                 let ext = dadosLocais.find(d => String(d.id) === id) || {};
                 
-                // Validação do Dia de Cobrança (Máx 31, Mín 0) durante a importação
-                let diaLido = cols[4]?.trim() || ext.diaCobranca || "";
+                let diaLido = cols[5]?.trim() || ext.diaCobranca || "";
                 if (diaLido !== "") {
                     let dNum = parseInt(diaLido);
                     if (!isNaN(dNum)) {
@@ -2072,18 +2231,22 @@
                     }
                 }
                 
-                // Mapeamento correto de acordo com a ordem de Exportação:
-                // 0:ID, 1:Nome, 2:Tel, 3:Data, 4:DiaCobranca, 5:Obs, 6:Valor, 7:Adiantadas, 8:Status, 9:Arquivado
+                let tagsStr = cols[3]?.trim() || "";
+                let tagsImport = tagsStr ? tagsStr.split(',').map(t=>t.trim().toUpperCase()).filter(Boolean) : (ext.tags || (ext.tag ? [ext.tag] : []));
+
+                // 0:ID, 1:Nome, 2:Tel, 3:Etiquetas, 4:Data, 5:DiaCobranca, 6:Obs, 7:Valor, 8:Adiantadas, 9:Status, 10:Arquivado
                 updates[id] = { 
                     nome: cols[1]?.trim() || ext.nome || "Sem Nome", 
                     tel: cols[2]?.trim() || ext.tel || "", 
-                    dataEntrada: cols[3]?.trim() || ext.dataEntrada || "",
+                    tags: tagsImport,
+                    tag: null, // Limpa legado
+                    dataEntrada: cols[4]?.trim() || ext.dataEntrada || "",
                     diaCobranca: diaLido,
-                    observacao: cols[5]?.trim() || ext.observacao || "",
-                    valor: cols[6] ? parseFloat(cols[6].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
-                    adiantadas: cols[7] ? parseInt(cols[7]) : (ext.adiantadas || 0), 
-                    pago: cols[8] ? cols[8].trim().toLowerCase() === "pago" : (ext.pago || false), 
-                    arquivado: cols[9] ? cols[9].trim().toLowerCase() === "sim" : (ext.arquivado || false),
+                    observacao: cols[6]?.trim() || ext.observacao || "",
+                    valor: cols[7] ? parseFloat(cols[7].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
+                    adiantadas: cols[8] ? parseInt(cols[8]) : (ext.adiantadas || 0), 
+                    pago: cols[9] ? cols[9].trim().toLowerCase() === "pago" : (ext.pago || false), 
+                    arquivado: cols[10] ? cols[10].trim().toLowerCase() === "sim" : (ext.arquivado || false),
                     msgEnviada: ext.msgEnviada || false, 
                     comprovante: ext.comprovante || null
                 };
