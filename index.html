@@ -412,7 +412,12 @@
                     <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
                         <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
                         <!-- Etiquetas visuais aparecem aqui via JS -->
-                        <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none flex-1 text-sm font-semibold dark:text-white min-w-[120px] ml-1" placeholder="Ex: Mensal, VIP (Aperte Enter)">
+                        <div id="tagInputWrapper_novo" class="flex-1 flex items-center min-w-[120px]">
+                            <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Ex: VIP (Enter ou +)">
+                            <button type="button" onclick="adicionarTagManual('novo')" class="p-1.5 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <!-- FIM SISTEMA ETIQUETAS -->
@@ -473,17 +478,24 @@
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
                     <input type="text" id="detalhesNome" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
-                    <input type="text" id="detalhesTel" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
-                </div>
-                <!-- SISTEMA DE MULTIPLAS ETIQUETAS NO DETALHE -->
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Etiquetas</label>
-                    <div id="tagsContainer_detalhe" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('detalhesTag').focus()">
-                        <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
-                        <!-- Etiquetas visuais aparecem aqui via JS -->
-                        <input type="text" id="detalhesTag" onkeydown="handleTagInput(event, 'detalhe')" class="bg-transparent outline-none flex-1 text-sm font-semibold dark:text-white min-w-[120px] ml-1" placeholder="Adicionar...">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
+                        <input type="text" id="detalhesTel" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
+                    </div>
+                    <!-- SISTEMA DE MULTIPLAS ETIQUETAS NO DETALHE -->
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Etiquetas</label>
+                        <div id="tagsContainer_detalhe" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('detalhesTag').focus()">
+                            <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+                            <!-- Etiquetas visuais aparecem aqui via JS -->
+                            <div id="tagInputWrapper_detalhe" class="flex-1 flex items-center min-w-[100px]">
+                                <input type="text" id="detalhesTag" onkeydown="handleTagInput(event, 'detalhe')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Adicionar...">
+                                <button type="button" onclick="adicionarTagManual('detalhe')" class="p-1 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -1288,13 +1300,7 @@
     function handleTagInput(e, arrayType) {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
-            let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
-            let val = e.target.value.trim().replace(',', '').toUpperCase();
-            if (val && !arr.includes(val)) {
-                arr.push(val);
-                renderTagsUI(arrayType);
-            }
-            e.target.value = '';
+            adicionarTagManual(arrayType);
         } else if (e.key === 'Backspace' && e.target.value === '') {
             let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
             if (arr.length > 0) {
@@ -1302,6 +1308,20 @@
                 renderTagsUI(arrayType);
             }
         }
+    }
+
+    function adicionarTagManual(arrayType) {
+        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
+        let inputId = arrayType === 'novo' ? 'novoTag' : 'detalhesTag';
+        let input = document.getElementById(inputId);
+        let val = input.value.trim().replace(',', '').toUpperCase();
+        
+        if (val && !arr.includes(val)) {
+            arr.push(val);
+            renderTagsUI(arrayType);
+        }
+        input.value = '';
+        input.focus();
     }
 
     function removerTag(index, arrayType) {
@@ -1313,10 +1333,10 @@
     function renderTagsUI(arrayType) {
         let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
         let containerId = arrayType === 'novo' ? 'tagsContainer_novo' : 'tagsContainer_detalhe';
-        let inputId = arrayType === 'novo' ? 'novoTag' : 'detalhesTag';
+        let wrapperId = arrayType === 'novo' ? 'tagInputWrapper_novo' : 'tagInputWrapper_detalhe';
         
         let container = document.getElementById(containerId);
-        let input = document.getElementById(inputId);
+        let wrapper = document.getElementById(wrapperId);
         
         container.querySelectorAll('.ui-tag').forEach(e => e.remove());
         
@@ -1324,7 +1344,7 @@
             let span = document.createElement('span');
             span.className = 'ui-tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] px-2 py-1 rounded font-bold flex items-center gap-1 uppercase tracking-widest';
             span.innerHTML = `${tag} <i data-lucide="x" class="w-3 h-3 cursor-pointer hover:text-rose-500" onclick="removerTag(${idx}, '${arrayType}')"></i>`;
-            container.insertBefore(span, input);
+            container.insertBefore(span, wrapper);
         });
         lucide.createIcons();
     }
