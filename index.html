@@ -809,6 +809,7 @@
                             <div class="bg-slate-900 rounded-lg p-3 text-[10px] text-slate-400 italic mb-2 border border-slate-800">
                                 Olá, João!<br><br>
                                 <span class="text-brand-400 not-italic font-bold">[O Seu Texto Entra Aqui]</span><br><br>
+                                Referência: Abril/2026<br>
                                 Valor: R$ 50,00<br>
                                 Chave PIX: sua@chave<br>
                                 Link: pagflow.com/...
@@ -928,6 +929,10 @@
                 <button onclick="abrirModalNovaPessoa()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-brand-600 text-white px-3 py-2 md:py-2.5 rounded-xl text-xs font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition active:scale-95">
                     <i data-lucide="plus" class="w-4 h-4"></i> Novo
                 </button>
+                <!-- Botão Ocultar Valores -->
+                <button onclick="toggleValoresGlobais()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Ocultar/Mostrar Valores">
+                    <i data-lucide="eye" id="iconToggleValores" class="w-4 h-4 md:w-5 md:h-5"></i>
+                </button>
                 <button onclick="abrirModalConfig()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Configurações">
                     <i data-lucide="settings" class="w-4 h-4 md:w-5 md:h-5"></i>
                 </button>
@@ -1029,17 +1034,17 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
         <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-soft">
             <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1 italic">Volume Projetado</p>
-            <div class="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral">0,00</span></div>
+            <div class="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral" class="transition-all duration-300">0,00</span></div>
         </div>
         
         <div class="bg-brand-600 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-white shadow-xl shadow-brand-500/25">
             <p class="opacity-70 text-[10px] font-bold uppercase tracking-widest mb-1 italic text-white">Total Recebido</p>
-            <div class="text-3xl md:text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago">0,00</span></div>
+            <div class="text-3xl md:text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago" class="transition-all duration-300">0,00</span></div>
         </div>
 
         <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-l-4 md:border-l-8 border-l-rose-500 shadow-soft">
             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Aguardando Pagamento</p>
-            <div class="text-3xl md:text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend">0,00</span></div>
+            <div class="text-3xl md:text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend" class="transition-all duration-300">0,00</span></div>
         </div>
     </div>
 
@@ -1118,6 +1123,7 @@
     let filaTotal = 0;
     let chartInstance = null;
     let dadosGraficoCache = null;
+    let valoresOcultos = localStorage.getItem('valoresOcultos') === 'true'; // Nova Feature
     
     // Arrays para o sistema Multi-Tags
     let tagsNovo = [];
@@ -1151,6 +1157,7 @@
             document.documentElement.classList.add('dark');
         }
         lucide.createIcons();
+        aplicarFiltroValores(); // Inicializa Feature 1
 
         if (idCliente && idAdminUrl) {
             adminId = idAdminUrl;
@@ -1175,6 +1182,33 @@
             icon.setAttribute('data-lucide', 'eye');
         }
         lucide.createIcons();
+    }
+
+    // --- LÓGICA OCULTAR VALORES GLOBAIS (Feature 1) ---
+    function toggleValoresGlobais() {
+        valoresOcultos = !valoresOcultos;
+        localStorage.setItem('valoresOcultos', valoresOcultos);
+        aplicarFiltroValores();
+    }
+
+    function aplicarFiltroValores() {
+        const icon = document.getElementById('iconToggleValores');
+        if(icon) {
+            icon.setAttribute('data-lucide', valoresOcultos ? 'eye-off' : 'eye');
+            lucide.createIcons();
+        }
+
+        const statsIds = ['tGeral', 'tPago', 'tPend'];
+        statsIds.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                if(valoresOcultos) {
+                    el.classList.add('blur-md', 'select-none', 'opacity-50');
+                } else {
+                    el.classList.remove('blur-md', 'select-none', 'opacity-50');
+                }
+            }
+        });
     }
 
     // --- LÓGICA DE AUTENTICAÇÃO E PAYWALL ---
@@ -1555,74 +1589,195 @@
         lucide.createIcons();
     }
 
-    // --- LÓGICA DE VISUALIZAÇÃO DE OBSERVAÇÕES (MOBILE E DESKTOP) ---
-    function abrirModalObs(encodedName, encodedObs) {
-        const nome = decodeURIComponent(encodedName);
-        const obs = decodeURIComponent(encodedObs);
+    // --- LÓGICA DE FILA DE ENVIO (WHATSAPP EM MASSA) ---
+    function iniciarFilaWhatsApp() {
+        if(selecionados.size === 0) return;
         
-        document.getElementById('modalObsTitle').innerText = nome;
-        document.getElementById('modalObsContent').innerText = obs;
+        filaEnvio = Array.from(selecionados)
+            .map(id => dadosLocais.find(c => c.id === id))
+            .filter(c => c && c.tel && !c.pago); // Remove quem não tem telefone ou JÁ PAGOU
         
-        document.getElementById('modalVisualizarObs').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalObs() {
-        document.getElementById('modalVisualizarObs').classList.remove('flex');
-    }
-
-    // --- LÓGICA DA CAIXA DE IDEIAS ---
-    function abrirModalIdeia() {
-        document.getElementById('textoIdeia').value = '';
-        document.getElementById('modalIdeia').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalIdeia() {
-        document.getElementById('modalIdeia').classList.remove('flex');
-    }
-
-    function enviarIdeia() {
-        const texto = document.getElementById('textoIdeia').value.trim();
-        if (!texto) {
-            showToast("Por favor, escreva a sua ideia antes de enviar.", "error");
+        if (filaEnvio.length === 0) {
+            showToast("Nenhum cliente válido na seleção. (Clientes pagos ou sem telefone foram ignorados)", "error");
             return;
         }
 
-        if (!adminId) return;
-
-        const btn = document.getElementById('btnEnviarIdeia');
-        const txtOriginal = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...';
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        lucide.createIcons();
-
-        const ideiaData = {
-            adminId: adminId,
-            email: auth.currentUser ? auth.currentUser.email : 'Desconhecido',
-            texto: texto,
-            data: Date.now(),
-            status: 'nova'
-        };
-
-        db.ref('ideias_sistema').push(ideiaData).then(() => {
-            finalizarEnvioIdeia(btn, txtOriginal);
-        }).catch(err => {
-            db.ref(`tenants/${adminId}/ideias_enviadas`).push(ideiaData).then(() => {
-                finalizarEnvioIdeia(btn, txtOriginal);
-            }).catch(errFallback => {
-                btn.innerHTML = txtOriginal;
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                showToast("Erro ao enviar ideia. Verifique a sua ligação.", "error");
-            });
-        });
+        filaTotal = filaEnvio.length;
+        atualizarUIFila();
+        document.getElementById('modalFilaEnvio').classList.add('flex');
     }
 
-    function finalizarEnvioIdeia(btn, txtOriginal) {
-        btn.innerHTML = txtOriginal;
-        btn.classList.remove('opacity-50', 'pointer-events-none');
-        fecharModalIdeia();
-        showToast("Ideia enviada! Muito obrigado pelo seu feedback.", "success");
+    function atualizarUIFila() {
+        if (filaEnvio.length === 0) {
+            fecharFilaWhatsApp();
+            showToast("Fila de envios concluída!", "success");
+            clearSelection();
+            return;
+        }
+
+        const atual = filaTotal - filaEnvio.length + 1;
+        document.getElementById('filaAtualNum').innerText = atual;
+        document.getElementById('filaTotalNum').innerText = filaTotal;
+        
+        const cliente = filaEnvio[0];
+        document.getElementById('filaClienteNome').innerText = cliente.nome;
+        document.getElementById('filaClienteTel').innerText = cliente.tel || 'Sem telefone';
+    }
+
+    function proximoFilaWhatsApp() {
+        if (filaEnvio.length === 0) return;
+        const cliente = filaEnvio.shift(); 
+        
+        const val = parseFloat(cliente.valor) || 0;
+        enviarZap(cliente.id, cliente.nome, cliente.tel, val);
+        
+        atualizarUIFila();
+    }
+
+    function pularFilaWhatsApp() {
+        if (filaEnvio.length === 0) return;
+        filaEnvio.shift(); 
+        atualizarUIFila();
+    }
+
+    function cancelarFilaWhatsApp() {
+        filaEnvio = [];
+        fecharFilaWhatsApp();
+    }
+
+    function fecharFilaWhatsApp() {
+        document.getElementById('modalFilaEnvio').classList.remove('flex');
+    }
+
+    // --- AÇÕES COM CONFIRMAÇÕES CUSTOMIZADAS ---
+    function arquivarSelecionados(arquivarStatus) {
+        if(selecionados.size === 0 || !adminId) return;
+        const acao = arquivarStatus ? "arquivar" : "desarquivar";
+        const btnClass = arquivarStatus ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30" : "bg-brand-500 hover:bg-brand-600 shadow-brand-500/30";
+        const bgIcoClass = arquivarStatus ? "bg-amber-500" : "bg-brand-500";
+        const ico = arquivarStatus ? "archive" : "archive-restore";
+
+        showConfirm(
+            `${acao.charAt(0).toUpperCase() + acao.slice(1)} ${selecionados.size} registo(s)`,
+            `Tem a certeza que deseja ${acao} os clientes selecionados simultaneamente?`,
+            "Confirmar", btnClass, ico, bgIcoClass,
+            () => {
+                const updates = {};
+                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}/arquivado`] = arquivarStatus; });
+                db.ref(`tenants/${adminId}`).update(updates).then(() => {
+                    selecionados.clear();
+                    showToast(`Registos ${acao}dos com sucesso!`);
+                });
+            }
+        );
+    }
+
+    function excluirSelecionados() {
+        if(selecionados.size === 0 || !adminId) return;
+        showConfirm(
+            "Excluir em Massa",
+            `Deseja realmente excluir ${selecionados.size} registo(s)? Esta ação não pode ser desfeita.`,
+            "Excluir Todos", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
+            () => {
+                const updates = {};
+                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}`] = null; });
+                db.ref(`tenants/${adminId}`).update(updates).then(() => {
+                    selecionados.clear();
+                    showToast("Registos excluídos com sucesso!");
+                });
+            }
+        );
+    }
+
+    function removerComprovante(id) { 
+        if(!adminId) return;
+        showConfirm(
+            "Remover Comprovativo",
+            "Deseja apagar este comprovativo e marcar a fatura como pendente novamente?",
+            "Remover", "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30", "image-minus", "bg-amber-500",
+            () => {
+                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ comprovante: null, pago: false });
+                showToast("Comprovativo removido.");
+            }
+        );
+    }
+
+    function excluir(id) { 
+        if(!adminId) return;
+        showConfirm(
+            "Excluir Registo",
+            "Deseja realmente apagar este registo? Todos os dados deste mês serão perdidos.",
+            "Excluir", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
+            () => {
+                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).remove();
+                showToast("Registo excluído.");
+            }
+        );
+    }
+    
+    function arquivarPessoa(id, arquivarStatus) { 
+        if(adminId) {
+            db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ arquivado: arquivarStatus });
+            showToast(arquivarStatus ? "Registo arquivado." : "Registo restaurado.");
+        }
+    }
+
+    async function copiarCicloAnterior() {
+        if (!adminId || mesAtual === 'todos') return;
+
+        let [m, y] = mesAtual.split('-');
+        let prevM = parseInt(m) - 1;
+        let prevY = parseInt(y);
+        if (prevM === 0) { prevM = 12; prevY--; }
+        let mesAnterior = `${String(prevM).padStart(2, '0')}-${prevY}`;
+
+        showConfirm(
+            "Copiar Ciclo Anterior",
+            `Deseja copiar os clientes ativos de [${mesAnterior}] para o ciclo atual [${mesAtual}]?\n\n(Apenas clientes que ainda não existem neste ciclo serão copiados, com status "Pendente")`,
+            "Copiar Clientes", "bg-violet-500 hover:bg-violet-600 shadow-violet-500/30", "copy", "bg-violet-500",
+            async () => {
+                const btn = document.getElementById('btnCopiarCiclo');
+                const txtOriginal = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Copiando...';
+                btn.classList.add('opacity-50', 'pointer-events-none');
+                lucide.createIcons();
+
+                try {
+                    const snapAtual = await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).once('value');
+                    const dadosAtual = snapAtual.val() || {};
+
+                    const snapAnterior = await db.ref(`tenants/${adminId}/cobrancas/${mesAnterior}`).once('value');
+                    const dadosAnterior = snapAnterior.val() || {};
+
+                    const updates = {};
+                    let count = 0;
+
+                    for (const id in dadosAnterior) {
+                        const cliente = dadosAnterior[id];
+                        if (!dadosAtual[id] && !cliente.arquivado) {
+                            updates[id] = {
+                                ...cliente, pago: false, msgEnviada: false, comprovante: null, adiantadas: 0
+                            };
+                            count++;
+                        }
+                    }
+
+                    if (count > 0) {
+                        await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).update(updates);
+                        showToast(`${count} cliente(s) importado(s) do ciclo passado!`);
+                    } else {
+                        showToast(`Nenhum cliente novo para importar.`, "error");
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showToast("Ocorreu um erro ao tentar copiar.", "error");
+                }
+
+                btn.innerHTML = txtOriginal;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                lucide.createIcons();
+            }
+        );
     }
 
     // --- RENDERIZAÇÃO E LÓGICA DA TABELA ---
@@ -1856,501 +2011,8 @@
     function fecharConfirm() { document.getElementById('modalConfirm').classList.remove('flex'); confirmActionCallback = null; }
     function executarConfirm() { if (confirmActionCallback) confirmActionCallback(); fecharConfirm(); }
 
-    // --- LÓGICA DA CENTRAL DE AJUDA ---
-    function abrirModalAjuda() {
-        document.getElementById('modalAjuda').classList.add('flex');
-        lucide.createIcons();
-    }
+    // --- MÉTODOS NATIVOS E COMUNICAÇÃO ---
 
-    function fecharModalAjuda() {
-        document.getElementById('modalAjuda').classList.remove('flex');
-    }
-
-    function toggleAjuda(id) {
-        const conteudo = document.getElementById(id);
-        const icone = document.getElementById('icon-' + id);
-        
-        if (conteudo.classList.contains('hidden')) {
-            conteudo.classList.remove('hidden');
-            icone.classList.add('rotate-180');
-        } else {
-            conteudo.classList.add('hidden');
-            icone.classList.remove('rotate-180');
-        }
-    }
-
-    // --- LÓGICA DE VISUALIZAÇÃO DE TAGS E OBSERVAÇÕES (MOBILE) ---
-    function abrirModalTags(encodedName, encodedTags) {
-        const nome = decodeURIComponent(encodedName);
-        const tags = JSON.parse(decodeURIComponent(encodedTags));
-        
-        document.getElementById('modalTagsTitle').innerText = nome;
-        const container = document.getElementById('modalTagsList');
-        
-        container.innerHTML = tags.map(t => `
-            <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest shadow-sm">
-                ${t}
-            </span>
-        `).join('');
-        
-        document.getElementById('modalVisualizarTags').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalTags() {
-        document.getElementById('modalVisualizarTags').classList.remove('flex');
-    }
-
-    function abrirModalObs(encodedName, encodedObs) {
-        const nome = decodeURIComponent(encodedName);
-        const obs = decodeURIComponent(encodedObs);
-        
-        document.getElementById('modalObsTitle').innerText = nome;
-        document.getElementById('modalObsContent').innerText = obs;
-        
-        document.getElementById('modalVisualizarObs').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalObs() {
-        document.getElementById('modalVisualizarObs').classList.remove('flex');
-    }
-
-    // --- LÓGICA DA CAIXA DE IDEIAS ---
-    function abrirModalIdeia() {
-        document.getElementById('textoIdeia').value = '';
-        document.getElementById('modalIdeia').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalIdeia() {
-        document.getElementById('modalIdeia').classList.remove('flex');
-    }
-
-    function enviarIdeia() {
-        const texto = document.getElementById('textoIdeia').value.trim();
-        if (!texto) {
-            showToast("Por favor, escreva a sua ideia antes de enviar.", "error");
-            return;
-        }
-
-        if (!adminId) return;
-
-        const btn = document.getElementById('btnEnviarIdeia');
-        const txtOriginal = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...';
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        lucide.createIcons();
-
-        const ideiaData = {
-            adminId: adminId,
-            email: auth.currentUser ? auth.currentUser.email : 'Desconhecido',
-            texto: texto,
-            data: Date.now(),
-            status: 'nova'
-        };
-
-        db.ref('ideias_sistema').push(ideiaData).then(() => {
-            finalizarEnvioIdeia(btn, txtOriginal);
-        }).catch(err => {
-            db.ref(`tenants/${adminId}/ideias_enviadas`).push(ideiaData).then(() => {
-                finalizarEnvioIdeia(btn, txtOriginal);
-            }).catch(errFallback => {
-                btn.innerHTML = txtOriginal;
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                showToast("Erro ao enviar ideia. Verifique a sua ligação.", "error");
-            });
-        });
-    }
-
-    function finalizarEnvioIdeia(btn, txtOriginal) {
-        btn.innerHTML = txtOriginal;
-        btn.classList.remove('opacity-50', 'pointer-events-none');
-        fecharModalIdeia();
-        showToast("Ideia enviada! Muito obrigado pelo seu feedback.", "success");
-    }
-
-    // --- LÓGICA DE FILA DE ENVIO (WHATSAPP EM MASSA) ---
-    function iniciarFilaWhatsApp() {
-        if(selecionados.size === 0) return;
-        
-        filaEnvio = Array.from(selecionados)
-            .map(id => dadosLocais.find(c => c.id === id))
-            .filter(c => c && c.tel && !c.pago); // Remove quem não tem telefone ou JÁ PAGOU
-        
-        if (filaEnvio.length === 0) {
-            showToast("Nenhum cliente válido na seleção. (Clientes pagos ou sem telefone foram ignorados)", "error");
-            return;
-        }
-
-        filaTotal = filaEnvio.length;
-        atualizarUIFila();
-        document.getElementById('modalFilaEnvio').classList.add('flex');
-    }
-
-    function atualizarUIFila() {
-        if (filaEnvio.length === 0) {
-            fecharFilaWhatsApp();
-            showToast("Fila de envios concluída!", "success");
-            clearSelection();
-            return;
-        }
-
-        const atual = filaTotal - filaEnvio.length + 1;
-        document.getElementById('filaAtualNum').innerText = atual;
-        document.getElementById('filaTotalNum').innerText = filaTotal;
-        
-        const cliente = filaEnvio[0];
-        document.getElementById('filaClienteNome').innerText = cliente.nome;
-        document.getElementById('filaClienteTel').innerText = cliente.tel || 'Sem telefone';
-    }
-
-    function proximoFilaWhatsApp() {
-        if (filaEnvio.length === 0) return;
-        const cliente = filaEnvio.shift(); 
-        
-        const val = parseFloat(cliente.valor) || 0;
-        enviarZap(cliente.id, cliente.nome, cliente.tel, val);
-        
-        atualizarUIFila();
-    }
-
-    function pularFilaWhatsApp() {
-        if (filaEnvio.length === 0) return;
-        filaEnvio.shift(); 
-        atualizarUIFila();
-    }
-
-    function cancelarFilaWhatsApp() {
-        filaEnvio = [];
-        fecharFilaWhatsApp();
-    }
-
-    function fecharFilaWhatsApp() {
-        document.getElementById('modalFilaEnvio').classList.remove('flex');
-    }
-
-    // --- AÇÕES COM CONFIRMAÇÕES CUSTOMIZADAS ---
-    function arquivarSelecionados(arquivarStatus) {
-        if(selecionados.size === 0 || !adminId) return;
-        const acao = arquivarStatus ? "arquivar" : "desarquivar";
-        const btnClass = arquivarStatus ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30" : "bg-brand-500 hover:bg-brand-600 shadow-brand-500/30";
-        const bgIcoClass = arquivarStatus ? "bg-amber-500" : "bg-brand-500";
-        const ico = arquivarStatus ? "archive" : "archive-restore";
-
-        showConfirm(
-            `${acao.charAt(0).toUpperCase() + acao.slice(1)} ${selecionados.size} registo(s)`,
-            `Tem a certeza que deseja ${acao} os clientes selecionados simultaneamente?`,
-            "Confirmar", btnClass, ico, bgIcoClass,
-            () => {
-                const updates = {};
-                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}/arquivado`] = arquivarStatus; });
-                db.ref(`tenants/${adminId}`).update(updates).then(() => {
-                    selecionados.clear();
-                    showToast(`Registos ${acao}dos com sucesso!`);
-                });
-            }
-        );
-    }
-
-    function excluirSelecionados() {
-        if(selecionados.size === 0 || !adminId) return;
-        showConfirm(
-            "Excluir em Massa",
-            `Deseja realmente excluir ${selecionados.size} registo(s)? Esta ação não pode ser desfeita.`,
-            "Excluir Todos", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
-            () => {
-                const updates = {};
-                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}`] = null; });
-                db.ref(`tenants/${adminId}`).update(updates).then(() => {
-                    selecionados.clear();
-                    showToast("Registos excluídos com sucesso!");
-                });
-            }
-        );
-    }
-
-    function removerComprovante(id) { 
-        if(!adminId) return;
-        showConfirm(
-            "Remover Comprovativo",
-            "Deseja apagar este comprovativo e marcar a fatura como pendente novamente?",
-            "Remover", "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30", "image-minus", "bg-amber-500",
-            () => {
-                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ comprovante: null, pago: false });
-                showToast("Comprovativo removido.");
-            }
-        );
-    }
-
-    function excluir(id) { 
-        if(!adminId) return;
-        showConfirm(
-            "Excluir Registo",
-            "Deseja realmente apagar este registo? Todos os dados deste mês serão perdidos.",
-            "Excluir", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
-            () => {
-                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).remove();
-                showToast("Registo excluído.");
-            }
-        );
-    }
-    
-    function arquivarPessoa(id, arquivarStatus) { 
-        if(adminId) {
-            db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ arquivado: arquivarStatus });
-            showToast(arquivarStatus ? "Registo arquivado." : "Registo restaurado.");
-        }
-    }
-
-    async function copiarCicloAnterior() {
-        if (!adminId || mesAtual === 'todos') return;
-
-        let [m, y] = mesAtual.split('-');
-        let prevM = parseInt(m) - 1;
-        let prevY = parseInt(y);
-        if (prevM === 0) { prevM = 12; prevY--; }
-        let mesAnterior = `${String(prevM).padStart(2, '0')}-${prevY}`;
-
-        showConfirm(
-            "Copiar Ciclo Anterior",
-            `Deseja copiar os clientes ativos de [${mesAnterior}] para o ciclo atual [${mesAtual}]?\n\n(Apenas clientes que ainda não existem neste ciclo serão copiados, com status "Pendente")`,
-            "Copiar Clientes", "bg-violet-500 hover:bg-violet-600 shadow-violet-500/30", "copy", "bg-violet-500",
-            async () => {
-                const btn = document.getElementById('btnCopiarCiclo');
-                const txtOriginal = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Copiando...';
-                btn.classList.add('opacity-50', 'pointer-events-none');
-                lucide.createIcons();
-
-                try {
-                    const snapAtual = await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).once('value');
-                    const dadosAtual = snapAtual.val() || {};
-
-                    const snapAnterior = await db.ref(`tenants/${adminId}/cobrancas/${mesAnterior}`).once('value');
-                    const dadosAnterior = snapAnterior.val() || {};
-
-                    const updates = {};
-                    let count = 0;
-
-                    for (const id in dadosAnterior) {
-                        const cliente = dadosAnterior[id];
-                        if (!dadosAtual[id] && !cliente.arquivado) {
-                            updates[id] = {
-                                ...cliente, pago: false, msgEnviada: false, comprovante: null, adiantadas: 0
-                            };
-                            count++;
-                        }
-                    }
-
-                    if (count > 0) {
-                        await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).update(updates);
-                        showToast(`${count} cliente(s) importado(s) do ciclo passado!`);
-                    } else {
-                        showToast(`Nenhum cliente novo para importar.`, "error");
-                    }
-                } catch (e) {
-                    console.error(e);
-                    showToast("Ocorreu um erro ao tentar copiar.", "error");
-                }
-
-                btn.innerHTML = txtOriginal;
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                lucide.createIcons();
-            }
-        );
-    }
-
-    // --- MODAIS E CONFIGURAÇÕES ---
-    function abrirModalConfig() {
-        document.getElementById('cfgChavePix').value = configGeral.chavePix || "";
-        document.getElementById('cfgValorPadrao').value = configGeral.valorPadrao || 50;
-        document.getElementById('cfgDiaVirada').value = configGeral.diaVirada || "";
-        document.getElementById('cfgTermoPart').value = configGeral.termoParticipante || "Participante";
-        document.getElementById('cfgTermoMens').value = configGeral.termoMensalidade || "Mensalidade";
-        document.getElementById('cfgOcultarAdiantadas').checked = configGeral.ocultarAdiantadas || false;
-        document.getElementById('cfgOcultarStatus').checked = configGeral.ocultarStatus || false;
-        document.getElementById('cfgOcultarDiaCobranca').checked = configGeral.ocultarDiaCobranca || false;
-        document.getElementById('cfgDesativarEmAnalise').checked = configGeral.desativarEmAnalise || false;
-        document.getElementById('cfgMsgCustom').value = configGeral.msgZapCustom || "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo.";
-        document.getElementById('modalConfig').classList.add('flex');
-    }
-    function fecharModalConfig() { document.getElementById('modalConfig').classList.remove('flex'); }
-
-    function salvarConfiguracoes() {
-        if(!adminId) return;
-        const vPadrao = parseFloat(document.getElementById('cfgValorPadrao').value) || 50;
-        
-        const updates = {
-            chavePix: document.getElementById('cfgChavePix').value,
-            valorPadrao: vPadrao,
-            diaVirada: document.getElementById('cfgDiaVirada').value,
-            termoParticipante: document.getElementById('cfgTermoPart').value || "Participante",
-            termoMensalidade: document.getElementById('cfgTermoMens').value || "Mensalidade",
-            ocultarAdiantadas: document.getElementById('cfgOcultarAdiantadas').checked,
-            ocultarStatus: document.getElementById('cfgOcultarStatus').checked,
-            ocultarDiaCobranca: document.getElementById('cfgOcultarDiaCobranca').checked,
-            desativarEmAnalise: document.getElementById('cfgDesativarEmAnalise').checked,
-            msgZapCustom: document.getElementById('cfgMsgCustom').value
-        };
-
-        db.ref(`tenants/${adminId}/configuracoes`).update(updates).then(() => {
-            fecharModalConfig();
-            carregarConfiguracoesGerais();
-        });
-    }
-
-    async function abrirModalNovaPessoa() {
-        document.getElementById('buscaCliente').value = "";
-        document.getElementById('listaSugestoes').classList.add('hidden');
-        idClienteSelecionadoParaNovo = null;
-
-        document.getElementById('novoNome').value = "";
-        document.getElementById('novoTel').value = "";
-        document.getElementById('novoTag').value = "";
-        document.getElementById('novoDataEntrada').value = "";
-        document.getElementById('novoDiaCobranca').value = "";
-        document.getElementById('novoObs').value = "";
-        
-        tagsNovo = [];
-        renderTagsUI('novo');
-        
-        document.getElementById('modalNovaPessoa').classList.add('flex');
-        lucide.createIcons();
-
-        // Carrega todos os clientes históricos silenciosamente
-        if (adminId) {
-            try {
-                const snap = await db.ref(`tenants/${adminId}/cobrancas`).once('value');
-                const todosMeses = snap.val() || {};
-                const mapClientes = new Map();
-
-                for (const mes in todosMeses) {
-                    for (const id in todosMeses[mes]) {
-                        mapClientes.set(id, { id: id, ...todosMeses[mes][id] });
-                    }
-                }
-                clientesGlobaisCache = Array.from(mapClientes.values());
-            } catch(e) {
-                console.error("Erro ao carregar cache de clientes", e);
-            }
-        }
-    }
-
-    function filtrarClientesGlobais() {
-        const termo = document.getElementById('buscaCliente').value.toLowerCase();
-        const lista = document.getElementById('listaSugestoes');
-
-        if (termo.length < 2) {
-            lista.classList.add('hidden');
-            idClienteSelecionadoParaNovo = null; 
-            return;
-        }
-
-        const filtrados = clientesGlobaisCache.filter(c => c.nome.toLowerCase().includes(termo) || (c.tel && c.tel.includes(termo)));
-
-        if (filtrados.length === 0) {
-            lista.innerHTML = '<div class="p-4 text-xs text-slate-500 text-center font-bold">Nenhum cliente encontrado no histórico.</div>';
-            lista.classList.remove('hidden');
-            return;
-        }
-
-        lista.innerHTML = filtrados.map(c => `
-            <div onclick="selecionarClienteAutocompletar('${c.id}')" class="p-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-brand-50 dark:hover:bg-brand-900/20 cursor-pointer transition">
-                <p class="text-sm font-bold dark:text-white">${c.nome}</p>
-                <div class="flex gap-3 text-[10px] text-slate-400 font-bold mt-0.5">
-                    <span><i data-lucide="phone" class="w-3 h-3 inline"></i> ${c.tel || 'Sem tel'}</span>
-                    ${c.dataEntrada ? `<span><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${c.dataEntrada}</span>` : ''}
-                </div>
-            </div>
-        `).join('');
-
-        lucide.createIcons();
-        lista.classList.remove('hidden');
-    }
-
-    function selecionarClienteAutocompletar(id) {
-        const c = clientesGlobaisCache.find(x => x.id === id);
-        if (!c) return;
-
-        idClienteSelecionadoParaNovo = id;
-        document.getElementById('buscaCliente').value = c.nome;
-        document.getElementById('listaSugestoes').classList.add('hidden');
-
-        document.getElementById('novoNome').value = c.nome || "";
-        document.getElementById('novoTel').value = c.tel || "";
-        document.getElementById('novoTag').value = c.tag || "";
-        document.getElementById('novoDataEntrada').value = c.dataEntrada || "";
-        document.getElementById('novoDiaCobranca').value = c.diaCobranca || "";
-        document.getElementById('novoObs').value = c.observacao || "";
-        
-        // Puxando Tags Antigas e Novas
-        tagsNovo = c.tags || [];
-        if (typeof c.tag === 'string' && c.tag.trim() !== '') tagsNovo = [c.tag.trim().toUpperCase()];
-        renderTagsUI('novo');
-        
-        showToast("Dados do cliente preenchidos!", "success");
-    }
-
-    function fecharModalNovaPessoa() { document.getElementById('modalNovaPessoa').classList.remove('flex'); }
-
-    function salvarNovaPessoa() {
-        if(!adminId) return;
-        const n = document.getElementById('novoNome').value.trim();
-        const t = document.getElementById('novoTel').value.trim();
-        const d = document.getElementById('novoDataEntrada').value;
-        const diaC = document.getElementById('novoDiaCobranca').value;
-        const obs = document.getElementById('novoObs').value.trim();
-        
-        // Pega alguma tag que ficou digitada no input mas não apertou Enter
-        const inputTag = document.getElementById('novoTag').value.trim().replace(',', '').toUpperCase();
-        if (inputTag && !tagsNovo.includes(inputTag)) tagsNovo.push(inputTag);
-        
-        if(!n) return showToast("Por favor, digite o nome.", "error");
-        
-        const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
-        const idFinal = idClienteSelecionadoParaNovo ? idClienteSelecionadoParaNovo : String(Date.now());
-
-        // Verifica se o ID já está a ser usado no ciclo alvo para evitar sobreposição cega
-        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).once('value').then(snap => {
-            const existeNoCiclo = snap.val();
-            
-            if (existeNoCiclo && idClienteSelecionadoParaNovo && !existeNoCiclo.arquivado) {
-                showToast("Este cliente já está na lista deste ciclo!", "error");
-                return;
-            }
-
-            db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).update({ 
-                nome: n, 
-                tel: t, 
-                tags: tagsNovo,
-                tag: null, // Limpa o formato antigo para não sujar o BD
-                valor: (existeNoCiclo && existeNoCiclo.valor !== undefined) ? existeNoCiclo.valor : configGeral.valorPadrao, 
-                adiantadas: (existeNoCiclo && existeNoCiclo.adiantadas !== undefined) ? existeNoCiclo.adiantadas : 0, 
-                pago: (existeNoCiclo && existeNoCiclo.pago !== undefined) ? existeNoCiclo.pago : false, 
-                msgEnviada: (existeNoCiclo && existeNoCiclo.msgEnviada !== undefined) ? existeNoCiclo.msgEnviada : false, 
-                comprovante: (existeNoCiclo && existeNoCiclo.comprovante !== undefined) ? existeNoCiclo.comprovante : null,
-                arquivado: false,
-                dataEntrada: d,
-                diaCobranca: diaC,
-                observacao: obs
-            }).then(() => {
-                fecharModalNovaPessoa();
-                showToast("Cliente adicionado ao ciclo com sucesso!");
-            }).catch((err) => {
-                showToast("Erro ao cadastrar: " + err.message, "error");
-            });
-        });
-    }
-
-    function toggleDrawer() {
-        const wrapper = document.getElementById('drawerWrapper');
-        const btn = document.getElementById('btnToggleDrawer');
-        wrapper.classList.toggle('aberto');
-        btn.classList.toggle('active');
-    }
-
-    // --- LÓGICA CORE DE IDENTIFICAÇÃO E ATUALIZAÇÕES ---
     function getTargetMes(id) {
         const p = dadosLocais.find(x => x.id === id);
         return p ? (p.sourceMes || mesAtual) : (mesAtual === 'todos' ? mesReal : mesAtual);
@@ -2541,7 +2203,11 @@
         const termoMens = configGeral.termoMensalidade || "Mensalidade";
         const msgMeio = configGeral.msgZapCustom || "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo.";
         
-        const msg = encodeURIComponent(`Olá, ${n}!\n\n${msgMeio}\n\nValor da ${termoMens}: R$ ${v.toFixed(2)}\nChave PIX: ${configGeral.chavePix}\n\nDetalhes da cobrança:\n${link}`); 
+        // Formata o mês com a primeira letra maiúscula (Feature 2)
+        const mesFormatado = formatarMesAno(targetMes);
+        const mesCapitalizado = mesFormatado.charAt(0).toUpperCase() + mesFormatado.slice(1);
+        
+        const msg = encodeURIComponent(`Olá, ${n}!\n\n${msgMeio}\n\nReferência: ${mesCapitalizado}\nValor da ${termoMens}: R$ ${v.toFixed(2)}\nChave PIX: ${configGeral.chavePix}\n\nDetalhes da cobrança:\n${link}`); 
         window.open(`https://wa.me/${t}?text=${msg}`); 
     }
 
@@ -2721,6 +2387,10 @@
             const val = parseFloat(p.valor) || 0;
             const termoMens = configGeral.termoMensalidade || "Mensalidade";
 
+            // Formata o mês com a primeira letra maiúscula (Feature 2)
+            const mesFormatado = formatarMesAno(mesAtual);
+            const mesCapitalizado = mesFormatado.charAt(0).toUpperCase() + mesFormatado.slice(1);
+
             let statusTag = '';
             let exibirUpload = false;
 
@@ -2736,7 +2406,7 @@
             portal.innerHTML = `
                 <div class="glass-card p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl text-center space-y-6 md:space-y-8 border-b-8 border-b-brand-500">
                     <div class="w-16 h-16 md:w-20 md:h-20 bg-brand-500 text-white rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto shadow-glow"><i data-lucide="wallet" class="w-8 h-8 md:w-10 md:h-10"></i></div>
-                    <div><h2 class="text-xl md:text-2xl font-black dark:text-white italic">Olá, ${p.nome}!</h2><p class="text-slate-400 text-xs md:text-sm font-medium mt-1 uppercase tracking-widest">Detalhes da sua ${termoMens}</p></div>
+                    <div><h2 class="text-xl md:text-2xl font-black dark:text-white italic">Olá, ${p.nome}!</h2><p class="text-slate-400 text-xs md:text-sm font-medium mt-1 uppercase tracking-widest">Detalhes da sua ${termoMens} - ${mesCapitalizado}</p></div>
                     <div class="py-8 md:py-10 bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] md:rounded-[2.5rem] shadow-inner border border-slate-100 dark:border-slate-800">
                         <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Total</p>
                         <div class="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tighter">R$ ${val.toLocaleString('pt-br',{minimumFractionDigits:2})}</div>
