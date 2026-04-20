@@ -318,6 +318,7 @@
                 </button>
             </div>
 
+            <!-- NOVA ÁREA: Teste Grátis -->
             <div id="areaTesteGratis" class="w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 hidden">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ainda não tem certeza?</p>
                 <button onclick="ativarTeste7Dias()" class="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 py-4 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 transition-all active:scale-95 flex justify-center items-center gap-2 shadow-sm">
@@ -1404,8 +1405,9 @@
                 const clientesMap = new Map();
                 
                 const mesesOrdenados = Object.keys(todosMeses).sort((a, b) => {
-                    const [mA, yA] = a.split('-'); const [mB, yB] = b.split('-');
-                    return new Date(yA, mA - 1) - new Date(yB, mB - 1);
+                    const partsA = String(a).split('-');
+                    const partsB = String(b).split('-');
+                    return new Date(parseInt(partsA[1]||0), parseInt(partsA[0]||1) - 1) - new Date(parseInt(partsB[1]||0), parseInt(partsB[0]||1) - 1);
                 });
 
                 mesesOrdenados.forEach(mes => {
@@ -1529,9 +1531,9 @@
         const mesAtualNum = hoje.getMonth() + 1;
         const anoAtual = hoje.getFullYear();
 
-        let [mCob, yCob] = mesDaCobranca.split('-');
-        mCob = parseInt(mCob);
-        yCob = parseInt(yCob);
+        const parts = String(mesDaCobranca).split('-');
+        const mCob = parseInt(parts[0]) || 0;
+        const yCob = parseInt(parts[1]) || 0;
 
         if (yCob < anoAtual) return true;
         if (yCob > anoAtual) return false;
@@ -1727,9 +1729,12 @@
     async function copiarCicloAnterior() {
         if (!adminId || mesAtual === 'todos') return;
 
-        let [m, y] = mesAtual.split('-');
-        let prevM = parseInt(m) - 1;
-        let prevY = parseInt(y);
+        const parts = String(mesAtual).split('-');
+        let m = parseInt(parts[0]) || 1;
+        let y = parseInt(parts[1]) || new Date().getFullYear();
+        
+        let prevM = m - 1;
+        let prevY = y;
         if (prevM === 0) { prevM = 12; prevY--; }
         let mesAnterior = `${String(prevM).padStart(2, '0')}-${prevY}`;
 
@@ -1818,7 +1823,12 @@
             }
 
             historico.sort((a, b) => {
-                const [mA, yA] = a.mes.split('-'); const [mB, yB] = b.split('-');
+                const partsA = String(a.mes).split('-'); 
+                const partsB = String(b.mes).split('-');
+                const mA = parseInt(partsA[0]) || 1;
+                const yA = parseInt(partsA[1]) || 0;
+                const mB = parseInt(partsB[0]) || 1;
+                const yB = parseInt(partsB[1]) || 0;
                 return new Date(yB, mB - 1) - new Date(yA, mA - 1);
             });
 
@@ -1887,7 +1897,11 @@
     }
 
     function formatarMesAno(mesAnoStr) {
-        const [m, y] = mesAnoStr.split('-');
+        if (!mesAnoStr) return '';
+        const parts = String(mesAnoStr).split('-');
+        if (parts.length < 2) return String(mesAnoStr);
+        const m = parseInt(parts[0]);
+        const y = parseInt(parts[1]);
         const date = new Date(y, m - 1, 1);
         return date.toLocaleDateString('pt-br', { month: 'long', year: 'numeric' });
     }
@@ -2482,7 +2496,11 @@
         if(!adminId) return;
         const user = dadosLocais.find(u => u.id === id);
         if (!user) return;
-        let [mesStr, anoStr] = baseMes.split('-'); let mes = parseInt(mesStr); let ano = parseInt(anoStr);
+        
+        const parts = String(baseMes).split('-'); 
+        let mes = parseInt(parts[0]) || 0; 
+        let ano = parseInt(parts[1]) || 0;
+        
         const updates = {};
         
         let tagsArray = user.tags || [];
