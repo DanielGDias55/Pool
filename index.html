@@ -1214,11 +1214,6 @@
                 }
             }
         });
-
-        // Atualiza o gráfico caso ele já esteja carregado na tela
-        if (dadosGraficoCache) {
-            atualizarGrafico(dadosGraficoCache.labels, dadosGraficoCache.dados);
-        }
     }
 
     function monitorarAutenticacao() {
@@ -1497,7 +1492,6 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                if (valoresOcultos) return ' R$ ****';
                                 return ' R$ ' + context.parsed.y.toLocaleString('pt-br', {minimumFractionDigits: 2});
                             }
                         }
@@ -1507,13 +1501,7 @@
                     y: {
                         beginAtZero: true,
                         grid: { color: gridColor },
-                        ticks: { 
-                            color: textColor,
-                            callback: function(value) {
-                                if (valoresOcultos) return '****';
-                                return value;
-                            }
-                        }
+                        ticks: { color: textColor }
                     },
                     x: {
                         grid: { display: false },
@@ -2558,3 +2546,4 @@
 </script>
 </body>
 </html>
+
