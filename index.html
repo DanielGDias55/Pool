@@ -1,2549 +1,2895 @@
 <!DOCTYPE html>
+
 <html lang="pt-br" class="transition-colors duration-300">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>PagFlow - Gestão de Cobranças</title>
+
     
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+
     <!-- Biblioteca Chart.js para os Gráficos -->
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     
+
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
+
+
     <script>
+
         tailwind.config = {
+
             darkMode: 'class',
+
             theme: {
+
                 extend: {
+
                     colors: { 
+
                         slate: { 850: '#1e293b', 950: '#020617' },
+
                         brand: { 500: '#3b82f6', 600: '#2563eb' }
+
                     },
+
                     boxShadow: {
+
                         'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05)',
+
                         'glow': '0 0 20px rgba(59, 130, 246, 0.15)'
+
                     }
+
                 }
+
             }
+
         }
+
     </script>
 
+
+
     <style>
+
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
         
+
         :root { --transition-speed: 0.3s; }
 
+
+
         body { 
+
             font-family: 'Plus Jakarta Sans', sans-serif; 
+
             transition: background-color var(--transition-speed) ease; 
+
             min-height: 100vh; 
+
             padding-bottom: 6rem;
+
         }
+
+
 
         html.dark { background-color: #020617 !important; }
+
         
+
         /* ================================================== */
+
         /* BLINDAGEM DE TELAS (Evita vazamento de informações)*/
+
         /* ================================================== */
+
         #loginScreen, #adminApp, #paywallScreen, #portalCliente { display: none !important; }
+
         
+
         body.modo-cliente #portalCliente { display: block !important; }
+
         body.modo-admin.estado-login #loginScreen { display: flex !important; }
+
         body.modo-admin.estado-logado #adminApp { display: block !important; }
+
         body.modo-admin.estado-bloqueado #paywallScreen { display: flex !important; }
 
+
+
         /* Correção do ícone de Calendário no Modo Escuro */
+
         .dark input[type="date"]::-webkit-calendar-picker-indicator {
+
             filter: invert(1) brightness(0.8);
+
             opacity: 0.6;
+
             cursor: pointer;
+
         }
+
+
 
         /* Estilos de Inputs Editáveis da Tabela */
+
         .editable-input { 
+
             background: transparent; 
+
             border: 1px solid transparent; 
+
             padding: 4px 8px; 
+
             border-radius: 8px; 
+
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+
             width: 100%;
+
         }
+
         .editable-input:hover { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.1); }
+
         .dark .editable-input:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+
         .editable-input:focus { 
+
             background: white; 
+
             border-color: #3b82f6; 
+
             outline: none; 
+
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
             color: #1e293b; 
+
         }
+
         .dark .editable-input:focus { background: #0f172a; color: white !important; }
 
+
+
         /* Modais */
+
         .modal-overlay { 
+
             display: none; 
+
             align-items: center; 
+
             justify-content: center; 
+
             position: fixed; 
+
             inset: 0; 
+
             z-index: 100; 
+
             background: rgba(2, 6, 23, 0.6); 
+
             backdrop-filter: blur(8px); 
+
         }
+
         .modal-overlay.flex { display: flex !important; }
 
+
+
         /* Botões de Filtro Ativos */
+
         .filter-btn.active { 
+
             background-color: white !important; 
+
             color: #1e293b !important; 
+
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
             opacity: 1 !important;
+
         }
+
         .dark .filter-btn.active { 
+
             background-color: #3b82f6 !important; 
+
             color: white !important; 
+
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+
         }
+
+
 
         /* Cartões de Vidro */
+
         .glass-card {
+
             background: rgba(255, 255, 255, 0.8);
+
             backdrop-filter: blur(12px);
+
             border: 1px solid rgba(255, 255, 255, 0.3);
+
         }
+
         .dark .glass-card {
+
             background: rgba(15, 23, 42, 0.8);
+
             border: 1px solid rgba(255, 255, 255, 0.05);
+
         }
+
+
 
         /* Gaveta (Drawer) */
+
         #drawerWrapper {
+
             max-height: 0;
+
             opacity: 0;
+
             overflow: hidden;
+
             transform: translateY(-10px) scale(0.98);
+
             pointer-events: none;
+
             margin-top: 0;
+
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s ease;
-        }
-        #drawerWrapper.aberto {
-            max-height: 800px;
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-            margin-top: 1.5rem; 
+
         }
 
-        #btnToggleDrawer.active, #btnToggleDashboard.active {
-            background-color: #3b82f6;
-            color: white;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            border-color: transparent;
-        }
-        .dark #btnToggleDrawer.active, .dark #btnToggleDashboard.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: transparent;
-        }
-        
-        #dashboardWrapper {
-            max-height: 1200px;
+        #drawerWrapper.aberto {
+
+            max-height: 800px;
+
             opacity: 1;
-            overflow: hidden;
+
             transform: translateY(0) scale(1);
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s ease;
+
+            pointer-events: auto;
+
+            margin-top: 1.5rem; 
+
         }
-        #dashboardWrapper.oculto {
-            max-height: 0 !important;
-            opacity: 0 !important;
-            margin-bottom: 0 !important;
-            transform: translateY(-10px) scale(0.98) !important;
-            pointer-events: none;
+
+
+
+        #btnToggleDrawer.active {
+
+            background-color: #3b82f6;
+
+            color: white;
+
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+            border-color: transparent;
+
         }
+
+        .dark #btnToggleDrawer.active {
+
+            background-color: #3b82f6;
+
+            color: white;
+
+            border-color: transparent;
+
+        }
+
+        
 
         .check-custom { accent-color: #3b82f6; width: 1.125rem; height: 1.125rem; cursor: pointer; border-radius: 4px; }
+
         
+
         /* Oculta colunas baseadas nas configs */
+
         .esconder-adiantadas .col-adiantadas { display: none !important; }
+
         .esconder-status .col-status { display: none !important; }
+
         .esconder-dia-cobranca .col-dia-cobranca { display: none !important; }
 
+
+
         /* Oculta os botões de incremento de campos numéricos (evita cortes no texto) */
+
         input[type=number]::-webkit-inner-spin-button, 
+
         input[type=number]::-webkit-outer-spin-button { 
+
             -webkit-appearance: none; 
+
             margin: 0; 
+
         }
+
         input[type=number] {
+
             -moz-appearance: textfield;
+
         }
+
     </style>
+
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 p-4 md:p-8 relative">
 
+
+
 <!-- ========================================== -->
+
 <!-- COMPONENTES DE SISTEMA (TOASTS & CONFIRMS) -->
+
 <!-- ========================================== -->
+
 <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
 
+
+
 <div id="modalConfirm" class="modal-overlay" onclick="fecharConfirm()">
+
     <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 transform transition-all text-center" onclick="event.stopPropagation()">
+
         <div id="confirmIcon" class="w-16 h-16 rounded-[1.5rem] flex items-center justify-center mx-auto mb-5 shadow-glow">
+
             <!-- Icon inserido via JS -->
+
         </div>
+
         <h3 id="confirmTitle" class="text-xl font-black dark:text-white mb-2"></h3>
+
         <p id="confirmMessage" class="text-sm text-slate-500 font-medium mb-8"></p>
+
         <div class="flex gap-3">
+
             <button onclick="fecharConfirm()" class="flex-1 py-3.5 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+
             <button id="btnConfirmAction" onclick="executarConfirm()" class="flex-1 py-3.5 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-95">Confirmar</button>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <!-- ========================================== -->
+
 <!-- 1. TELA DE LOGIN (SaaS)                    -->
+
 <!-- ========================================== -->
+
 <div id="loginScreen" class="min-h-[80vh] items-center justify-center">
+
     <div class="glass-card w-full max-w-md p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl"></div>
+
         <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
         
+
         <div class="relative z-10 flex flex-col items-center">
+
+            <!-- Logo Icon Opção 2 -->
+
             <div class="w-20 h-20 flex items-center justify-center mb-3">
+
                 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-lg">
+
+                    <!-- Parte externa do P -->
+
                     <path d="M25 80V35L45 15H65L85 35V50L65 70H45" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-slate-800 dark:text-slate-100"/>
+
+                    <!-- Dobra cruzando -->
+
                     <path d="M25 55L45 75L35 85" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-brand-500"/>
+
+                    <!-- Detalhe interno da fita -->
+
                     <path d="M45 40L65 60" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-brand-500"/>
+
                 </svg>
+
             </div>
+
             <h2 class="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white mb-1 flex items-center">
+
                 Pag<span class="text-brand-500 font-bold">Flow</span>
+
             </h2>
+
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Acesso Restrito</p>
 
+
+
             <div class="w-full space-y-4">
+
                 <div>
+
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">E-mail</label>
+
                     <input type="email" id="emailAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="seu@email.com">
+
                 </div>
+
                 <div>
+
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Palavra-passe</label>
+
                     <div class="relative">
+
                         <input type="password" id="senhaAuth" onkeydown="if(event.key === 'Enter') fazerLogin()" class="w-full bg-white dark:bg-slate-900 dark:text-white pl-5 pr-12 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="••••••••">
+
                         <button type="button" onclick="toggleSenha()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-brand-500 transition focus:outline-none" tabindex="-1">
+
                             <i data-lucide="eye" id="iconToggleSenha" class="w-5 h-5"></i>
+
                         </button>
+
                     </div>
+
                 </div>
+
+
 
                 <div class="pt-4 space-y-3">
+
                     <button onclick="fazerLogin()" class="w-full bg-brand-600 text-white py-4 rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex justify-center items-center gap-2">
+
                         <i data-lucide="log-in" class="w-5 h-5"></i> Entrar no Sistema
+
                     </button>
+
                     <button onclick="criarConta()" class="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-4 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+
                         Criar Nova Conta
+
                     </button>
+
+
 
                     <div class="relative flex items-center py-2">
+
                         <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+
                         <span class="flex-shrink-0 mx-4 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Ou</span>
+
                         <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+
                     </div>
+
+
 
                     <button onclick="loginComGoogle()" class="w-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 flex justify-center items-center gap-3 shadow-sm">
+
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
+
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+
                             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+
                         </svg>
+
                         Continuar com o Google
+
                     </button>
+
                 </div>
+
                 <p id="msgErroAuth" class="text-rose-500 text-xs font-bold text-center mt-4 hidden"></p>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <!-- ========================================== -->
+
 <!-- 2. TELA DE PAGAMENTO/BLOQUEIO (Paywall)    -->
+
 <!-- ========================================== -->
+
 <div id="paywallScreen" class="min-h-[80vh] items-center justify-center">
+
     <div class="glass-card w-full max-w-md p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden text-center">
+
         <div class="absolute -right-10 -top-10 w-40 h-40 bg-rose-500/10 rounded-full blur-3xl"></div>
+
         <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl"></div>
+
         
+
         <div class="relative z-10 flex flex-col items-center">
+
             <div class="w-16 h-16 bg-rose-500 rounded-3xl shadow-glow flex items-center justify-center mb-6">
+
                 <i data-lucide="lock" class="text-white w-8 h-8"></i>
+
             </div>
+
             <h2 class="text-2xl font-black tracking-tighter dark:text-white uppercase mb-2">Acesso Bloqueado</h2>
+
             <p class="text-sm text-slate-500 font-medium mb-6">A sua licença está inativa ou pendente. Para libertar o seu painel de gestão de forma vitalícia, ative o seu acesso.</p>
 
+
+
             <div class="bg-slate-50 dark:bg-slate-900/80 p-5 rounded-2xl w-full mb-8 border border-slate-100 dark:border-slate-800 text-left">
+
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Detalhes da Licença</p>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="bg-brand-100 dark:bg-brand-900/30 p-2.5 rounded-xl text-brand-600"><i data-lucide="tag" class="w-5 h-5"></i></div>
+
                     <div>
+
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Acesso Vitalício (Pagamento Único)</p>
+
                         <p class="text-base font-black dark:text-white">R$ 250,00 <span class="text-[10px] font-medium line-through text-slate-400 ml-1">R$ 598,00/ano</span></p>
+
                     </div>
+
                 </div>
+
                 <div class="flex items-center gap-3 mb-4">
+
                     <div class="bg-emerald-100 dark:bg-emerald-900/30 p-2.5 rounded-xl text-emerald-600"><i data-lucide="user" class="w-5 h-5"></i></div>
+
                     <div>
+
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Falar com</p>
+
                         <p class="text-sm font-bold dark:text-white">Daniel Garcia Dias</p>
+
                     </div>
+
                 </div>
+
                 <div class="flex items-center gap-3">
+
                     <div class="bg-emerald-100 dark:bg-emerald-900/30 p-2.5 rounded-xl text-emerald-600"><i data-lucide="phone" class="w-5 h-5"></i></div>
+
                     <div>
+
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">WhatsApp</p>
+
                         <p class="text-sm font-bold dark:text-white">(13) 97412-3358</p>
+
                     </div>
+
                 </div>
+
             </div>
+
+
 
             <div class="w-full space-y-3">
+
                 <button onclick="falarComSuporte()" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition-all active:scale-95 flex justify-center items-center gap-2">
+
                     <i data-lucide="message-circle" class="w-5 h-5"></i> Enviar Comprovante
+
                 </button>
+
                 <button onclick="fazerLogout()" class="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-4 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 flex justify-center items-center gap-2">
+
                     <i data-lucide="log-out" class="w-4 h-4"></i> Sair da Conta
+
                 </button>
+
             </div>
+
+
 
             <!-- NOVA ÁREA: Teste Grátis -->
+
             <div id="areaTesteGratis" class="w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 hidden">
+
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Ainda não tem certeza?</p>
+
                 <button onclick="ativarTeste7Dias()" class="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 py-4 rounded-2xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800 transition-all active:scale-95 flex justify-center items-center gap-2 shadow-sm">
+
                     <i data-lucide="unlock" class="w-5 h-5"></i> Iniciar Teste de 7 Dias
+
                 </button>
+
             </div>
+
             
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <!-- ========================================== -->
+
 <!-- 3. MODAIS DA APLICAÇÃO ADMIN               -->
+
 <!-- ========================================== -->
+
+
 
 <!-- Modal de Ajuda / FAQ -->
+
 <div id="modalAjuda" class="modal-overlay" onclick="fecharModalAjuda()">
+
     <div class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+
         <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+
             <div class="flex items-center gap-4">
+
                 <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600 flex items-center justify-center">
+
                     <i data-lucide="book-open" class="w-6 h-6"></i>
+
                 </div>
+
                 <div>
+
                     <h3 class="text-xl font-extrabold dark:text-white">Central de Ajuda</h3>
+
                     <p class="text-xs text-slate-500 font-medium">Guia rápido do PagFlow</p>
+
                 </div>
+
             </div>
+
             <button onclick="fecharModalAjuda()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"><i data-lucide="x"></i></button>
+
         </div>
 
+
+
         <div class="space-y-4">
+
             
+
+            <!-- Pergunta 1 -->
+
             <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+
                 <button onclick="toggleAjuda('ajuda1')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+
                     <div class="flex items-center gap-3">
+
                         <i data-lucide="tags" class="w-5 h-5 text-brand-500 shrink-0"></i>
+
                         <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Como funciona o sistema de Múltiplas Etiquetas?</span>
+
                     </div>
+
                     <i data-lucide="chevron-down" id="icon-ajuda1" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+
                 </button>
+
                 <div id="ajuda1" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+
                     As etiquetas (Tags) servem para organizar os seus clientes por categorias (ex: Plano VIP, Mensal, Manutenção). 
+
                     <br><br>
+
                     Para adicionar uma etiqueta durante o registo ou na edição do cliente, basta <strong>escrever o nome da etiqueta e clicar na tecla "Enter", inserir uma vírgula, ou clicar no botão azul (+)</strong> ao lado do campo.
+
                     Pode adicionar quantas etiquetas quiser! Elas aparecerão na tabela debaixo do número de telefone e podem ser usadas na gaveta de Filtros para encontrar grupos específicos rapidamente.
+
                 </div>
+
             </div>
 
+
+
+            <!-- Pergunta 2 -->
+
             <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+
                 <button onclick="toggleAjuda('ajuda2')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+
                     <div class="flex items-center gap-3">
+
                         <i data-lucide="calendar-clock" class="w-5 h-5 text-brand-500 shrink-0"></i>
+
                         <span class="font-bold text-sm text-slate-800 dark:text-slate-200">O que significa cada Status na tabela?</span>
+
                     </div>
+
                     <i data-lucide="chevron-down" id="icon-ajuda2" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+
                 </button>
+
                 <div id="ajuda2" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+
                     O sistema atualiza a cor do status automaticamente com base nas ações:
+
                     <ul class="list-disc pl-5 mt-2 space-y-1">
+
                         <li><strong class="text-emerald-500">Pago (Verde):</strong> O pagamento foi confirmado por si.</li>
+
                         <li><strong class="text-amber-500">Pendente (Amarelo):</strong> A aguardar pagamento, mas ainda não passou da data de vencimento.</li>
+
                         <li><strong class="text-rose-500">Atrasado (Vermelho):</strong> O dia de hoje já ultrapassou o "Dia Venc." registado para este cliente e ele ainda não pagou.</li>
+
                         <li><strong class="text-violet-500">Em Análise (Roxo):</strong> O cliente enviou o comprovativo de pagamento através do Portal do Cliente. Clique no ícone de imagem piscando para validar o comprovativo e marcar como "Pago".</li>
+
                     </ul>
+
                 </div>
+
             </div>
 
+
+
+            <!-- Pergunta 3 -->
+
             <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+
                 <button onclick="toggleAjuda('ajuda3')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+
                     <div class="flex items-center gap-3">
+
                         <i data-lucide="send" class="w-5 h-5 text-brand-500 shrink-0"></i>
+
                         <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Como funciona a Fila de Envio (Cobrança em Massa)?</span>
+
                     </div>
+
                     <i data-lucide="chevron-down" id="icon-ajuda3" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+
                 </button>
+
                 <div id="ajuda3" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+
                     Pode cobrar vários clientes consecutivamente sem perder o rasto.
+
                     <br><br>
+
                     <strong>1.</strong> Selecione os clientes que deseja cobrar usando as caixas de verificação (checkboxes) no lado esquerdo da tabela.<br>
+
                     <strong>2.</strong> Na barra preta que aparece no rodapé, clique em <strong>"Cobrar Todos"</strong>.<br>
+
                     <strong>3.</strong> Uma janela de "Fila" irá abrir-se. Ao clicar em <em>"Abrir WhatsApp e Avançar"</em>, a janela do WhatsApp Web abrir-se-á com a mensagem pronta para o primeiro cliente, marcando-o automaticamente com o ícone azul de "enviado".<br>
+
                     <strong>4.</strong> Ao voltar ao sistema, o próximo cliente já estará pronto para envio na fila.
+
                 </div>
+
             </div>
 
+
+
+            <!-- Pergunta 4 -->
+
             <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+
                 <button onclick="toggleAjuda('ajuda4')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+
                     <div class="flex items-center gap-3">
+
                         <i data-lucide="history" class="w-5 h-5 text-brand-500 shrink-0"></i>
+
                         <span class="font-bold text-sm text-slate-800 dark:text-slate-200">A Virada do Ciclo e o botão "Copiar Anterior"</span>
+
                     </div>
+
                     <i data-lucide="chevron-down" id="icon-ajuda4" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+
                 </button>
+
                 <div id="ajuda4" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+
                     O PagFlow trabalha por "Ciclos Mensais", garantindo que tem um histórico limpo e organizado mês a mês.
+
                     <br><br>
+
                     Quando um novo mês começa (ou no dia configurado na "Virada do Ciclo" em Configurações), a tabela aparecerá vazia. Para não ter que registar os seus clientes recorrentes todos de novo, abra a gaveta de Filtros e clique no botão roxo <strong>"Copiar Anterior"</strong>.
+
                     <br><br>
+
                     Isto fará com que todos os clientes do mês passado que <em>não estavam arquivados</em> sejam transportados para o mês atual com o status reiniciado para "Pendente".
+
                 </div>
+
             </div>
 
+
+
+            <!-- Pergunta 5 -->
+
             <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50">
+
                 <button onclick="toggleAjuda('ajuda5')" class="w-full flex justify-between items-center p-4 md:p-5 text-left focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+
                     <div class="flex items-center gap-3">
+
                         <i data-lucide="message-square-warning" class="w-5 h-5 text-brand-500 shrink-0"></i>
+
                         <span class="font-bold text-sm text-slate-800 dark:text-slate-200">Alertas de Observações</span>
+
                     </div>
+
                     <i data-lucide="chevron-down" id="icon-ajuda5" class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0"></i>
+
                 </button>
+
                 <div id="ajuda5" class="hidden px-5 pb-5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
+
                     Se preencher o campo "Observações" durante o registo ou no perfil do cliente, um pequeno <strong>ícone de alerta amarelo</strong> aparecerá ao lado do nome do cliente na tabela principal.
+
                     <br><br>
+
                     Clique neste ícone para ler rapidamente a observação sem precisar de abrir o perfil completo do cliente. É ideal para lembretes como "Paga sempre no dia 15" ou "Pediu desconto este mês". O tamanho máximo para uma observação é de 300 caracteres.
+
                 </div>
+
             </div>
+
+
 
         </div>
+
     </div>
+
 </div>
 
-<!-- Modal Caixa de Ideias -->
+
+
+<!-- Modal Caixa de Ideias (NOVO) -->
+
 <div id="modalIdeia" class="modal-overlay" onclick="fecharModalIdeia()">
+
     <div class="glass-card w-full max-w-md p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 relative" onclick="event.stopPropagation()">
+
         <div class="flex items-center gap-4 mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+
             <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl text-amber-600 flex items-center justify-center shadow-inner">
+
                 <i data-lucide="lightbulb" class="w-6 h-6"></i>
+
             </div>
+
             <div>
+
                 <h3 class="text-xl font-extrabold dark:text-white">Caixa de Ideias</h3>
+
                 <p class="text-xs text-slate-500 font-medium">Ajude a melhorar o PagFlow</p>
+
             </div>
+
             <button onclick="fecharModalIdeia()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition ml-auto"><i data-lucide="x"></i></button>
+
         </div>
+
+
 
         <div class="space-y-4">
+
             <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+
                 Sentiu falta de alguma funcionalidade? Tem uma sugestão de melhoria? Envie diretamente para a nossa equipa de desenvolvimento!
+
             </p>
+
             <div>
+
                 <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Sua Ideia / Sugestão</label>
+
                 <textarea id="textoIdeia" rows="4" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none mt-1" placeholder="Descreva a sua ideia com detalhes..."></textarea>
+
             </div>
+
         </div>
+
         
+
         <div class="flex gap-3 mt-6">
+
             <button onclick="fecharModalIdeia()" class="flex-1 py-3.5 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+
             <button onclick="enviarIdeia()" id="btnEnviarIdeia" class="flex-1 py-3.5 bg-amber-500 text-white rounded-2xl font-bold hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all active:scale-95 flex justify-center items-center gap-2">
+
                 <i data-lucide="send" class="w-4 h-4"></i> Enviar
+
             </button>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Visualizar Etiquetas -->
+
 <div id="modalVisualizarTags" class="modal-overlay" onclick="fecharModalTags()">
+
     <div class="glass-card w-full max-w-xs p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
+
         <div class="w-14 h-14 bg-brand-500 text-white rounded-[1.25rem] flex items-center justify-center mx-auto mb-4 shadow-glow">
+
             <i data-lucide="tags" class="w-7 h-7"></i>
+
         </div>
+
         <h3 class="text-lg font-black dark:text-white mb-1">Etiquetas</h3>
+
         <p id="modalTagsTitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 truncate"></p>
+
         
+
         <div id="modalTagsList" class="flex flex-wrap justify-center gap-2 mb-6 max-h-48 overflow-y-auto p-1">
+
+            <!-- Preenchido via JS -->
+
         </div>
+
+
 
         <button onclick="fecharModalTags()" class="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all active:scale-95">
+
             Fechar
+
         </button>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Visualizar Observação -->
+
 <div id="modalVisualizarObs" class="modal-overlay" onclick="fecharModalObs()">
+
     <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative" onclick="event.stopPropagation()">
+
         <div class="w-14 h-14 bg-amber-500 text-white rounded-[1.25rem] flex items-center justify-center mx-auto mb-4 shadow-glow">
+
             <i data-lucide="message-square-text" class="w-7 h-7"></i>
+
         </div>
+
         <h3 class="text-lg font-black dark:text-white mb-1">Observações</h3>
+
         <p id="modalObsTitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 truncate"></p>
+
         
+
         <div id="modalObsContent" class="text-sm text-slate-600 dark:text-slate-300 mb-6 max-h-48 overflow-y-auto p-1 text-left whitespace-pre-wrap leading-relaxed break-words">
+
+            <!-- Preenchido via JS -->
+
         </div>
+
+
 
         <button onclick="fecharModalObs()" class="w-full py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all active:scale-95">
+
             Fechar
+
         </button>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Fila de Envio -->
+
 <div id="modalFilaEnvio" class="modal-overlay" onclick="event.stopPropagation()">
+
     <div class="glass-card w-full max-w-sm p-6 md:p-8 rounded-[2.5rem] shadow-2xl mx-4 text-center relative">
+
         <div class="w-16 h-16 bg-blue-500 text-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-glow">
+
             <i data-lucide="send" class="w-8 h-8"></i>
+
         </div>
+
         <h3 class="text-xl font-black dark:text-white mb-1">Fila de Cobrança</h3>
+
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Enviando <span id="filaAtualNum" class="text-blue-500 font-black text-sm">1</span> de <span id="filaTotalNum" class="font-black text-sm">X</span></p>
+
         
+
         <div class="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl mb-6 text-left border border-slate-100 dark:border-slate-800">
+
             <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Próximo Cliente:</p>
+
             <p id="filaClienteNome" class="font-bold dark:text-white text-lg truncate">Carregando...</p>
+
             <p id="filaClienteTel" class="text-xs text-slate-500 font-medium">...</p>
+
         </div>
+
+
 
         <div class="space-y-3">
+
             <button onclick="proximoFilaWhatsApp()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+
                 <i data-lucide="external-link" class="w-5 h-5"></i> Abrir WhatsApp e Avançar
+
             </button>
+
             <button onclick="pularFilaWhatsApp()" class="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-2xl font-bold transition-all active:scale-95">
+
                 Pular este cliente
+
             </button>
+
             <button onclick="cancelarFilaWhatsApp()" class="w-full py-3 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-2xl font-bold transition-all">
+
                 Cancelar Fila
+
             </button>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Nova Pessoa -->
+
 <div id="modalNovaPessoa" class="modal-overlay" onclick="fecharModalNovaPessoa()">
+
     <div class="glass-card w-full max-w-2xl p-0 rounded-[2rem] shadow-2xl mx-4 transform transition-all flex flex-col md:flex-row overflow-hidden" onclick="event.stopPropagation()">
+
+        <!-- Lado Ilustrativo (Some no mobile) -->
+
         <div class="md:w-2/5 bg-gradient-to-br from-brand-500 to-brand-700 p-8 flex-col justify-center items-center text-center text-white relative overflow-hidden hidden md:flex">
+
             <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-30"></div>
+
             <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 shadow-glow border border-white/30 z-10">
+
                 <i data-lucide="user-plus" class="w-10 h-10 text-white"></i>
-            </div>
-            <h3 class="text-xl font-black mb-2 z-10">Novo Registo</h3>
-            <p class="text-xs font-medium opacity-80 z-10">Adicione novos clientes ou importe do seu banco de dados.</p>
-        </div>
-        
-        <div class="w-full md:w-3/5 p-6 md:p-10 relative">
-            <div class="flex justify-between items-center mb-6 md:hidden">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center text-brand-600"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
-                    <h3 class="text-lg font-black dark:text-white">Novo Registo</h3>
-                </div>
-                <button onclick="fecharModalNovaPessoa()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+
             </div>
 
-            <div class="space-y-4">
-                <div class="relative z-20">
-                    <label class="text-[10px] font-black uppercase text-brand-500 tracking-widest px-1 italic flex items-center gap-1"><i data-lucide="database" class="w-3 h-3"></i> Importar Cliente Existente</label>
-                    <div class="relative group mt-1">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 transition z-10"></i>
-                        <input type="text" id="buscaCliente" oninput="filtrarClientesGlobais()" placeholder="Digite para buscar..." class="w-full bg-brand-50 dark:bg-brand-900/20 text-slate-900 dark:text-black pl-11 pr-4 py-3.5 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-brand-200 dark:border-brand-800 shadow-sm transition">
-                    </div>
-                    <div id="listaSugestoes" class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto hidden z-50"></div>
+            <h3 class="text-xl font-black mb-2 z-10">Novo Registo</h3>
+
+            <p class="text-xs font-medium opacity-80 z-10">Adicione novos clientes ou importe do seu banco de dados.</p>
+
+        </div>
+
+        
+
+        <!-- Formulário -->
+
+        <div class="w-full md:w-3/5 p-6 md:p-10 relative">
+
+            <!-- Título visível só no mobile -->
+
+            <div class="flex justify-between items-center mb-6 md:hidden">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-10 h-10 bg-brand-100 dark:bg-brand-900/30 rounded-xl flex items-center justify-center text-brand-600"><i data-lucide="user-plus" class="w-5 h-5"></i></div>
+
+                    <h3 class="text-lg font-black dark:text-white">Novo Registo</h3>
+
                 </div>
+
+                <button onclick="fecharModalNovaPessoa()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+
+            </div>
+
+
+
+            <div class="space-y-4">
+
+                <!-- BUSCA GLOBAL NO BANCO DE DADOS -->
+
+                <div class="relative z-20">
+
+                    <label class="text-[10px] font-black uppercase text-brand-500 tracking-widest px-1 italic flex items-center gap-1"><i data-lucide="database" class="w-3 h-3"></i> Importar Cliente Existente</label>
+
+                    <div class="relative group mt-1">
+
+                        <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-brand-400 transition z-10"></i>
+
+                        <input type="text" id="buscaCliente" oninput="filtrarClientesGlobais()" placeholder="Digite para buscar..." class="w-full bg-brand-50 dark:bg-brand-900/20 text-slate-900 dark:text-black pl-11 pr-4 py-3.5 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-brand-200 dark:border-brand-800 shadow-sm transition">
+
+                    </div>
+
+                    <!-- Lista suspensa de sugestões -->
+
+                    <div id="listaSugestoes" class="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto hidden z-50"></div>
+
+                </div>
+
+
 
                 <div class="flex items-center gap-4 py-1">
+
                     <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+
                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Ou preencha manualmente</span>
+
                     <div class="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+
+                </div>
+
+
+
+                <div>
+
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
+
+                    <input type="text" id="novoNome" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
+
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
+
+                        <div class="relative group">
+
+                            <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
+                            <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
+
+                        </div>
+
+                    </div>
+
+                    <!-- SISTEMA DE MULTIPLAS ETIQUETAS -->
+
+                    <div>
+
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Categorias ou Planos">Etiquetas</label>
+
+                        <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
+
+                            <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+
+                            <!-- Etiquetas visuais aparecem aqui via JS -->
+
+                            <div id="tagInputWrapper_novo" class="flex-1 flex items-center min-w-[120px]">
+
+                                <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Ex: VIP (Enter ou +)">
+
+                                <button type="button" onclick="adicionarTagManual('novo')" class="p-1.5 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
+
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- FIM SISTEMA ETIQUETAS -->
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div>
+
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Data Entrada">Entrada</label>
+
+                        <div class="relative group">
+
+                            <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
+                            <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-9 pr-3 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Dia de Cobrança">Dia Venc.</label>
+
+                        <div class="relative group">
+
+                            <i data-lucide="calendar-clock" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
+                            <input type="number" min="0" max="31" id="novoDiaCobranca" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" placeholder="Ex: 10" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-9 pr-3 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
+
+                        </div>
+
+                    </div>
+
                 </div>
 
                 <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
-                    <input type="text" id="novoNome" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white px-5 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: João Silva">
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
-                        <div class="relative group">
-                            <i data-lucide="phone" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                            <input type="tel" id="novoTel" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition" placeholder="Ex: 55119...">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Categorias ou Planos">Etiquetas</label>
-                        <div id="tagsContainer_novo" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('novoTag').focus()">
-                            <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
-                            <div id="tagInputWrapper_novo" class="flex-1 flex items-center min-w-[120px]">
-                                <input type="text" id="novoTag" onkeydown="handleTagInput(event, 'novo')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Ex: VIP (Enter ou +)">
-                                <button type="button" onclick="adicionarTagManual('novo')" class="p-1.5 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
-                                    <i data-lucide="plus" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Data Entrada">Entrada</label>
-                        <div class="relative group">
-                            <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                            <input type="date" id="novoDataEntrada" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-9 pr-3 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Dia de Cobrança">Dia Venc.</label>
-                        <div class="relative group">
-                            <i data-lucide="calendar-clock" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
-                            <input type="number" min="0" max="31" id="novoDiaCobranca" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" onkeydown="if(event.key === 'Enter') salvarNovaPessoa()" placeholder="Ex: 10" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-9 pr-3 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition">
-                        </div>
-                    </div>
-                </div>
-                <div>
+
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Máx: 300 caracteres)</label>
+
                     <div class="relative group">
+
                         <i data-lucide="align-left" class="w-4 h-4 absolute left-4 top-4 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
                         <textarea id="novoObs" rows="2" maxlength="300" class="w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white pl-11 pr-4 py-4 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 shadow-sm transition resize-none" placeholder="Detalhes gerais..."></textarea>
+
                     </div>
+
                 </div>
+
             </div>
+
             
+
             <div class="flex gap-3 mt-6">
+
                 <button onclick="fecharModalNovaPessoa()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+
                 <button onclick="salvarNovaPessoa()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Adicionar</button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- Modal Detalhes do Cliente -->
+
+
+<!-- Modal Detalhes do Cliente (Segunda Página) -->
+
 <div id="modalDetalhesCliente" class="modal-overlay" onclick="fecharDetalhes()">
+
     <div class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 md:p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+
         <div class="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+
             <div class="flex items-center gap-4">
+
                 <div class="p-3 bg-brand-100 dark:bg-brand-900/30 rounded-2xl text-brand-600">
+
                     <i data-lucide="user" class="w-6 h-6"></i>
+
                 </div>
+
                 <div>
+
                     <h3 class="text-xl font-extrabold dark:text-white">Perfil do Cliente</h3>
+
                     <p class="text-xs text-slate-500 font-medium" id="textoUltimoPago">Analisando pagamentos...</p>
+
                 </div>
+
             </div>
+
             <button onclick="fecharDetalhes()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"><i data-lucide="x"></i></button>
+
         </div>
+
+
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Dados Cadastrais -->
+
             <div class="space-y-4">
+
                 <h4 class="text-sm font-black dark:text-white flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i> Informações Base</h4>
+
                 <div>
+
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome Completo</label>
+
                     <input type="text" id="detalhesNome" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
+
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">WhatsApp</label>
+
                         <input type="text" id="detalhesTel" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
+
                     </div>
+
+                    <!-- SISTEMA DE MULTIPLAS ETIQUETAS NO DETALHE -->
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Etiquetas</label>
+
                         <div id="tagsContainer_detalhe" class="w-full bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center gap-1.5 px-3 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition focus-within:ring-2 focus-within:ring-brand-500 cursor-text" onclick="document.getElementById('detalhesTag').focus()">
+
                             <i data-lucide="tags" class="w-4 h-4 text-slate-400 shrink-0 ml-1"></i>
+
+                            <!-- Etiquetas visuais aparecem aqui via JS -->
+
                             <div id="tagInputWrapper_detalhe" class="flex-1 flex items-center min-w-[100px]">
+
                                 <input type="text" id="detalhesTag" onkeydown="handleTagInput(event, 'detalhe')" class="bg-transparent outline-none w-full text-sm font-semibold dark:text-white ml-1" placeholder="Adicionar...">
+
                                 <button type="button" onclick="adicionarTagManual('detalhe')" class="p-1 bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg hover:bg-brand-500 hover:text-white transition-all shrink-0 ml-1">
+
                                     <i data-lucide="plus" class="w-4 h-4"></i>
+
                                 </button>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Data de Entrada</label>
+
                         <input type="date" id="detalhesDataEntrada" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
+
                     </div>
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Dia de Cobrança</label>
+
                         <input type="number" min="0" max="31" id="detalhesDiaCobranca" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" placeholder="Ex: 10" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition">
+
                     </div>
+
                 </div>
+
                 <div>
+
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Observações (Máx: 300 caracteres)</label>
+
                     <textarea id="detalhesObs" rows="3" maxlength="300" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500 outline-none transition resize-none" placeholder="Detalhes gerais deste cliente..."></textarea>
+
                 </div>
+
                 <button id="btnSalvarDetalhes" class="w-full py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 mt-2 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Salvar Alterações</button>
+
             </div>
+
             
+
+            <!-- Histórico -->
+
             <div class="space-y-4">
+
                 <h4 class="text-sm font-black dark:text-white flex items-center gap-2"><i data-lucide="history" class="w-4 h-4 text-slate-400"></i> Histórico de Pagamentos</h4>
+
                 <div id="listaHistorico" class="bg-slate-50 dark:bg-slate-900/50 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 h-[280px] md:h-full overflow-y-auto shadow-inner">
+
+                    <!-- Preenchido via JS -->
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Configurações -->
+
 <div id="modalConfig" class="modal-overlay" onclick="fecharModalConfig()">
+
     <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 md:p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+
         <div class="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-800 pb-4">
+
             <div class="flex items-center gap-4">
+
                 <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-600 dark:text-slate-300">
+
                     <i data-lucide="settings" class="w-6 h-6"></i>
+
                 </div>
+
                 <div>
+
                     <h3 class="text-xl font-extrabold dark:text-white">Configurações do Sistema</h3>
+
                 </div>
+
             </div>
+
             <button onclick="fecharModalConfig()" class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"><i data-lucide="x"></i></button>
+
         </div>
+
+
 
         <div class="space-y-6">
+
+            <!-- Financeiro -->
+
             <div class="space-y-3">
+
                 <h4 class="text-sm font-black dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">1. Dados Financeiros</h4>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Chave PIX</label>
+
                         <input type="text" id="cfgChavePix" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition mt-1">
+
                     </div>
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Valor Padrão (R$)</label>
+
                         <input type="number" step="0.01" id="cfgValorPadrao" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition mt-1">
+
                     </div>
+
                     <div>
+
+                        <!-- Help Card: Virada do Ciclo -->
+
                         <div class="flex items-center gap-1 relative group w-max">
+
                             <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Virada do Ciclo (Dia)</label>
+
                             <i data-lucide="help-circle" class="w-3.5 h-3.5 text-slate-400 cursor-help hover:text-brand-500 transition"></i>
+
+                            
+
                             <div class="absolute bottom-full left-0 md:left-1/2 md:-translate-x-1/2 mb-2 w-64 bg-slate-800 dark:bg-slate-700 border border-slate-700 dark:border-slate-600 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100] p-3 pointer-events-none text-left">
+
                                 <p class="text-[10px] font-bold text-white uppercase tracking-widest border-b border-slate-600 pb-1 mb-2">Como funciona?</p>
+
                                 <ul class="text-[11px] text-slate-300 space-y-1.5 leading-tight">
+
                                     <li><strong class="text-white">Vazio:</strong> O ciclo muda naturalmente no dia 1.</li>
+
                                     <li><strong class="text-white">Ex: 15:</strong> O sistema antecipa o próximo mês a partir do dia 15.</li>
+
                                     <li><strong class="text-white">Ex: 31:</strong> Adapta-se automaticamente a meses mais curtos (28/30 dias).</li>
+
                                 </ul>
+
                                 <div class="absolute top-full left-6 md:left-1/2 md:-translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+
                             </div>
+
                         </div>
+
                         <input type="number" min="0" max="31" id="cfgDiaVirada" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" placeholder="Ex: 10 (Opcional)" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition mt-1">
+
                     </div>
+
                 </div>
+
             </div>
 
+
+
+            <!-- Nomenclaturas -->
+
             <div class="space-y-3">
+
                 <h4 class="text-sm font-black dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">2. Personalização da Tabela</h4>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome para Participante</label>
+
                         <input type="text" id="cfgTermoPart" placeholder="Ex: Cliente, Carro, Aluno" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition mt-1">
+
                     </div>
+
                     <div>
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Nome para Pagamento</label>
+
                         <input type="text" id="cfgTermoMens" placeholder="Ex: Mensalidade, Fatura" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition mt-1">
+
                     </div>
+
                 </div>
+
                 <div class="flex flex-col sm:flex-row gap-4 mt-2">
+
                     <label class="flex items-center gap-2 cursor-pointer">
+
                         <input type="checkbox" id="cfgOcultarAdiantadas" class="check-custom">
+
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Adiantadas"</span>
+
                     </label>
+
                     <label class="flex items-center gap-2 cursor-pointer">
+
                         <input type="checkbox" id="cfgOcultarStatus" class="check-custom">
+
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Status"</span>
+
                     </label>
+
                     <label class="flex items-center gap-2 cursor-pointer">
+
                         <input type="checkbox" id="cfgOcultarDiaCobranca" class="check-custom">
+
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Ocultar "Dia Venc."</span>
+
                     </label>
+
                 </div>
+
                 <div class="flex flex-col sm:flex-row gap-4 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
+
                     <label class="flex items-center gap-2 cursor-pointer">
+
                         <input type="checkbox" id="cfgDesativarEmAnalise" class="check-custom">
+
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Desativar Status "Em Análise" (Aprova o pagamento direto pelo portal)</span>
+
                     </label>
+
                 </div>
+
             </div>
 
+
+
+            <!-- Comunicação -->
+
             <div class="space-y-3">
+
+                <!-- Help Card: Mensagem do WhatsApp -->
+
                 <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+
                     <h4 class="text-sm font-black dark:text-white">3. Mensagem do WhatsApp</h4>
+
                     <div class="relative group">
+
                         <i data-lucide="help-circle" class="w-4 h-4 text-slate-400 cursor-help hover:text-brand-500 transition"></i>
+
+                        
+
                         <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 dark:bg-slate-700 border border-slate-700 dark:border-slate-600 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100] p-4 pointer-events-none text-left">
+
                             <p class="text-[10px] font-bold text-white uppercase tracking-widest border-b border-slate-600 pb-1 mb-2">Envio Automático</p>
+
                             <p class="text-[10px] text-slate-300 mb-2 leading-tight">Escreva abaixo <strong>apenas</strong> o "recheio" da mensagem. O sistema cuidará do resto:</p>
+
                             <div class="bg-slate-900 rounded-lg p-3 text-[10px] text-slate-400 italic mb-2 border border-slate-800">
+
                                 Olá, João!<br><br>
+
                                 <span class="text-brand-400 not-italic font-bold">[O Seu Texto Entra Aqui]</span><br><br>
-                                Referência: Abril/2026<br>
+
                                 Valor: R$ 50,00<br>
+
                                 Chave PIX: sua@chave<br>
+
                                 Link: pagflow.com/...
+
                             </div>
+
                             <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+
                         </div>
+
                     </div>
+
                 </div>
+
                 <div>
+
                     <textarea id="cfgMsgCustom" rows="3" class="w-full bg-slate-50 dark:bg-slate-900 dark:text-white px-4 py-3 rounded-2xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none border border-slate-200 dark:border-slate-800 transition resize-none mt-1" placeholder="A sua fatura já está disponível para pagamento..."></textarea>
+
                 </div>
+
             </div>
+
+
 
             <div class="flex gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 mt-4">
+
                 <button onclick="fecharModalConfig()" class="flex-1 py-3 md:py-4 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Cancelar</button>
+
                 <button onclick="salvarConfiguracoes()" class="flex-1 py-3 md:py-4 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95 flex justify-center items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Guardar</button>
+
             </div>
+
         </div>
+
     </div>
+
 </div>
+
+
 
 <!-- Modal Importação CSV -->
+
 <div id="modalImport" class="modal-overlay" onclick="fecharModal()">
+
     <div class="glass-card w-full max-w-lg p-6 md:p-8 rounded-[2rem] shadow-2xl mx-4 transform transition-all" onclick="event.stopPropagation()">
+
         <div class="flex items-center gap-4 mb-6">
+
             <div class="p-4 bg-emerald-500/10 rounded-2xl text-emerald-600">
+
                 <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+
             </div>
+
             <div>
+
                 <h3 class="text-xl font-extrabold dark:text-white">Importar Dados</h3>
+
                 <p class="text-xs text-slate-500 font-medium">Sincronize a sua grelha rapidamente.</p>
+
             </div>
+
         </div>
+
+
 
         <div class="group relative border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 md:p-10 text-center bg-slate-50/50 dark:bg-slate-900/50 hover:border-brand-500 transition-all cursor-pointer">
+
             <input type="file" id="arquivoCSV" accept=".csv" class="hidden" onchange="validarArquivo(this)">
+
             <label for="arquivoCSV" class="cursor-pointer">
+
                 <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto mb-3 text-slate-300 group-hover:text-brand-500 transition-transform group-hover:-translate-y-1"></i>
+
                 <p class="text-sm font-bold text-slate-600 dark:text-slate-400" id="nomeArquivo">Selecione o ficheiro CSV</p>
+
                 <p class="text-[9px] text-slate-400 mt-2 uppercase tracking-widest leading-relaxed">Colunas: ID, Nome, Tel, Etiquetas (sep por vírgula), Data Entrada, Dia Cobrança, Observacoes, Valor, Adiantadas, Status, Arquivado</p>
+
             </label>
+
         </div>
+
+
 
         <div class="mt-4 text-center">
+
             <button onclick="baixarModeloCSV()" class="inline-flex items-center justify-center gap-1.5 text-[10px] md:text-xs font-bold text-brand-500 hover:text-brand-600 transition-colors">
+
                 <i data-lucide="download-cloud" class="w-3.5 h-3.5 md:w-4 md:h-4"></i> Baixar Modelo de Planilha
+
             </button>
+
         </div>
+
+
 
         <div class="flex gap-3 mt-6">
+
             <button onclick="fecharModal()" class="flex-1 py-3 font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition">Voltar</button>
+
             <button onclick="processarCSV()" class="flex-1 py-3 bg-brand-600 text-white rounded-2xl font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-all active:scale-95">Importar Agora</button>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <!-- ========================================== -->
+
 <!-- 4. APLICAÇÃO ADMIN                         -->
+
 <!-- ========================================== -->
+
 <div id="adminApp" class="max-w-6xl mx-auto space-y-4 md:space-y-6">
+
     
+
+    <!-- Barra de Ações em Massa (Fixa no rodapé) -->
+
     <div id="bulkActionsBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 md:px-6 py-3 md:py-4 rounded-[1.5rem] shadow-2xl z-50 flex items-center gap-3 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none w-[90%] md:w-auto overflow-x-auto whitespace-nowrap">
+
         <div class="flex items-center gap-2 md:gap-3">
+
             <div class="bg-brand-500 text-white w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs font-black shadow-inner" id="bulkCount">0</div>
+
             <span class="text-xs md:text-sm font-extrabold tracking-wide">Selecionados</span>
+
         </div>
+
         <div class="h-6 w-px bg-slate-700 dark:bg-slate-300 mx-1 shrink-0"></div>
+
         <button id="btnBulkWhatsApp" onclick="iniciarFilaWhatsApp()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center gap-2 shrink-0">
+
             <i data-lucide="send" class="w-4 h-4"></i> <span class="hidden sm:inline">Cobrar Todos</span>
+
         </button>
+
         <button id="btnBulkArchive" onclick="arquivarSelecionados(true)" class="bg-amber-500 hover:bg-amber-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-lg shadow-amber-500/30 transition-all active:scale-95 flex items-center gap-2 shrink-0">
+
             <i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">Arquivar</span>
+
         </button>
+
         <button onclick="excluirSelecionados()" class="bg-rose-500 hover:bg-rose-600 text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold shadow-lg shadow-rose-500/30 transition-all active:scale-95 flex items-center gap-2 shrink-0">
+
             <i data-lucide="trash-2" class="w-4 h-4"></i> <span class="hidden sm:inline">Excluir</span>
+
         </button>
+
         <button onclick="clearSelection()" class="text-slate-400 dark:text-slate-500 hover:text-white dark:hover:text-slate-900 px-2 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-colors shrink-0">
+
             Cancelar
+
         </button>
+
     </div>
+
+
 
     <div>
+
+        <!-- Header Principal Corrigido -->
+
         <header class="glass-card p-4 md:p-6 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-4 shadow-soft relative z-10">
+
             <div class="flex flex-row items-center gap-3 text-left w-full md:w-auto">
+
+                <!-- Logo Icon Opção 2 no Admin -->
+
                 <div class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center shrink-0">
+
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
+
                         <path d="M25 80V35L45 15H65L85 35V50L65 70H45" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-slate-800 dark:text-slate-100"/>
+
                         <path d="M25 55L45 75L35 85" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-brand-500"/>
+
                         <path d="M45 40L65 60" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" class="text-brand-500"/>
+
                     </svg>
+
                 </div>
+
                 <div>
+
                     <h1 class="text-xl md:text-2xl font-semibold tracking-tight text-slate-900 dark:text-white leading-none mb-1 flex items-center">
+
                         Pag<span class="text-brand-500 font-bold">Flow</span>
+
                         <span id="badgeTesteStatus"></span>
+
                     </h1>
+
                     <span class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest block" id="adminEmailDisplay">Carregando...</span>
+
                 </div>
+
             </div>
+
             
+
             <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 w-full md:w-auto">
+
+                <!-- Botão Caixa de Ideias -->
+
                 <button onclick="abrirModalIdeia()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/30 shadow-soft transition hover:bg-amber-500 hover:text-white" title="Enviar Ideia ou Sugestão">
+
                     <i data-lucide="lightbulb" class="w-4 h-4 md:w-5 md:h-5"></i>
+
                 </button>
+
+                <!-- Botão Central de Ajuda -->
+
                 <button onclick="abrirModalAjuda()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30 shadow-soft transition hover:bg-blue-500 hover:text-white" title="Central de Ajuda">
+
                     <i data-lucide="help-circle" class="w-4 h-4 md:w-5 md:h-5"></i>
+
                 </button>
+
                 <div class="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1"></div>
-                <button id="btnToggleDashboard" onclick="toggleDashboard()" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 md:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm active">
-                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-                </button>
+
                 <button id="btnToggleDrawer" onclick="toggleDrawer()" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 md:py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-800 transition-all shadow-sm">
+
                     <i data-lucide="filter" class="w-4 h-4"></i> Filtros
+
                 </button>
+
                 <button onclick="abrirModalNovaPessoa()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-brand-600 text-white px-3 py-2 md:py-2.5 rounded-xl text-xs font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition active:scale-95">
+
                     <i data-lucide="plus" class="w-4 h-4"></i> Novo
+
                 </button>
-                <button onclick="toggleValoresGlobais()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Ocultar/Mostrar Valores">
-                    <i data-lucide="eye" id="iconToggleValores" class="w-4 h-4 md:w-5 md:h-5"></i>
-                </button>
+
                 <button onclick="abrirModalConfig()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 hover:text-brand-500 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Configurações">
+
                     <i data-lucide="settings" class="w-4 h-4 md:w-5 md:h-5"></i>
+
                 </button>
+
                 <button onclick="toggleDarkMode()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-white dark:bg-slate-800 text-slate-400 dark:text-yellow-400 border border-slate-100 dark:border-slate-700 shadow-soft transition" title="Alternar Tema">
+
                     <i data-lucide="moon" class="dark:hidden w-4 h-4 md:w-5 md:h-5"></i><i data-lucide="sun" class="hidden dark:block w-4 h-4 md:w-5 md:h-5"></i>
+
                 </button>
+
                 <button onclick="fazerLogout()" class="p-2 md:py-2.5 md:px-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 border border-rose-100 dark:border-rose-800/30 shadow-soft transition hover:bg-rose-500 hover:text-white" title="Sair do Sistema">
+
                     <i data-lucide="log-out" class="w-4 h-4 md:w-5 md:h-5"></i>
+
                 </button>
+
             </div>
+
         </header>
 
+
+
+        <!-- Gaveta de Filtros Avançados -->
+
         <div id="drawerWrapper">
+
             <div class="glass-card rounded-[2rem] p-5 md:p-6 shadow-inner border border-slate-200/50 dark:border-slate-800/50 relative z-0">
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6 items-end">
+
                     
+
                     <div class="space-y-1 md:space-y-2 lg:col-span-2">
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Pesquisar</label>
+
                         <div class="relative group">
+
                             <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
                             <input type="text" id="inputPesquisa" oninput="renderizarTabela()" placeholder="Nome ou telefone..." class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+
                         </div>
+
                     </div>
 
+
+
                     <div class="space-y-1 md:space-y-2">
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Tag</label>
+
                         <div class="relative group">
+
                             <i data-lucide="tag" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
                             <select id="filtroTagDropdown" onchange="renderizarTabela()" class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition appearance-none cursor-pointer">
+
                                 <option value="">Todas as Tags</option>
+
                             </select>
+
                         </div>
+
                     </div>
 
+
+
                     <div class="space-y-1 md:space-y-2">
+
+                        <!-- Help Card: Ciclo Atual -->
+
                         <div class="flex items-center gap-1 relative group w-max">
+
                             <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Ciclo Atual</label>
+
                             <i data-lucide="help-circle" class="w-3 h-3 text-slate-400 cursor-help hover:text-brand-500 transition"></i>
+
+                            
+
                             <div class="absolute bottom-full left-0 mb-2 w-56 bg-slate-800 dark:bg-slate-700 border border-slate-700 dark:border-slate-600 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100] p-3 pointer-events-none text-left">
+
                                 <p class="text-[10px] font-bold text-white uppercase tracking-widest border-b border-slate-600 pb-1 mb-2">Visão Geral</p>
+
                                 <p class="text-[11px] text-slate-300 leading-tight mb-2">Navegue pelas suas cobranças mensais.</p>
+
                                 <p class="text-[11px] text-slate-300 leading-tight"><strong class="text-white">Todos os Ciclos:</strong> Mostra o status mais recente de <i>todos</i> os clientes juntos numa só lista.</p>
+
                                 <div class="absolute top-full left-4 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700"></div>
+
                             </div>
+
                         </div>
+
                         <select id="filtroMes" onchange="mudarMes(this.value)" class="w-full bg-white dark:bg-slate-950 dark:text-white px-4 py-3 rounded-xl md:rounded-2xl text-xs font-bold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm cursor-pointer transition mt-1"></select>
+
                     </div>
 
+
+
                     <div class="space-y-1 md:space-y-2">
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Filtrar por data de entrada">Data Inicial</label>
+
                         <div class="relative group">
+
                             <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
                             <input type="date" id="filtroDataInicio" onchange="renderizarTabela()" class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+
                         </div>
+
                     </div>
 
+
+
                     <div class="space-y-1 md:space-y-2">
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic" title="Filtrar por data de entrada">Data Final</label>
+
                         <div class="relative group">
+
                             <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition"></i>
+
                             <input type="date" id="filtroDataFim" onchange="renderizarTabela()" class="w-full bg-white dark:bg-slate-950 dark:text-white pl-11 pr-4 py-3 rounded-xl md:rounded-2xl text-xs font-semibold focus:ring-2 focus:ring-brand-500 outline-none border-none shadow-sm transition">
+
                         </div>
+
                     </div>
+
+
 
                     <div class="space-y-1 md:space-y-2 sm:col-span-2 lg:col-span-6">
+
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1 italic">Filtrar por Status (Múltiplos)</label>
+
                         <div class="bg-white dark:bg-slate-950 p-1.5 rounded-xl md:rounded-2xl flex flex-wrap gap-1 shadow-sm border border-slate-100 dark:border-slate-900 transition">
+
                             <button onclick="setFiltroStatus('todos')" id="btn-todos" class="filter-btn active flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase transition-all opacity-100 text-slate-600 dark:text-slate-100">Todos</button>
+
                             <button onclick="setFiltroStatus('hoje')" id="btn-hoje" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-blue-500 dark:text-blue-400">Vence Hoje</button>
+
                             <button onclick="setFiltroStatus('atrasado')" id="btn-atrasado" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-rose-500 dark:text-rose-400">Atrasados</button>
+
                             <button onclick="setFiltroStatus('em_analise')" id="btn-em_analise" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-violet-500 dark:text-violet-400">Em Análise</button>
+
                             <button onclick="setFiltroStatus('pendente')" id="btn-pendente" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-amber-600 dark:text-amber-500">Pendentes</button>
+
                             <button onclick="setFiltroStatus('pago')" id="btn-pago" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-emerald-600 dark:text-emerald-500">Pagos</button>
+
                             <button onclick="setFiltroStatus('nao_enviado')" id="btn-nao_enviado" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-slate-400 dark:text-slate-300">Não Cobrados</button>
+
                             <button onclick="setFiltroStatus('arquivado')" id="btn-arquivado" class="filter-btn flex-1 px-3 py-2 rounded-lg md:rounded-xl text-[9px] font-extrabold uppercase opacity-40 hover:opacity-100 transition-all text-slate-400 dark:text-slate-500">Arquivados</button>
+
                         </div>
+
                     </div>
+
+
 
                     <div class="sm:col-span-2 lg:col-span-6 flex flex-wrap gap-2 md:gap-3">
+
                         <button id="btnCopiarCiclo" onclick="copiarCicloAnterior()" class="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-violet-500/10 text-violet-600 font-bold text-[10px] uppercase tracking-widest hover:bg-violet-500/20 transition" title="Copiar os clientes ativos do mês passado para o atual">
+
                             <i data-lucide="copy" class="w-4 h-4"></i> Copiar Anterior
+
                         </button>
+
                         <button onclick="abrirModal()" class="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 text-emerald-600 font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-500/20 transition">
+
                             <i data-lucide="upload" class="w-4 h-4"></i> Importar CSV
+
                         </button>
+
                         <button onclick="exportarExcel()" class="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-brand-500/10 text-brand-600 font-bold text-[10px] uppercase tracking-widest hover:bg-brand-500/20 transition">
+
                             <i data-lucide="download" class="w-4 h-4"></i> Exportar
+
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
 
-    <!-- Wrapper do Dashboard (Stats + Gráfico) -->
-    <div id="dashboardWrapper" class="flex flex-col gap-4 md:gap-6 mb-4 md:mb-6">
-        <!-- Stats Cards Limpos -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-soft">
-                <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1 italic">Volume Projetado</p>
-                <div class="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral" class="transition-all duration-300">0,00</span></div>
-            </div>
-            
-            <div class="bg-brand-600 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-white shadow-xl shadow-brand-500/25">
-                <p class="opacity-70 text-[10px] font-bold uppercase tracking-widest mb-1 italic text-white">Total Recebido</p>
-                <div class="text-3xl md:text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago" class="transition-all duration-300">0,00</span></div>
-            </div>
 
-            <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-l-4 md:border-l-8 border-l-rose-500 shadow-soft">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Aguardando Pagamento</p>
-                <div class="text-3xl md:text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend" class="transition-all duration-300">0,00</span></div>
-            </div>
+
+    <!-- Stats Cards Limpos -->
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+
+        <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-soft">
+
+            <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1 italic">Volume Projetado</p>
+
+            <div class="text-3xl md:text-4xl font-extrabold dark:text-white text-slate-800 tracking-tighter">R$ <span id="tGeral">0,00</span></div>
+
         </div>
 
-        <!-- Gráfico de Receita -->
-        <div class="glass-card rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-soft h-[250px] md:h-[300px]">
-            <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-4 italic">Receita Confirmada (Últimos 6 Meses)</p>
-            <div class="relative h-full w-full pb-6">
-                <canvas id="chartReceita"></canvas>
-            </div>
+        
+
+        <div class="bg-brand-600 p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] text-white shadow-xl shadow-brand-500/25">
+
+            <p class="opacity-70 text-[10px] font-bold uppercase tracking-widest mb-1 italic text-white">Total Recebido</p>
+
+            <div class="text-3xl md:text-4xl font-extrabold italic tracking-tighter">R$ <span id="tPago">0,00</span></div>
+
         </div>
+
+
+
+        <div class="glass-card p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-l-4 md:border-l-8 border-l-rose-500 shadow-soft">
+
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 italic">Aguardando Pagamento</p>
+
+            <div class="text-3xl md:text-4xl font-extrabold text-rose-500 italic tracking-tighter">R$ <span id="tPend">0,00</span></div>
+
+        </div>
+
     </div>
+
+
+
+    <!-- Gráfico de Receita -->
+
+    <div class="glass-card rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-6 shadow-soft h-[250px] md:h-[300px] mb-4 md:mb-6">
+
+        <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-4 italic">Receita Confirmada (Últimos 6 Meses)</p>
+
+        <div class="relative h-full w-full pb-6">
+
+            <canvas id="chartReceita"></canvas>
+
+        </div>
+
+    </div>
+
+
 
     <!-- Tabela Responsiva -->
+
     <div id="tableContainer" class="glass-card rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shadow-soft">
+
         <div class="overflow-x-auto">
+
             <table class="w-full text-left min-w-[850px]">
+
                 <thead class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+
                     <tr>
+
                         <th class="px-4 md:px-6 py-4 md:py-5 w-10 md:w-12 text-center">
+
                             <input type="checkbox" id="selectAll" onclick="toggleAll(this)" class="check-custom">
+
                         </th>
+
                         <th class="px-3 md:px-4 py-4 md:py-5 cursor-pointer hover:text-brand-500 transition" onclick="toggleOrdemAlfabetica()">
+
                             <div class="flex items-center gap-2">
+
                                 <span id="labelThParticipante">Participante</span> <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+
                             </div>
+
                         </th>
+
                         <th class="px-2 md:px-4 py-4 md:py-5 text-center col-dia-cobranca w-[80px]" title="Dia de Cobrança">Dia</th>
+
                         <th class="px-4 md:px-8 py-4 md:py-5 text-center w-[150px]" id="labelThMensalidade">Mensalidade</th>
+
                         <th class="px-4 md:px-8 py-4 md:py-5 text-center col-adiantadas w-[120px]" title="Meses pagos adiantados">Adiantadas</th>
+
                         <th class="px-4 md:px-8 py-4 md:py-5 text-center col-status w-[130px]">Status</th>
+
                         <th class="px-4 md:px-6 py-4 md:py-5 text-right w-[180px] min-w-[180px]">Ações</th>
+
                     </tr>
+
                 </thead>
+
                 <tbody id="corpoTabela" class="divide-y divide-slate-100 dark:divide-slate-800/50"></tbody>
+
             </table>
+
         </div>
+
     </div>
+
 </div>
 
+
+
 <!-- ========================================== -->
+
 <!-- 5. CLIENT PORTAL VIEW                      -->
+
 <!-- ========================================== -->
+
 <div class="client-only max-w-lg mx-auto py-6 md:py-10 px-4" id="portalCliente"></div>
 
+
+
 <script>
+
     const firebaseConfig = {
+
         apiKey: "AIzaSyBKuldmBQEuNyEWVZ-0sPW0ItGn8QqPxd8",
+
         authDomain: "pool-e439a.firebaseapp.com",
+
         databaseURL: "https://pool-e439a-default-rtdb.firebaseio.com",
+
         projectId: "pool-e439a",
+
         storageBucket: "pool-e439a.firebasestorage.app",
+
         messagingSenderId: "94463318724",
+
         appId: "1:94463318724:web:05208de1c8a9cbfd014791"
+
     };
+
+
 
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.database();
+
     const auth = firebase.auth();
 
+
+
     let adminId = null;
+
     
+
+    // Variáveis de controlo do Ciclo
+
     let dataReferencia = new Date();
+
     let mesReal = `${String(dataReferencia.getMonth() + 1).padStart(2, '0')}-${dataReferencia.getFullYear()}`;
+
     let mesAtual = mesReal;
+
     let mesAtualAjustado = false; 
+
     
+
     let dadosLocais = [];
+
     let filtrosStatus = new Set(['todos']);
+
     let ordemCrescente = true;
+
     let selecionados = new Set();
+
     
+
+    // Variáveis Globais de Autocomplete e Funcionalidades
+
     let clientesGlobaisCache = [];
+
     let idClienteSelecionadoParaNovo = null;
+
     let filaEnvio = [];
+
     let filaTotal = 0;
+
     let chartInstance = null;
+
     let dadosGraficoCache = null;
-    let valoresOcultos = localStorage.getItem('valoresOcultos') === 'true';
-    let dashboardOculto = localStorage.getItem('dashboardOculto') === 'true';
+
     
+
+    // Arrays para o sistema Multi-Tags
+
     let tagsNovo = [];
+
     let tagsDetalhe = [];
 
+
+
     let configGeral = { 
+
         chavePix: "", 
+
         valorPadrao: 50,
+
         diaVirada: "", 
+
         termoParticipante: "Participante",
+
         termoMensalidade: "Mensalidade",
+
         ocultarAdiantadas: false,
+
         ocultarStatus: false,
+
         ocultarDiaCobranca: false,
+
         desativarEmAnalise: false,
+
         msgZapCustom: "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo."
+
     };
 
+
+
     const urlParams = new URLSearchParams(window.location.search);
+
     const idCliente = urlParams.get('p');
+
     const idAdminUrl = urlParams.get('a');
+
     const urlMes = urlParams.get('m');
 
+
+
+    // Previne o erro "lucide is not defined" caso a biblioteca falhe no carregamento
+
     if (typeof window.lucide === 'undefined') {
+
         window.lucide = { createIcons: () => console.warn("Ícones não carregados.") };
+
     }
+
+
 
     function iniciar() {
+
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+
             document.documentElement.classList.add('dark');
+
         }
+
         lucide.createIcons();
-        aplicarFiltroValores();
-        aplicarEstadoDashboard();
+
+
 
         if (idCliente && idAdminUrl) {
+
             adminId = idAdminUrl;
+
             if (urlMes) { mesAtual = urlMes; mesReal = urlMes; }
+
             document.body.className = "modo-cliente";
+
             carregarConfiguracoesGerais();
+
             carregarPortalCliente();
+
         } else {
+
             document.body.className = "modo-admin";
+
             monitorarAutenticacao();
+
         }
+
     }
+
+
 
     function toggleSenha() {
+
         const input = document.getElementById('senhaAuth');
+
         const icon = document.getElementById('iconToggleSenha');
+
         if (input.type === 'password') {
+
             input.type = 'text';
+
             icon.setAttribute('data-lucide', 'eye-off');
+
         } else {
+
             input.type = 'password';
+
             icon.setAttribute('data-lucide', 'eye');
+
         }
+
         lucide.createIcons();
+
     }
 
-    function toggleDrawer() {
-        const wrapper = document.getElementById('drawerWrapper');
-        const btn = document.getElementById('btnToggleDrawer');
-        wrapper.classList.toggle('aberto');
-        btn.classList.toggle('active');
-    }
 
-    function toggleValoresGlobais() {
-        valoresOcultos = !valoresOcultos;
-        localStorage.setItem('valoresOcultos', valoresOcultos);
-        aplicarFiltroValores();
-    }
 
-    function aplicarEstadoDashboard() {
-        const wrapper = document.getElementById('dashboardWrapper');
-        const btn = document.getElementById('btnToggleDashboard');
-        if (!wrapper || !btn) return;
-
-        if (dashboardOculto) {
-            wrapper.classList.add('oculto');
-            btn.classList.remove('active');
-        } else {
-            wrapper.classList.remove('oculto');
-            btn.classList.add('active');
-        }
-    }
-
-    function toggleDashboard() {
-        dashboardOculto = !dashboardOculto;
-        localStorage.setItem('dashboardOculto', dashboardOculto);
-        aplicarEstadoDashboard();
-    }
-
-    function aplicarFiltroValores() {
-        const icon = document.getElementById('iconToggleValores');
-        if(icon) {
-            icon.setAttribute('data-lucide', valoresOcultos ? 'eye-off' : 'eye');
-            lucide.createIcons();
-        }
-
-        const statsIds = ['tGeral', 'tPago', 'tPend'];
-        statsIds.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                if(valoresOcultos) {
-                    el.classList.add('blur-md', 'select-none', 'opacity-50');
-                } else {
-                    el.classList.remove('blur-md', 'select-none', 'opacity-50');
-                }
-            }
-        });
-    }
+    // --- LÓGICA DE AUTENTICAÇÃO E PAYWALL ---
 
     function monitorarAutenticacao() {
+
         auth.onAuthStateChanged(user => {
+
             if (user) {
+
                 adminId = user.uid;
+
                 const emailDisplay = document.getElementById('adminEmailDisplay');
+
                 if (emailDisplay) emailDisplay.innerText = user.email || "Admin";
+
                 
+
                 db.ref(`tenants/${adminId}/perfil`).update({ email_cadastrado: user.email, ultimo_login: Date.now() });
+
                 
+
                 db.ref(`tenants/${adminId}/assinatura`).on('value', snap => {
+
                     const assinatura = snap.val() || {};
+
                     const status = assinatura.status ? String(assinatura.status).toLowerCase() : null;
+
                     const testeExpiraEm = assinatura.testeExpiraEm || 0;
+
                     const agora = Date.now();
+
+
 
                     let temAcesso = false;
 
+
+
+                    // Verifica se o acesso está liberado
+
                     if (status === 'ativo' || status === 'pago') {
+
                         temAcesso = true;
+
                     } else if (status === 'teste') {
+
                         if (agora < testeExpiraEm) {
+
                             temAcesso = true;
+
                         } else {
+
+                            // Teste expirou, volta para pendente e bloqueia
+
                             db.ref(`tenants/${adminId}/assinatura/status`).set('pendente');
+
                             temAcesso = false;
+
                         }
+
                     }
+
+
+
+                    // Atualiza a Badge de Teste no Topo
 
                     const badgeTeste = document.getElementById('badgeTesteStatus');
+
                     if (temAcesso && status === 'teste') {
+
                         const hojeDate = new Date();
+
                         hojeDate.setHours(0, 0, 0, 0);
+
                         const expiraDate = new Date(testeExpiraEm);
+
                         expiraDate.setHours(0, 0, 0, 0);
+
                         const diasRestantes = Math.max(0, Math.round((expiraDate - hojeDate) / (1000 * 60 * 60 * 24)));
+
                         
+
                         if (badgeTeste) badgeTeste.innerHTML = `<span class="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2 border border-indigo-200 dark:border-indigo-800">Teste: ${diasRestantes} dia(s)</span>`;
+
                     } else {
+
                         if (badgeTeste) badgeTeste.innerHTML = '';
+
                     }
+
+
 
                     if (temAcesso) {
+
                         document.body.classList.add('estado-logado');
+
                         document.body.classList.remove('estado-login', 'estado-bloqueado');
+
                         carregarConfiguracoesGerais();
+
                     } else {
+
                         if (status === null) {
+
                             db.ref(`tenants/${adminId}/assinatura`).set({ status: 'pendente', criadoEm: agora, testeUsado: false });
+
                         }
+
                         
+
+                        // Controla a visibilidade do botão de Iniciar Teste (só aparece se nunca usou)
+
                         const areaTeste = document.getElementById('areaTesteGratis');
+
                         if (areaTeste) {
+
                             if (assinatura.testeUsado) areaTeste.classList.add('hidden');
+
                             else areaTeste.classList.remove('hidden');
+
                         }
+
+
 
                         document.body.classList.add('estado-bloqueado');
+
                         document.body.classList.remove('estado-login', 'estado-logado');
+
                     }
+
                 }, error => {
+
                     console.error(error); 
+
                     showToast("Erro de segurança. Verifique as regras do BD.", "error"); 
+
                     fazerLogout();
+
                 });
+
             } else {
+
                 adminId = null;
+
                 document.body.classList.add('estado-login');
+
                 document.body.classList.remove('estado-logado', 'estado-bloqueado');
+
             }
+
         });
+
     }
+
+
 
     function ativarTeste7Dias() {
+
         if (!adminId) return;
+
         showConfirm(
+
             "Liberar Teste de 7 Dias",
+
             "O sistema será desbloqueado por 7 dias corridos. Após esse período, ele será bloqueado novamente até a ativação da licença.\n\n⚠️ Você só pode usar este teste 1 vez.",
+
             "Iniciar Teste", "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30", "unlock", "bg-indigo-600",
+
             () => {
-                const expiraEm = Date.now() + (7 * 24 * 60 * 60 * 1000);
+
+                const expiraEm = Date.now() + (7 * 24 * 60 * 60 * 1000); // Hoje + 7 dias em ms
+
                 db.ref(`tenants/${adminId}/assinatura`).update({
+
                     status: 'teste',
+
                     testeUsado: true,
+
                     testeExpiraEm: expiraEm
+
                 }).then(() => {
+
                     showToast("Teste de 7 dias ativado!", "success");
+
                 }).catch(err => {
+
                     showToast("Erro ao ativar teste.", "error");
+
                 });
+
             }
+
         );
+
     }
+
+
 
     function mostrarErro(msg) {
+
         const p = document.getElementById('msgErroAuth');
+
         p.innerText = msg; p.classList.remove('hidden');
+
         setTimeout(() => p.classList.add('hidden'), 5000);
+
     }
+
     function fazerLogin() { const e = document.getElementById('emailAuth').value, s = document.getElementById('senhaAuth').value; if(!e || !s) return mostrarErro("Preencha e-mail e senha."); auth.signInWithEmailAndPassword(e, s).catch(er => mostrarErro("Erro: " + er.message)); }
+
     function criarConta() { const e = document.getElementById('emailAuth').value, s = document.getElementById('senhaAuth').value; if(!e || !s) return mostrarErro("Preencha e-mail e senha para criar conta."); auth.createUserWithEmailAndPassword(e, s).catch(er => mostrarErro("Erro: " + er.message)); }
+
     function fazerLogout() { auth.signOut(); }
+
     function loginComGoogle() { const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider).catch(e => mostrarErro("Erro Google: " + e.message)); }
+
     function falarComSuporte() { const n = "5513974123358", msg = encodeURIComponent("Olá Daniel Garcia Dias! Fiz o meu registo no Pagflow e gostaria de ativar a minha licença vitalícia."); window.open(`https://wa.me/${n}?text=${msg}`); }
 
+
+
+    // --- CARREGAMENTO DE DADOS E CONFIGURAÇÕES ---
+
     function carregarConfiguracoesGerais() {
+
         if(!adminId) return;
+
         db.ref(`tenants/${adminId}/configuracoes`).on('value', s => { 
+
             if (s.val()) configGeral = { ...configGeral, ...s.val() }; 
+
             
+
             if (!mesAtualAjustado && configGeral.diaVirada) {
+
                 let d = new Date();
+
                 let diaV = parseInt(configGeral.diaVirada);
+
                 
+
                 if (!isNaN(diaV) && diaV > 1) { 
+
                     let ultimoDiaMes = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+
                     let diaRealVirada = diaV > ultimoDiaMes ? ultimoDiaMes : diaV;
+
                     if (d.getDate() >= diaRealVirada) {
+
                         d.setMonth(d.getMonth() + 1);
+
                     }
+
                 }
+
+
 
                 mesReal = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+
                 if (mesAtual !== 'todos' && !urlParams.get('m')) mesAtual = mesReal;
+
                 mesAtualAjustado = true;
+
             }
+
+
 
             if(!idCliente) {
+
                 gerarOpcoesMes();
+
                 carregarDadosAdmin();
-                carregarDadosGrafico();
+
+                carregarDadosGrafico(); // Carrega os dados para o gráfico do Dashboard
+
             }
+
+
+
+            // Aplica as configs na UI (Tabela)
 
             const thPart = document.getElementById('labelThParticipante');
+
             if (thPart) thPart.innerText = configGeral.termoParticipante || "Participante";
+
             const thMens = document.getElementById('labelThMensalidade');
+
             if (thMens) thMens.innerText = configGeral.termoMensalidade || "Mensalidade";
 
+
+
             const container = document.getElementById('tableContainer');
+
             if (container) {
+
                 container.classList.toggle('esconder-adiantadas', configGeral.ocultarAdiantadas);
+
                 container.classList.toggle('esconder-status', configGeral.ocultarStatus);
+
                 container.classList.toggle('esconder-dia-cobranca', configGeral.ocultarDiaCobranca);
+
             }
+
             
+
             const btnEmAnalise = document.getElementById('btn-em_analise');
+
             if (btnEmAnalise) {
+
                 btnEmAnalise.style.display = configGeral.desativarEmAnalise ? 'none' : 'block';
+
             }
+
+
 
             const btnCopiar = document.getElementById('btnCopiarCiclo');
+
             if (btnCopiar) btnCopiar.style.display = mesAtual === 'todos' ? 'none' : 'flex';
+
             
+
             if(idCliente) carregarPortalCliente();
+
         });
+
     }
+
+
 
     function atualizarDropdownTags() {
+
         const dropdown = document.getElementById('filtroTagDropdown');
+
         if (!dropdown) return;
+
         const valorAtual = dropdown.value;
+
         const tagsUnicas = new Set();
+
         
+
         dadosLocais.forEach(p => {
+
             let tArr = p.tags || [];
+
             if (typeof p.tag === 'string' && p.tag.trim() !== '') tArr = [p.tag.trim()];
+
             tArr.forEach(t => {
+
                 if(t.trim() !== '') tagsUnicas.add(t.trim().toUpperCase());
+
             });
+
         });
+
         
+
         let html = '<option value="">Todas as Tags</option>';
+
         Array.from(tagsUnicas).sort().forEach(tag => {
+
             html += `<option value="${tag}">${tag}</option>`;
+
         });
+
         
+
         dropdown.innerHTML = html;
+
         if (tagsUnicas.has(valorAtual)) dropdown.value = valorAtual;
+
     }
+
+
 
     function carregarDadosAdmin() {
+
         if(!adminId) return;
+
         if (mesAtual === 'todos') {
+
             db.ref(`tenants/${adminId}/cobrancas`).on('value', s => {
+
                 const todosMeses = s.val() || {};
+
                 const clientesMap = new Map();
+
                 
+
                 const mesesOrdenados = Object.keys(todosMeses).sort((a, b) => {
+
                     const [mA, yA] = a.split('-'); const [mB, yB] = b.split('-');
+
                     return new Date(yA, mA - 1) - new Date(yB, mB - 1);
+
                 });
+
+
 
                 mesesOrdenados.forEach(mes => {
+
                     const dadosMes = todosMeses[mes];
+
                     for (const id in dadosMes) {
+
                         clientesMap.set(id, { id, sourceMes: mes, ...dadosMes[id] });
+
                     }
+
                 });
+
                 
+
                 dadosLocais = Array.from(clientesMap.values());
+
                 atualizarDropdownTags();
+
                 selecionados.forEach(id => { if(!clientesMap.has(id)) selecionados.delete(id); });
+
                 renderizarTabela();
+
             });
+
         } else {
+
             db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).on('value', s => {
+
                 const dados = s.val() || {};
+
                 dadosLocais = Object.keys(dados).map(id => ({ id, sourceMes: mesAtual, ...dados[id] }));
+
                 atualizarDropdownTags();
+
                 selecionados.forEach(id => { if(!dados[id]) selecionados.delete(id); });
+
                 renderizarTabela();
+
             });
+
         }
+
     }
+
+
+
+    // --- GRÁFICOS DO DASHBOARD ---
 
     function carregarDadosGrafico() {
+
         if(!adminId) return;
+
         db.ref(`tenants/${adminId}/cobrancas`).on('value', snap => {
+
             const todosMeses = snap.val() || {};
+
             const labels = [];
+
             const dadosValores = [];
 
+
+
             let d = new Date();
+
             for(let i = 5; i >= 0; i--) {
+
                 let tempDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
+
                 let mesStr = `${String(tempDate.getMonth() + 1).padStart(2, '0')}-${tempDate.getFullYear()}`;
+
                 
+
                 let labelStr = tempDate.toLocaleDateString('pt-br', {month: 'short', year: '2-digit'}).replace('. de ', '/').replace('.', '');
+
                 labelStr = labelStr.charAt(0).toUpperCase() + labelStr.slice(1);
 
+
+
                 let totalPagoMes = 0;
+
                 if(todosMeses[mesStr]) {
+
                     Object.values(todosMeses[mesStr]).forEach(p => {
+
                         if(p.pago) {
+
                             let val = parseFloat(p.valor) || 0;
+
                             let adiantadas = parseInt(p.adiantadas) || 0;
+
                             totalPagoMes += val + (val * adiantadas);
+
                         }
+
                     });
+
                 }
+
                 labels.push(labelStr);
+
                 dadosValores.push(totalPagoMes);
+
             }
+
             dadosGraficoCache = { labels, dados: dadosValores };
+
             atualizarGrafico(labels, dadosValores);
+
         });
+
     }
 
+
+
     function atualizarGrafico(labels, dados) {
+
         const ctx = document.getElementById('chartReceita');
+
         if(!ctx) return;
+
+
 
         if(chartInstance) chartInstance.destroy();
 
+
+
         const isDark = document.documentElement.classList.contains('dark');
+
         const textColor = isDark ? '#94a3b8' : '#64748b'; 
+
         const gridColor = isDark ? '#1e293b' : '#f1f5f9'; 
 
+
+
         chartInstance = new Chart(ctx, {
+
             type: 'bar',
+
             data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Receita Confirmada (R$)',
-                    data: dados,
-                    backgroundColor: '#3b82f6', 
-                    borderRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ' R$ ' + context.parsed.y.toLocaleString('pt-br', {minimumFractionDigits: 2});
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: gridColor },
-                        ticks: { color: textColor }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: textColor }
-                    }
-                }
-            }
-        });
-    }
 
-    function verificarAtraso(p, mesDaCobranca) {
-        if (p.pago) return false;
-        if (!p.diaCobranca || p.diaCobranca === "") return false;
-
-        const hoje = new Date();
-        const diaAtual = hoje.getDate();
-        const mesAtualNum = hoje.getMonth() + 1;
-        const anoAtual = hoje.getFullYear();
-
-        let [mCob, yCob] = mesDaCobranca.split('-');
-        mCob = parseInt(mCob);
-        yCob = parseInt(yCob);
-
-        if (yCob < anoAtual) return true;
-        if (yCob > anoAtual) return false;
-        if (mCob < mesAtualNum) return true;
-        if (mCob > mesAtualNum) return false;
-
-        return parseInt(p.diaCobranca) < diaAtual;
-    }
-
-    function handleTagInput(e, arrayType) {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            adicionarTagManual(arrayType);
-        } else if (e.key === 'Backspace' && e.target.value === '') {
-            let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
-            if (arr.length > 0) {
-                arr.pop();
-                renderTagsUI(arrayType);
-            }
-        }
-    }
-
-    function adicionarTagManual(arrayType) {
-        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
-        let inputId = arrayType === 'novo' ? 'novoTag' : 'detalhesTag';
-        let input = document.getElementById(inputId);
-        let val = input.value.trim().replace(',', '').toUpperCase();
-        
-        if (val && !arr.includes(val)) {
-            arr.push(val);
-            renderTagsUI(arrayType);
-        }
-        input.value = '';
-        input.focus();
-    }
-
-    function removerTag(index, arrayType) {
-        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
-        arr.splice(index, 1);
-        renderTagsUI(arrayType);
-    }
-
-    function renderTagsUI(arrayType) {
-        let arr = arrayType === 'novo' ? tagsNovo : tagsDetalhe;
-        let containerId = arrayType === 'novo' ? 'tagsContainer_novo' : 'tagsContainer_detalhe';
-        let wrapperId = arrayType === 'novo' ? 'tagInputWrapper_novo' : 'tagInputWrapper_detalhe';
-        
-        let container = document.getElementById(containerId);
-        let wrapper = document.getElementById(wrapperId);
-        
-        container.querySelectorAll('.ui-tag').forEach(e => e.remove());
-        
-        arr.forEach((tag, idx) => {
-            let span = document.createElement('span');
-            span.className = 'ui-tag bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[9px] px-2 py-1 rounded font-bold flex items-center gap-1 uppercase tracking-widest';
-            span.innerHTML = `${tag} <i data-lucide="x" class="w-3 h-3 cursor-pointer hover:text-rose-500" onclick="removerTag(${idx}, '${arrayType}')"></i>`;
-            container.insertBefore(span, wrapper);
-        });
-        lucide.createIcons();
-    }
-
-    function iniciarFilaWhatsApp() {
-        if(selecionados.size === 0) return;
-        
-        filaEnvio = Array.from(selecionados)
-            .map(id => dadosLocais.find(c => c.id === id))
-            .filter(c => c && c.tel && !c.pago); 
-        
-        if (filaEnvio.length === 0) {
-            showToast("Nenhum cliente válido na seleção. (Clientes pagos ou sem telefone foram ignorados)", "error");
-            return;
-        }
-
-        filaTotal = filaEnvio.length;
-        atualizarUIFila();
-        document.getElementById('modalFilaEnvio').classList.add('flex');
-    }
-
-    function atualizarUIFila() {
-        if (filaEnvio.length === 0) {
-            fecharFilaWhatsApp();
-            showToast("Fila de envios concluída!", "success");
-            clearSelection();
-            return;
-        }
-
-        const atual = filaTotal - filaEnvio.length + 1;
-        document.getElementById('filaAtualNum').innerText = atual;
-        document.getElementById('filaTotalNum').innerText = filaTotal;
-        
-        const cliente = filaEnvio[0];
-        document.getElementById('filaClienteNome').innerText = cliente.nome;
-        document.getElementById('filaClienteTel').innerText = cliente.tel || 'Sem telefone';
-    }
-
-    function proximoFilaWhatsApp() {
-        if (filaEnvio.length === 0) return;
-        const cliente = filaEnvio.shift(); 
-        
-        const val = parseFloat(cliente.valor) || 0;
-        enviarZap(cliente.id, cliente.nome, cliente.tel, val);
-        
-        atualizarUIFila();
-    }
-
-    function pularFilaWhatsApp() {
-        if (filaEnvio.length === 0) return;
-        filaEnvio.shift(); 
-        atualizarUIFila();
-    }
-
-    function cancelarFilaWhatsApp() {
-        filaEnvio = [];
-        fecharFilaWhatsApp();
-    }
-
-    function fecharFilaWhatsApp() {
-        document.getElementById('modalFilaEnvio').classList.remove('flex');
-    }
-
-    function arquivarSelecionados(arquivarStatus) {
-        if(selecionados.size === 0 || !adminId) return;
-        const acao = arquivarStatus ? "arquivar" : "desarquivar";
-        const btnClass = arquivarStatus ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30" : "bg-brand-500 hover:bg-brand-600 shadow-brand-500/30";
-        const bgIcoClass = arquivarStatus ? "bg-amber-500" : "bg-brand-500";
-        const ico = arquivarStatus ? "archive" : "archive-restore";
-
-        showConfirm(
-            `${acao.charAt(0).toUpperCase() + acao.slice(1)} ${selecionados.size} registo(s)`,
-            `Tem a certeza que deseja ${acao} os clientes selecionados simultaneamente?`,
-            "Confirmar", btnClass, ico, bgIcoClass,
-            () => {
-                const updates = {};
-                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}/arquivado`] = arquivarStatus; });
-                db.ref(`tenants/${adminId}`).update(updates).then(() => {
-                    selecionados.clear();
-                    showToast(`Registos ${acao}dos com sucesso!`);
-                });
-            }
-        );
-    }
-
-    function excluirSelecionados() {
-        if(selecionados.size === 0 || !adminId) return;
-        showConfirm(
-            "Excluir em Massa",
-            `Deseja realmente excluir ${selecionados.size} registo(s)? Esta ação não pode ser desfeita.`,
-            "Excluir Todos", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
-            () => {
-                const updates = {};
-                selecionados.forEach(id => { updates[`cobrancas/${getTargetMes(id)}/${id}`] = null; });
-                db.ref(`tenants/${adminId}`).update(updates).then(() => {
-                    selecionados.clear();
-                    showToast("Registos excluídos com sucesso!");
-                });
-            }
-        );
-    }
-
-    function removerComprovante(id) { 
-        if(!adminId) return;
-        showConfirm(
-            "Remover Comprovativo",
-            "Deseja apagar este comprovativo e marcar a fatura como pendente novamente?",
-            "Remover", "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30", "image-minus", "bg-amber-500",
-            () => {
-                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ comprovante: null, pago: false });
-                showToast("Comprovativo removido.");
-            }
-        );
-    }
-
-    function excluir(id) { 
-        if(!adminId) return;
-        showConfirm(
-            "Excluir Registo",
-            "Deseja realmente apagar este registo? Todos os dados deste mês serão perdidos.",
-            "Excluir", "bg-rose-500 hover:bg-rose-600 shadow-rose-500/30", "trash-2", "bg-rose-500",
-            () => {
-                db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).remove();
-                showToast("Registo excluído.");
-            }
-        );
-    }
-    
-    function arquivarPessoa(id, arquivarStatus) { 
-        if(adminId) {
-            db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ arquivado: arquivarStatus });
-            showToast(arquivarStatus ? "Registo arquivado." : "Registo restaurado.");
-        }
-    }
-
-    async function copiarCicloAnterior() {
-        if (!adminId || mesAtual === 'todos') return;
-
-        let [m, y] = mesAtual.split('-');
-        let prevM = parseInt(m) - 1;
-        let prevY = parseInt(y);
-        if (prevM === 0) { prevM = 12; prevY--; }
-        let mesAnterior = `${String(prevM).padStart(2, '0')}-${prevY}`;
-
-        showConfirm(
-            "Copiar Ciclo Anterior",
-            `Deseja copiar os clientes ativos de [${mesAnterior}] para o ciclo atual [${mesAtual}]?\n\n(Apenas clientes que ainda não existem neste ciclo serão copiados, com status "Pendente")`,
-            "Copiar Clientes", "bg-violet-500 hover:bg-violet-600 shadow-violet-500/30", "copy", "bg-violet-500",
-            async () => {
-                const btn = document.getElementById('btnCopiarCiclo');
-                const txtOriginal = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Copiando...';
-                btn.classList.add('opacity-50', 'pointer-events-none');
-                lucide.createIcons();
-
-                try {
-                    const snapAtual = await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).once('value');
-                    const dadosAtual = snapAtual.val() || {};
-
-                    const snapAnterior = await db.ref(`tenants/${adminId}/cobrancas/${mesAnterior}`).once('value');
-                    const dadosAnterior = snapAnterior.val() || {};
-
-                    const updates = {};
-                    let count = 0;
-
-                    for (const id in dadosAnterior) {
-                        const cliente = dadosAnterior[id];
-                        if (!dadosAtual[id] && !cliente.arquivado) {
-                            updates[id] = {
-                                ...cliente, pago: false, msgEnviada: false, comprovante: null, adiantadas: 0
-                            };
-                            count++;
-                        }
-                    }
-
-                    if (count > 0) {
-                        await db.ref(`tenants/${adminId}/cobrancas/${mesAtual}`).update(updates);
-                        showToast(`${count} cliente(s) importado(s) do ciclo passado!`);
-                    } else {
-                        showToast(`Nenhum cliente novo para importar.`, "error");
-                    }
-                } catch (e) {
-                    console.error(e);
-                    showToast("Ocorreu um erro ao tentar copiar.", "error");
-                }
-
-                btn.innerHTML = txtOriginal;
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                lucide.createIcons();
-            }
-        );
-    }
-
-    function renderizarTabela() {
-        const corpo = document.getElementById('corpoTabela');
-        const termoBusca = document.getElementById('inputPesquisa').value.toLowerCase();
-        
-        const dtInicio = document.getElementById('filtroDataInicio')?.value;
-        const dtFim = document.getElementById('filtroDataFim')?.value;
-        const filtroTagSelecionada = document.getElementById('filtroTagDropdown')?.value;
-
-        if(!corpo) return;
-
-        let filtrados = [...dadosLocais];
-        
-        if (filtroTagSelecionada && filtroTagSelecionada !== '') {
-            filtrados = filtrados.filter(p => {
-                let tArr = p.tags || [];
-                if (typeof p.tag === 'string' && p.tag.trim() !== '') tArr = [p.tag.trim()];
-                return tArr.some(t => t.toUpperCase() === filtroTagSelecionada.toUpperCase());
-            });
-        }
-        
-        if (dtInicio) filtrados = filtrados.filter(p => p.dataEntrada && p.dataEntrada >= dtInicio);
-        if (dtFim) filtrados = filtrados.filter(p => p.dataEntrada && p.dataEntrada <= dtFim);
-
-        if (filtrosStatus.has('arquivado')) {
-            filtrados = filtrados.filter(p => p.arquivado === true);
-        } else {
-            filtrados = filtrados.filter(p => !p.arquivado);
-        }
-
-        if (!filtrosStatus.has('todos')) {
-            if (filtrosStatus.has('hoje')) {
-                const hoje = new Date().getDate();
-                filtrados = filtrados.filter(p => !p.pago && parseInt(p.diaCobranca) === hoje);
-            }
-            if (filtrosStatus.has('atrasado')) {
-                filtrados = filtrados.filter(p => verificarAtraso(p, p.sourceMes || mesAtual));
-            }
-            if (filtrosStatus.has('em_analise')) {
-                filtrados = filtrados.filter(p => !p.pago && p.comprovante);
-            }
-            if (filtrosStatus.has('pago')) filtrados = filtrados.filter(p => p.pago);
-            if (filtrosStatus.has('pendente')) filtrados = filtrados.filter(p => !p.pago); 
-            if (filtrosStatus.has('nao_enviado')) filtrados = filtrados.filter(p => !p.msgEnviada);
-        }
-
-        if (termoBusca) {
-            filtrados = filtrados.filter(p => p.nome.toLowerCase().includes(termoBusca) || (p.tel && p.tel.includes(termoBusca)));
-        }
-
-        filtrados.sort((a,b) => ordemCrescente ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
-
-        const hojeDia = new Date().getDate();
-        const pendentesHoje = dadosLocais.filter(p => !p.arquivado && !p.pago && parseInt(p.diaCobranca) === hojeDia).length;
-        const btnHoje = document.getElementById('btn-hoje');
-        if (btnHoje) {
-            btnHoje.innerHTML = `Vence Hoje ${pendentesHoje > 0 ? `<span class="bg-blue-500 text-white rounded-full px-1.5 py-0.5 ml-1 text-[8px] shadow-sm">${pendentesHoje}</span>` : ''}`;
-        }
-
-        corpo.innerHTML = "";
-        let t = 0, pg = 0, pd = 0;
-
-        filtrados.forEach(p => {
-            const val = parseFloat(p.valor) || 0;
-            const adiantadas = p.adiantadas || 0;
-            
-            const totalPessoa = val + (val * adiantadas);
-            t += totalPessoa; 
-            if(p.pago) pg += totalPessoa; else pd += totalPessoa;
-
-            const msgIcone = p.msgEnviada ? 'check-circle-2' : 'send';
-            const msgEstilo = p.msgEnviada ? 'text-blue-500' : 'text-slate-300 hover:text-brand-500';
-            const icoArquivo = p.arquivado ? 'archive-restore' : 'archive';
-            const tituloArquivo = p.arquivado ? 'Desarquivar' : 'Arquivar Ocultar';
-            
-            const badgeMes = mesAtual === 'todos' ? `<span class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[9px] px-2 py-1 rounded-md font-extrabold ml-2 border border-indigo-200/50 dark:border-indigo-500/20 shadow-sm whitespace-nowrap shrink-0 flex items-center gap-1" title="Mês de origem"><i data-lucide="calendar-days" class="w-3 h-3"></i> ${p.sourceMes}</span>` : '';
-
-            let safeObs = encodeURIComponent(p.observacao || '');
-            let safeNameObs = encodeURIComponent(p.nome || '');
-            const obsIcon = (p.observacao && p.observacao.trim() !== '') 
-                ? `<button onclick="abrirModalObs('${safeNameObs}', '${safeObs}')" class="flex items-center justify-center shrink-0 transition-transform active:scale-90" title="Ver observações">
-                     <i data-lucide="message-square-warning" class="w-4 h-4 text-amber-500 hover:text-amber-600 transition-colors"></i>
-                   </button>` 
-                : '';
-
-            let tagsArray = p.tags || [];
-            if (typeof p.tag === 'string' && p.tag.trim() !== '') {
-                tagsArray = [p.tag.trim().toUpperCase()];
-            }
-
-            let badgeTag = '';
-            if (tagsArray.length > 0) {
-                let firstTag = tagsArray[0];
-                
-                let safeTags = encodeURIComponent(JSON.stringify(tagsArray));
-                let safeName = encodeURIComponent(p.nome || '');
-
-                let moreTags = tagsArray.length > 1 
-                    ? `<button onclick="abrirModalTags('${safeName}', '${safeTags}')" class="bg-brand-500 hover:bg-brand-600 text-white text-[8px] px-1.5 py-0.5 rounded-full shrink-0 cursor-pointer transition active:scale-90 shadow-sm" title="Ver todas as etiquetas">+${tagsArray.length - 1}</button>` 
-                    : '';
-                
-                badgeTag = `
-                    <div class="flex items-center gap-1">
-                        <span class="bg-slate-200/70 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-[8px] px-2 py-0.5 rounded border border-slate-300/50 dark:border-slate-700 font-bold uppercase tracking-widest whitespace-nowrap truncate max-w-[80px]" title="${firstTag}">${firstTag}</span>
-                        ${moreTags}
-                    </div>
-                `;
-            }
-
-            const estaEmAnalise = !configGeral.desativarEmAnalise && !p.pago && p.comprovante;
-            const estaAtrasado = verificarAtraso(p, p.sourceMes || mesAtual);
-
-            let btnStatusClass = '';
-            let btnStatusText = '';
-
-            if (p.pago) {
-                btnStatusClass = 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20';
-                btnStatusText = 'Pago';
-            } else if (estaEmAnalise) {
-                btnStatusClass = 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 ring-1 ring-violet-400';
-                btnStatusText = 'Em Análise';
-            } else if (estaAtrasado) {
-                btnStatusClass = 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 ring-1 ring-rose-500 font-black';
-                btnStatusText = 'Atrasado';
-            } else {
-                btnStatusClass = 'bg-amber-100 text-amber-600 dark:bg-amber-900/20';
-                btnStatusText = 'Pendente';
-            }
-
-            corpo.innerHTML += `
-                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-all group ${selecionados.has(p.id) ? 'bg-brand-50/50 dark:bg-brand-900/10' : ''}">
-                    <td class="px-4 md:px-6 py-4 md:py-5 text-center">
-                        <input type="checkbox" class="check-custom row-checkbox" value="${p.id}" ${selecionados.has(p.id) ? 'checked' : ''} onchange="toggleRowSelection('${p.id}')">
-                    </td>
-                    <td class="px-3 md:px-4 py-4 md:py-5">
-                        <div class="flex flex-col">
-                            <div class="flex items-center gap-2 mb-1 w-full overflow-visible">
-                                <input type="text" value="${p.nome}" onblur="editar('${p.id}','nome',this.value)" class="editable-input font-bold dark:text-white text-xs md:text-sm truncate min-w-[100px]">
-                                ${obsIcon}
-                                ${badgeMes}
-                                ${adiantadas > 0 ? `<span class="bg-brand-100 text-brand-600 dark:bg-brand-500/20 dark:text-brand-400 text-[9px] px-2 py-0.5 rounded-full font-extrabold shrink-0">+${adiantadas}</span>` : ''}
-                            </div>
-                            <div class="flex items-center gap-2 -mt-1 pl-2">
-                                <input type="text" value="${p.tel || ''}" onblur="editar('${p.id}','tel',this.value)" class="editable-input text-[9px] md:text-[10px] text-slate-400 font-bold max-w-[100px] p-0" placeholder="Sem telefone">
-                                ${badgeTag}
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-2 md:px-4 py-4 md:py-5 text-center col-dia-cobranca">
-                        <input type="number" min="0" max="31" value="${p.diaCobranca || ''}" oninput="if(this.value > 31) this.value = 31; else if(this.value !== '' && this.value < 0) this.value = 0;" onblur="editar('${p.id}','diaCobranca',this.value)" class="editable-input w-full max-w-[80px] mx-auto block text-center font-bold text-slate-500 dark:text-slate-400" placeholder="--">
-                    </td>
-                    <td class="px-4 md:px-8 py-4 md:py-5 text-center font-bold dark:text-white text-xs md:text-sm">
-                        <div class="flex items-center justify-center gap-1">
-                            <span class="text-[10px] text-slate-400">R$</span>
-                            <input type="number" step="0.01" value="${val.toFixed(2)}" onblur="editar('${p.id}','valor',this.value)" class="editable-input w-full max-w-[100px] text-center font-bold">
-                        </div>
-                    </td>
-                    <td class="px-4 md:px-8 py-4 md:py-5 text-center col-adiantadas">
-                        <input type="number" value="${adiantadas}" onblur="editar('${p.id}','adiantadas',parseInt(this.value || 0))" class="editable-input w-full max-w-[80px] mx-auto block text-center font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/10">
-                    </td>
-                    <td class="px-4 md:px-8 py-4 md:py-5 text-center col-status">
-                        <button onclick="togglePago('${p.id}',${p.pago})" class="px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-extrabold uppercase transition-all transform active:scale-95 ${btnStatusClass}">
-                            ${btnStatusText}
-                        </button>
-                    </td>
-                    <td class="px-4 md:px-8 py-4 md:py-5 text-right">
-                        <div class="flex justify-end gap-1 opacity-60 md:opacity-40 group-hover:opacity-100 transition">
-                            <button onclick="enviarZap('${p.id}','${p.nome}','${p.tel}',${val})" class="p-2 md:p-2.5 ${msgEstilo}" title="Cobrar"><i data-lucide="${msgIcone}" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                            ${p.comprovante ? `
-                                <button onclick="verFoto('${p.comprovante}')" class="p-2 md:p-2.5 text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 rounded-lg transition animate-pulse" title="Ver Comprovativo"><i data-lucide="image" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                                <button onclick="removerComprovante('${p.id}')" class="p-2 md:p-2.5 text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="Apagar Comprovativo"><i data-lucide="image-minus" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                            ` : ''}
-                            <button onclick="abrirDetalhes('${p.id}')" class="p-2 md:p-2.5 text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition" title="Perfil e Histórico"><i data-lucide="user" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                            <button onclick="arquivarPessoa('${p.id}', ${!p.arquivado})" class="p-2 md:p-2.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition" title="${tituloArquivo}"><i data-lucide="${icoArquivo}" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                            <button onclick="excluir('${p.id}')" class="p-2 md:p-2.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition" title="Excluir"><i data-lucide="trash-2" class="w-3.5 h-3.5 md:w-4 md:h-4"></i></button>
-                        </div>
-                    </td>
-                </tr>`;
-        });
-
-        document.getElementById('tGeral').innerText = t.toLocaleString('pt-br',{minimumFractionDigits:2});
-        document.getElementById('tPago').innerText = pg.toLocaleString('pt-br',{minimumFractionDigits:2});
-        document.getElementById('tPend').innerText = pd.toLocaleString('pt-br',{minimumFractionDigits:2});
-        
-        updateBulkUI();
-        lucide.createIcons();
-    }
-
-    function showToast(msg, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        const isSuccess = type === 'success';
-        const bgColor = isSuccess ? 'bg-emerald-500' : 'bg-rose-500';
-        const icon = isSuccess ? 'check-circle' : 'alert-circle';
-        
-        toast.className = `${bgColor} text-white px-5 py-4 rounded-[1.25rem] shadow-2xl flex items-center gap-3 text-sm font-bold transform transition-all duration-300 translate-x-full opacity-0`;
-        toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i> <span>${msg}</span>`;
-        
-        container.appendChild(toast);
-        lucide.createIcons();
-        
-        requestAnimationFrame(() => toast.classList.remove('translate-x-full', 'opacity-0'));
-        setTimeout(() => {
-            toast.classList.add('translate-x-full', 'opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    let confirmActionCallback = null;
-    function showConfirm(title, message, confirmText, typeClass, iconLucide, iconBg, callback) {
-        document.getElementById('confirmTitle').innerText = title;
-        document.getElementById('confirmMessage').innerText = message;
-        
-        const btn = document.getElementById('btnConfirmAction');
-        btn.innerText = confirmText;
-        btn.className = `flex-1 py-3 text-white rounded-2xl font-bold shadow-lg transition-all active:scale-95 ${typeClass}`;
-        
-        const iconDiv = document.getElementById('confirmIcon');
-        iconDiv.className = `w-16 h-16 rounded-[1.5rem] flex items-center justify-center mx-auto mb-5 shadow-glow ${iconBg}`;
-        iconDiv.innerHTML = `<i data-lucide="${iconLucide}" class="w-8 h-8 text-white"></i>`;
-        
-        confirmActionCallback = callback;
-        document.getElementById('modalConfirm').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharConfirm() { document.getElementById('modalConfirm').classList.remove('flex'); confirmActionCallback = null; }
-    function executarConfirm() { if (confirmActionCallback) confirmActionCallback(); fecharConfirm(); }
-
-    function abrirModalTags(encodedName, encodedTags) {
-        const nome = decodeURIComponent(encodedName);
-        const tags = JSON.parse(decodeURIComponent(encodedTags));
-        
-        document.getElementById('modalTagsTitle').innerText = nome;
-        const container = document.getElementById('modalTagsList');
-        
-        container.innerHTML = tags.map(t => `
-            <span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest shadow-sm">
-                ${t}
-            </span>
-        `).join('');
-        
-        document.getElementById('modalVisualizarTags').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalTags() {
-        document.getElementById('modalVisualizarTags').classList.remove('flex');
-    }
-
-    function abrirModalObs(encodedName, encodedObs) {
-        const nome = decodeURIComponent(encodedName);
-        const obs = decodeURIComponent(encodedObs);
-        
-        document.getElementById('modalObsTitle').innerText = nome;
-        document.getElementById('modalObsContent').innerText = obs;
-        
-        document.getElementById('modalVisualizarObs').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalObs() {
-        document.getElementById('modalVisualizarObs').classList.remove('flex');
-    }
-
-    function abrirModalIdeia() {
-        document.getElementById('textoIdeia').value = '';
-        document.getElementById('modalIdeia').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalIdeia() {
-        document.getElementById('modalIdeia').classList.remove('flex');
-    }
-
-    function enviarIdeia() {
-        const texto = document.getElementById('textoIdeia').value.trim();
-        if (!texto) {
-            showToast("Por favor, escreva a sua ideia antes de enviar.", "error");
-            return;
-        }
-
-        if (!adminId) return;
-
-        const btn = document.getElementById('btnEnviarIdeia');
-        const txtOriginal = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...';
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        lucide.createIcons();
-
-        const ideiaData = {
-            adminId: adminId,
-            email: auth.currentUser ? auth.currentUser.email : 'Desconhecido',
-            texto: texto,
-            data: Date.now(),
-            status: 'nova'
-        };
-
-        db.ref('ideias_sistema').push(ideiaData).then(() => {
-            finalizarEnvioIdeia(btn, txtOriginal);
-        }).catch(err => {
-            db.ref(`tenants/${adminId}/ideias_enviadas`).push(ideiaData).then(() => {
-                finalizarEnvioIdeia(btn, txtOriginal);
-            }).catch(errFallback => {
-                btn.innerHTML = txtOriginal;
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                showToast("Erro ao enviar ideia. Verifique a sua ligação.", "error");
-            });
-        });
-    }
-
-    function finalizarEnvioIdeia(btn, txtOriginal) {
-        btn.innerHTML = txtOriginal;
-        btn.classList.remove('opacity-50', 'pointer-events-none');
-        fecharModalIdeia();
-        showToast("Ideia enviada! Muito obrigado pelo seu feedback.", "success");
-    }
-
-    function abrirModalAjuda() {
-        document.getElementById('modalAjuda').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalAjuda() {
-        document.getElementById('modalAjuda').classList.remove('flex');
-    }
-
-    function toggleAjuda(id) {
-        const conteudo = document.getElementById(id);
-        const icone = document.getElementById('icon-' + id);
-        
-        if (conteudo.classList.contains('hidden')) {
-            conteudo.classList.remove('hidden');
-            icone.classList.add('rotate-180');
-        } else {
-            conteudo.classList.add('hidden');
-            icone.classList.remove('rotate-180');
-        }
-    }
-
-    function abrirModalConfig() {
-        document.getElementById('cfgChavePix').value = configGeral.chavePix || "";
-        document.getElementById('cfgValorPadrao').value = configGeral.valorPadrao || 50;
-        document.getElementById('cfgDiaVirada').value = configGeral.diaVirada || "";
-        document.getElementById('cfgTermoPart').value = configGeral.termoParticipante || "Participante";
-        document.getElementById('cfgTermoMens').value = configGeral.termoMensalidade || "Mensalidade";
-        document.getElementById('cfgOcultarAdiantadas').checked = configGeral.ocultarAdiantadas || false;
-        document.getElementById('cfgOcultarStatus').checked = configGeral.ocultarStatus || false;
-        document.getElementById('cfgOcultarDiaCobranca').checked = configGeral.ocultarDiaCobranca || false;
-        document.getElementById('cfgDesativarEmAnalise').checked = configGeral.desativarEmAnalise || false;
-        document.getElementById('cfgMsgCustom').value = configGeral.msgZapCustom || "A sua fatura já está disponível para pagamento. Acesse o link para anexar o comprovativo.";
-        document.getElementById('modalConfig').classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function fecharModalConfig() { 
-        document.getElementById('modalConfig').classList.remove('flex'); 
-    }
-
-    function salvarConfiguracoes() {
-        if(!adminId) return;
-        const vPadrao = parseFloat(document.getElementById('cfgValorPadrao').value) || 50;
-        
-        const updates = {
-            chavePix: document.getElementById('cfgChavePix').value,
-            valorPadrao: vPadrao,
-            diaVirada: document.getElementById('cfgDiaVirada').value,
-            termoParticipante: document.getElementById('cfgTermoPart').value || "Participante",
-            termoMensalidade: document.getElementById('cfgTermoMens').value || "Mensalidade",
-            ocultarAdiantadas: document.getElementById('cfgOcultarAdiantadas').checked,
-            ocultarStatus: document.getElementById('cfgOcultarStatus').checked,
-            ocultarDiaCobranca: document.getElementById('cfgOcultarDiaCobranca').checked,
-            desativarEmAnalise: document.getElementById('cfgDesativarEmAnalise').checked,
-            msgZapCustom: document.getElementById('cfgMsgCustom').value
-        };
-
-        db.ref(`tenants/${adminId}/configuracoes`).update(updates).then(() => {
-            fecharModalConfig();
-            carregarConfiguracoesGerais();
-            showToast("Configurações salvas com sucesso!");
-        });
-    }
-
-    async function abrirModalNovaPessoa() {
-        document.getElementById('buscaCliente').value = "";
-        document.getElementById('listaSugestoes').classList.add('hidden');
-        idClienteSelecionadoParaNovo = null;
-
-        document.getElementById('novoNome').value = "";
-        document.getElementById('novoTel').value = "";
-        document.getElementById('novoTag').value = "";
-        document.getElementById('novoDataEntrada').value = "";
-        document.getElementById('novoDiaCobranca').value = "";
-        document.getElementById('novoObs').value = "";
-        
-        tagsNovo = [];
-        renderTagsUI('novo');
-        
-        document.getElementById('modalNovaPessoa').classList.add('flex');
-        lucide.createIcons();
-
-        if (adminId) {
-            try {
-                const snap = await db.ref(`tenants/${adminId}/cobrancas`).once('value');
-                const todosMeses = snap.val() || {};
-                const mapClientes = new Map();
-
-                for (const mes in todosMeses) {
-                    for (const id in todosMeses[mes]) {
-                        mapClientes.set(id, { id: id, ...todosMeses[mes][id] });
-                    }
-                }
-                clientesGlobaisCache = Array.from(mapClientes.values());
-            } catch(e) {
-                console.error("Erro ao carregar cache de clientes", e);
-            }
-        }
-    }
-
-    function fecharModalNovaPessoa() { 
-        document.getElementById('modalNovaPessoa').classList.remove('flex'); 
-    }
-
-    function filtrarClientesGlobais() {
-        const termo = document.getElementById('buscaCliente').value.toLowerCase();
-        const lista = document.getElementById('listaSugestoes');
-
-        if (termo.length < 2) {
-            lista.classList.add('hidden');
-            idClienteSelecionadoParaNovo = null; 
-            return;
-        }
-
-        const filtrados = clientesGlobaisCache.filter(c => c.nome.toLowerCase().includes(termo) || (c.tel && c.tel.includes(termo)));
-
-        if (filtrados.length === 0) {
-            lista.innerHTML = '<div class="p-4 text-xs text-slate-500 text-center font-bold">Nenhum cliente encontrado no histórico.</div>';
-            lista.classList.remove('hidden');
-            return;
-        }
-
-        lista.innerHTML = filtrados.map(c => `
-            <div onclick="selecionarClienteAutocompletar('${c.id}')" class="p-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-brand-50 dark:hover:bg-brand-900/20 cursor-pointer transition">
-                <p class="text-sm font-bold dark:text-white">${c.nome}</p>
-                <div class="flex gap-3 text-[10px] text-slate-400 font-bold mt-0.5">
-                    <span><i data-lucide="phone" class="w-3 h-3 inline"></i> ${c.tel || 'Sem tel'}</span>
-                    ${c.dataEntrada ? `<span><i data-lucide="calendar" class="w-3 h-3 inline"></i> ${c.dataEntrada}</span>` : ''}
-                </div>
-            </div>
-        `).join('');
-
-        lucide.createIcons();
-        lista.classList.remove('hidden');
-    }
-
-    function selecionarClienteAutocompletar(id) {
-        const c = clientesGlobaisCache.find(x => x.id === id);
-        if (!c) return;
-
-        idClienteSelecionadoParaNovo = id;
-        document.getElementById('buscaCliente').value = c.nome;
-        document.getElementById('listaSugestoes').classList.add('hidden');
-
-        document.getElementById('novoNome').value = c.nome || "";
-        document.getElementById('novoTel').value = c.tel || "";
-        document.getElementById('novoTag').value = c.tag || "";
-        document.getElementById('novoDataEntrada').value = c.dataEntrada || "";
-        document.getElementById('novoDiaCobranca').value = c.diaCobranca || "";
-        document.getElementById('novoObs').value = c.observacao || "";
-        
-        tagsNovo = c.tags || [];
-        if (typeof c.tag === 'string' && c.tag.trim() !== '') tagsNovo = [c.tag.trim().toUpperCase()];
-        renderTagsUI('novo');
-        
-        showToast("Dados do cliente preenchidos!", "success");
-    }
-
-    function salvarNovaPessoa() {
-        if(!adminId) return;
-        const n = document.getElementById('novoNome').value.trim();
-        const t = document.getElementById('novoTel').value.trim();
-        const d = document.getElementById('novoDataEntrada').value;
-        const diaC = document.getElementById('novoDiaCobranca').value;
-        const obs = document.getElementById('novoObs').value.trim();
-        
-        const inputTag = document.getElementById('novoTag').value.trim().replace(',', '').toUpperCase();
-        if (inputTag && !tagsNovo.includes(inputTag)) tagsNovo.push(inputTag);
-        
-        if(!n) return showToast("Por favor, digite o nome.", "error");
-        
-        const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
-        const idFinal = idClienteSelecionadoParaNovo ? idClienteSelecionadoParaNovo : String(Date.now());
-
-        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).once('value').then(snap => {
-            const existeNoCiclo = snap.val();
-            
-            if (existeNoCiclo && idClienteSelecionadoParaNovo && !existeNoCiclo.arquivado) {
-                showToast("Este cliente já está na lista deste ciclo!", "error");
-                return;
-            }
-
-            db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${idFinal}`).update({ 
-                nome: n, 
-                tel: t, 
-                tags: tagsNovo,
-                tag: null,
-                valor: (existeNoCiclo && existeNoCiclo.valor !== undefined) ? existeNoCiclo.valor : configGeral.valorPadrao, 
-                adiantadas: (existeNoCiclo && existeNoCiclo.adiantadas !== undefined) ? existeNoCiclo.adiantadas : 0, 
-                pago: (existeNoCiclo && existeNoCiclo.pago !== undefined) ? existeNoCiclo.pago : false, 
-                msgEnviada: (existeNoCiclo && existeNoCiclo.msgEnviada !== undefined) ? existeNoCiclo.msgEnviada : false, 
-                comprovante: (existeNoCiclo && existeNoCiclo.comprovante !== undefined) ? existeNoCiclo.comprovante : null,
-                arquivado: false,
-                dataEntrada: d,
-                diaCobranca: diaC,
-                observacao: obs
-            }).then(() => {
-                fecharModalNovaPessoa();
-                showToast("Cliente adicionado ao ciclo com sucesso!");
-            }).catch((err) => {
-                showToast("Erro ao cadastrar: " + err.message, "error");
-            });
-        });
-    }
-
-    function getTargetMes(id) {
-        const p = dadosLocais.find(x => x.id === id);
-        return p ? (p.sourceMes || mesAtual) : (mesAtual === 'todos' ? mesReal : mesAtual);
-    }
-
-    function toggleRowSelection(id) { if (selecionados.has(id)) selecionados.delete(id); else selecionados.add(id); renderizarTabela(); }
-    function toggleAll(source) { const checkboxes = document.querySelectorAll('.row-checkbox'); if(source.checked) { checkboxes.forEach(cb => selecionados.add(cb.value)); } else { selecionados.clear(); } renderizarTabela(); }
-    
-    function updateBulkUI() {
-        const bar = document.getElementById('bulkActionsBar');
-        const selectAllInput = document.getElementById('selectAll');
-        if(selectAllInput) {
-            const allVisibleIds = Array.from(document.querySelectorAll('.row-checkbox')).map(cb => cb.value);
-            selectAllInput.checked = allVisibleIds.length > 0 && allVisibleIds.every(id => selecionados.has(id));
-        }
-
-        const btnArchive = document.getElementById('btnBulkArchive');
-        if (btnArchive) {
-            if (filtrosStatus.has('arquivado')) {
-                btnArchive.setAttribute('onclick', 'arquivarSelecionados(false)');
-                btnArchive.innerHTML = `<i data-lucide="archive-restore" class="w-4 h-4"></i> <span class="hidden sm:inline">Desarquivar</span>`;
-            } else {
-                btnArchive.setAttribute('onclick', 'arquivarSelecionados(true)');
-                btnArchive.innerHTML = `<i data-lucide="archive" class="w-4 h-4"></i> <span class="hidden sm:inline">Arquivar</span>`;
-            }
-        }
-
-        if (selecionados.size > 0) {
-            document.getElementById('bulkCount').innerText = selecionados.size;
-            bar.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-            bar.classList.add('translate-y-0', 'opacity-100');
-            lucide.createIcons();
-        } else {
-            bar.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-            bar.classList.remove('translate-y-0', 'opacity-100');
-        }
-    }
-    function clearSelection() { selecionados.clear(); renderizarTabela(); }
-
-    function editar(id, c, v) { 
-        if(!adminId) return;
-        const targetMes = getTargetMes(id);
-        db.ref(`tenants/${adminId}/cobrancas/${targetMes}/${id}`).update({ [c]: v }).then(() => {
-            if (c === 'adiantadas' && parseInt(v) > 0) propagarAdiantamento(id, parseInt(v), targetMes);
-        }); 
-    }
-
-    function propagarAdiantamento(id, qtdMeses, baseMes) {
-        if(!adminId) return;
-        const user = dadosLocais.find(u => u.id === id);
-        if (!user) return;
-        let [mesStr, anoStr] = baseMes.split('-'); let mes = parseInt(mesStr); let ano = parseInt(anoStr);
-        const updates = {};
-        
-        let tagsArray = user.tags || [];
-        if (typeof user.tag === 'string' && user.tag.trim() !== '') tagsArray = [user.tag.trim().toUpperCase()];
-
-        for (let i = 1; i <= qtdMeses; i++) {
-            mes++; if (mes > 12) { mes = 1; ano++; }
-            let futuroMes = `${String(mes).padStart(2, '0')}-${ano}`;
-            updates[`tenants/${adminId}/cobrancas/${futuroMes}/${id}`] = { nome: user.nome, tel: user.tel || "", tags: tagsArray, valor: 0, adiantadas: qtdMeses - i, pago: true, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
-        }
-        mes++; if (mes > 12) { mes = 1; ano++; }
-        let mesRetorno = `${String(mes).padStart(2, '0')}-${ano}`;
-        updates[`tenants/${adminId}/cobrancas/${mesRetorno}/${id}`] = { nome: user.nome, tel: user.tel || "", tags: tagsArray, valor: configGeral.valorPadrao, adiantadas: 0, pago: false, msgEnviada: false, arquivado: false, dataEntrada: user.dataEntrada || "", diaCobranca: user.diaCobranca || "", observacao: user.observacao || "" };
-        db.ref().update(updates);
-    }
-
-    function togglePago(id, s) { if(adminId) db.ref(`tenants/${adminId}/cobrancas/${getTargetMes(id)}/${id}`).update({ pago: !s }); }
-    
-    function mudarMes(v) { 
-        mesAtual = v; 
-        selecionados.clear(); 
-        
-        const btnCopiar = document.getElementById('btnCopiarCiclo');
-        if(btnCopiar) btnCopiar.style.display = mesAtual === 'todos' ? 'none' : 'flex';
-        
-        carregarDadosAdmin(); 
-    }
-    
-    function setFiltroStatus(s) { 
-        if (s === 'todos') {
-            filtrosStatus.clear();
-            filtrosStatus.add('todos');
-        } else {
-            filtrosStatus.delete('todos');
-            if (filtrosStatus.has(s)) {
-                filtrosStatus.delete(s);
-            } else {
-                filtrosStatus.add(s);
-            }
-            if (filtrosStatus.size === 0) {
-                filtrosStatus.add('todos');
-            }
-        }
-
-        document.querySelectorAll('.filter-btn').forEach(b => { 
-            const btnId = b.id.replace('btn-', '');
-            if (filtrosStatus.has(btnId)) {
-                b.classList.add('active', 'opacity-100');
-                b.classList.remove('opacity-40');
-            } else {
-                b.classList.remove('active', 'opacity-100');
-                b.classList.add('opacity-40');
-            }
-        }); 
-        
-        renderizarTabela(); 
-    }
-
-    function toggleOrdemAlfabetica() { ordemCrescente = !ordemCrescente; renderizarTabela(); }
-    function fecharModal() { document.getElementById('modalImport').classList.remove('flex'); }
-    function abrirModal() { document.getElementById('modalImport').classList.add('flex'); }
-    function validarArquivo(i) { if(i.files[0]) document.getElementById('nomeArquivo').innerText = i.files[0].name; }
-    function verFoto(img) { const v = window.open(""); v.document.write(`<body style="margin:0; background:#000; display:flex; align-items:center; justify-content:center"><img src="${img}" style="max-height:100%; max-width:100%; border-radius:10px;"></body>`); }
-    function toggleDarkMode() { 
-        document.documentElement.classList.toggle('dark'); 
-        localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; 
-        
-        if(dadosGraficoCache) atualizarGrafico(dadosGraficoCache.labels, dadosGraficoCache.dados);
-    }
-    
-    function baixarModeloCSV() {
-        const cabecalho = "ID;Nome;Telefone;Etiquetas;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado\n";
-        const exemplo1 = ";Joao Silva;5511999999999;PREMIUM, VIP;2023-10-01;10;Cliente top;50.00;0;Pendente;Nao\n";
-        const exemplo2 = ";Maria Souza;5511888888888;BASICO;2023-10-15;05;;100.00;1;Pago;Nao\n";
-        const csvContent = cabecalho + exemplo1 + exemplo2;
-        
-        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "modelo_importacao_pagflow.csv";
-        link.click();
-    }
-
-    function exportarExcel() {
-        if (dadosLocais.length === 0) return;
-        let csv = "ID;Nome;Telefone;Etiquetas;Data de Entrada;Dia Cobranca;Observacoes;Valor;Adiantadas;Status;Arquivado;Ciclo_Origem\n";
-        dadosLocais.forEach(p => { 
-            let tagsStr = (p.tags || []).join(', ');
-            if(!p.tags && p.tag) tagsStr = p.tag;
-            
-            csv += `${p.id};${p.nome};${p.tel || ''};${tagsStr};${p.dataEntrada || ''};${p.diaCobranca || ''};${p.observacao || ''};${p.valor};${p.adiantadas || 0};${p.pago ? 'Pago' : 'Pendente'};${p.arquivado ? 'Sim' : 'Nao'};${p.sourceMes || mesAtual}\n`; 
-        });
-        const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' })); link.download = `pagflow_relatorio_${mesAtual}.csv`; link.click();
-    }
-    
-    function processarCSV() {
-        const file = document.getElementById('arquivoCSV').files[0];
-        if (!file || !adminId) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const linhas = e.target.result.split('\n');
-            const updates = {};
-            const targetMes = mesAtual === 'todos' ? mesReal : mesAtual;
-
-            linhas.forEach((linha, i) => {
-                if (i === 0 || !linha.trim()) return;
-                
-                let cols = linha.split(/[;,]/);
-                let id = (cols[0] && cols[0].trim() !== "") ? cols[0].trim() : String(Date.now() + i); 
-                let ext = dadosLocais.find(d => String(d.id) === id) || {};
-                
-                let diaLido = cols[5]?.trim() || ext.diaCobranca || "";
-                if (diaLido !== "") {
-                    let dNum = parseInt(diaLido);
-                    if (!isNaN(dNum)) {
-                        if (dNum > 31) diaLido = "31";
-                        else if (dNum < 0) diaLido = "0";
-                        else diaLido = dNum.toString();
-                    }
-                }
-                
-                let tagsStr = cols[3]?.trim() || "";
-                let tagsImport = tagsStr ? tagsStr.split(',').map(t=>t.trim().toUpperCase()).filter(Boolean) : (ext.tags || (ext.tag ? [ext.tag] : []));
-
-                updates[id] = { 
-                    nome: cols[1]?.trim() || ext.nome || "Sem Nome", 
-                    tel: cols[2]?.trim() || ext.tel || "", 
-                    tags: tagsImport,
-                    tag: null, 
-                    dataEntrada: cols[4]?.trim() || ext.dataEntrada || "",
-                    diaCobranca: diaLido,
-                    observacao: (cols[6]?.trim() || ext.observacao || "").substring(0, 300),
-                    valor: cols[7] ? parseFloat(cols[7].replace(',', '.')) : (ext.valor !== undefined ? ext.valor : configGeral.valorPadrao), 
-                    adiantadas: cols[8] ? parseInt(cols[8]) : (ext.adiantadas || 0), 
-                    pago: cols[9] ? cols[9].trim().toLowerCase() === "pago" : (ext.pago || false), 
-                    arquivado: cols[10] ? cols[10].trim().toLowerCase() === "sim" : (ext.arquivado || false),
-                    msgEnviada: ext.msgEnviada || false, 
-                    comprovante: ext.comprovante || null
-                };
-            });
-            
-            db.ref(`tenants/${adminId}/cobrancas/${targetMes}`).update(updates).then(() => { 
-                fecharModal(); 
-                showToast("Dados importados com sucesso!"); 
-            });
-        };
-        reader.readAsText(file, 'UTF-8');
-    }
-    
-    function gerarOpcoesMes() { 
-        const s = document.getElementById('filtroMes'); if(!s) return; s.innerHTML = '';
-        
-        const optTodos = document.createElement('option');
-        optTodos.value = 'todos';
-        optTodos.innerText = 'Todos os Ciclos (Geral)';
-        optTodos.selected = mesAtual === 'todos';
-        s.appendChild(optTodos);
-
-        let baseDate = new Date(); 
-        let diaV = configGeral ? parseInt(configGeral.diaVirada) : NaN;
-        
-        if (!isNaN(diaV) && diaV > 1) {
-            let ultimoDiaMes = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
-            let diaRealVirada = diaV > ultimoDiaMes ? ultimoDiaMes : diaV;
-            
-            if (baseDate.getDate() >= diaRealVirada) {
-                baseDate.setMonth(baseDate.getMonth() + 1);
-            }
-        }
-
-        for(let i = -12; i <= 36; i++) { 
-            const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, 1); 
-            const k = `${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`; 
-            const o = document.createElement('option'); o.value = k; 
-            o.innerText = d.toLocaleDateString('pt-br', {month: 'long', year: 'numeric'}); 
-            o.selected = k === mesAtual; 
-            s.appendChild(o); 
-        } 
-    }
-
-    function copiarPix(txt) {
-        const temp = document.createElement("input"); 
-        document.body.appendChild(temp); 
-        temp.value = txt; 
-        temp.select(); 
-        document.execCommand("copy"); 
-        document.body.removeChild(temp);
-        
-        showToast("Chave PIX copiada!");
-    }
-
-    window.onload = function() {
-        iniciar();
-    };
-</script>
-</body>
-</html>
-
+                labe
